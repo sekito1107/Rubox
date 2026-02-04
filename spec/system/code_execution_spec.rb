@@ -50,4 +50,22 @@ RSpec.describe "Code Execution", type: :system do
     # Verify error is displayed
     expect(page).to have_content("Error:", wait: 10)
   end
+
+  it "clears terminal output" do
+    visit root_path
+
+    # Wait for Ruby WASM to initialize
+    expect(page).to have_content("Ruby WASM ready!", wait: 30)
+
+    # Output something to terminal (init message is already there)
+    # Use execute_script to simulate run or just use what's there.
+    # The init message "// Ruby WASM ready!" should be present.
+
+    # Click Clear button
+    click_button "Clear"
+
+    # Verify terminal is empty (or at least doesn't have the init message)
+    expect(page).not_to have_content("Ruby WASM ready!")
+    expect(page).not_to have_content("//")
+  end
 end

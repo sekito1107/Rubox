@@ -80,6 +80,12 @@ $stdout.string
     }
   }
 
+  clear() {
+    if (this.hasOutputTarget) {
+      this.outputTarget.innerHTML = ""
+    }
+  }
+
   updateOutput(text) {
     if (this.hasOutputTarget) {
       this.outputTarget.innerHTML = text.split("\n").map(line => 
