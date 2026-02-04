@@ -3,13 +3,15 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["container"]
 
-  connect() {
-    this.loadMonaco().then(() => {
+  async connect() {
+    try {
+      await this.loadEditor()
       this.initEditor()
-    }).catch(err => {
+    } catch (error) {
       // Create a fallback error message in the editor container
       this.containerTarget.innerText = "Failed to load editor."
-    })
+      console.error(error)
+    }
   }
 
   disconnect() {
@@ -19,19 +21,19 @@ export default class extends Controller {
     if (this.observer) {
       this.observer.disconnect()
     }
-    window.removeEventListener("resize", this.handleResize)
   }
 
-  loadMonaco() {
+  loadEditor() {
     return new Promise((resolve, reject) => {
+      // Check if global object exists
       if (window.monaco) {
         resolve()
         return
       }
 
       // Check if loader is already added
-      if (document.getElementById("monaco-loader")) {
-        // Simple polling if already loading
+      if (document.getElementById("editor-loader")) {
+        // Poll for completion
         const check = setInterval(() => {
           if (window.monaco) {
             clearInterval(check)
@@ -44,7 +46,7 @@ export default class extends Controller {
       const LOADER_URL = "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js"
       
       const script = document.createElement("script")
-      script.id = "monaco-loader"
+      script.id = "editor-loader"
       script.src = LOADER_URL
       script.onload = () => {
         // Configure loader
@@ -79,7 +81,7 @@ export default class extends Controller {
       ].join("\n"),
       language: "ruby",
       theme: this.currentTheme,
-      automaticLayout: true, // Handle resize automatically
+      automaticLayout: true,
       minimap: { enabled: false },
       fontSize: 14,
       scrollBeyondLastLine: false,
