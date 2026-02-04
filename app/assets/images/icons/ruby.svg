@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="24" height="24">
+  <linearGradient id="ruby-gradient" x1="50%" y1="0%" x2="50%" y2="100%">
+    <stop offset="0%" stop-color="#e52222"/>
+    <stop offset="100%" stop-color="#8b0000"/>
+  </linearGradient>
+  <path fill="url(#ruby-gradient)" d="M64 8L8 64l20 56h72l20-56L64 8zm0 16l40 40-12 36H36L24 64l40-40z"/>
+  <polygon fill="#cc1515" points="64,24 104,64 92,100 36,100 24,64"/>
+</svg>
