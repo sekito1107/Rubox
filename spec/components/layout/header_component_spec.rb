@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Layout::HeaderComponent, type: :component do
-  it "ロゴとアクションボタンが表示されること" do
+  it "ロゴ、アクションボタン、テーマ切替ボタンが表示されること" do
     render_inline(described_class.new)
 
     # ロゴの確認
@@ -11,6 +11,9 @@ RSpec.describe Layout::HeaderComponent, type: :component do
     # ボタンの確認
     expect(page).to have_button("Share")
     expect(page).to have_button("Run")
+
+    # テーマ切替ボタンの確認
+    expect(page).to have_css("#theme-toggle")
 
     # アイコンの確認 (svgタグの存在確認)
     expect(page).to have_css("svg")
