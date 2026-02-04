@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
-import { EditorView, basicSetup } from "codemirror"
+import { basicSetup } from "codemirror"
+import { EditorView } from "@codemirror/view"
 import { ruby } from "@codemirror/lang-ruby"
 import { oneDark } from "@codemirror/theme-one-dark"
 import { Compartment } from "@codemirror/state"
