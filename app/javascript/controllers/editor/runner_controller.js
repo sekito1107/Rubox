@@ -10,52 +10,66 @@ export default class extends Controller {
     this.editor = null
     this.vm = null
     
-    // Listen for editor initialization
+    // エディタの初期化を監視
     document.addEventListener("editor--main:initialized", (e) => {
       this.editor = e.detail.editor
     })
     
-    // Initialize Ruby VM in the background
+    // バックグラウンドで Ruby VM を初期化
     this.initializeVM()
   }
 
   async initializeVM() {
     try {
-      this.updateOutput("// Ruby WASM initializing...")
+      this.updateOutput("// Ruby WASM を初期化中...")
       
-      // Dynamically import Ruby WASM API (ESM version)
+      // Ruby WASM API を動的インポート (ESM版)
       const { DefaultRubyVM } = await import(WASM_API_URL)
       
-      // Fetch and compile WASM module
+      // WASM モジュールの取得とコンパイル
       const response = await fetch(RUBY_WASM_URL)
       const module = await WebAssembly.compileStreaming(response)
       
-      // Initialize VM
+      // VM の初期化
       const { vm } = await DefaultRubyVM(module)
       this.vm = vm
       
-      this.updateOutput("// Ruby WASM ready! Click Run to execute code.")
+      this.updateOutput("// Ruby WASM 準備完了！ Run ボタンで実行できます。")
     } catch (error) {
-      console.error("Failed to initialize Ruby VM:", error)
-      this.updateOutput(`// Error: ${error.message}`)
+      console.error("Ruby VM の初期化に失敗しました:", error)
+      this.updateOutput(`// エラー: Ruby VM の初期化に失敗しました: ${error.message}`)
     }
+  }
+
+  loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) {
+        resolve()
+        return
+      }
+      const script = document.createElement("script")
+      script.src = src
+      script.onload = resolve
+      script.onerror = reject
+      document.head.appendChild(script)
+    })
   }
 
   async run() {
     if (!this.vm) {
-      this.updateOutput("// Ruby VM is not ready yet. Please wait...")
+      this.updateOutput("// Ruby VM の準備がまだできていません。少々お待ちください...")
       return
     }
 
     if (!this.editor) {
-      this.updateOutput("// Editor not available.")
+      this.updateOutput("// エディタが見つかりません。")
       return
     }
 
     const code = this.editor.getValue()
     
     try {
-      // Capture stdout using StringIO
+      // StringIO を使って標準出力をキャプチャする
       const wrappedCode = [
         "require 'stringio'",
         "$stdout = StringIO.new",
@@ -73,10 +87,10 @@ export default class extends Controller {
       if (output.trim()) {
         this.updateOutput(output)
       } else {
-        this.updateOutput("// (no output)")
+        this.updateOutput("// (出力なし)")
       }
     } catch (error) {
-      this.updateOutput(`Error: ${error.message}`)
+      this.updateOutput(`実行エラー: ${error.message}`)
     }
   }
 
