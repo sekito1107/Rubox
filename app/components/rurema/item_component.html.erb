@@ -1,0 +1,10 @@
+<div class="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-white/5 rounded-md overflow-hidden hover:border-slate-300 dark:hover:border-white/10 transition-colors shadow-sm dark:shadow-none">
+  <div class="px-3 py-2 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 flex items-center gap-2">
+    <span class="text-blue-600 dark:text-blue-400 text-xs font-mono">&lt;&gt;</span>
+    <span class="text-slate-800 dark:text-slate-200 text-sm font-semibold font-mono"><%= @method %></span>
+  </div>
+  <div class="p-3 space-y-2">
+    <div class="text-xs text-slate-600 dark:text-slate-400 font-mono">Array<span class="text-red-500 dark:text-red-400">#<%= @method.delete('.') %></span></div>
+    <div class="text-xs text-slate-600 dark:text-slate-400 font-mono">Enumerable<span class="text-red-500 dark:text-red-400">#<%= @method.delete('.') %></span></div>
+  </div>
+</div>
