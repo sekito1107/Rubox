@@ -4,13 +4,16 @@ import { Controller } from "@hotwired/stimulus"
 const RUREMA_BASE_URL = "https://docs.ruby-lang.org/ja/latest/method"
 const RUREMA_SEARCH_URL = "https://docs.ruby-lang.org/ja/search/"
 
+// メソッド呼び出しを検出する正規表現
+// .method_name や .method_name! や .method_name? にマッチ
+const METHOD_CALL_REGEX = /\.([a-zA-Z_][a-zA-Z0-9_]*[!?]?)/g
+
 export default class extends Controller {
   static targets = ["content"]
 
   async connect() {
     this.index = null
     this.editor = null
-    this.currentWord = null
 
     // インデックスを読み込む
     await this.loadIndex()
@@ -18,7 +21,7 @@ export default class extends Controller {
     // エディタの初期化を監視
     document.addEventListener("editor--main:initialized", (e) => {
       this.editor = e.detail.editor
-      this.setupCursorListener()
+      this.setupContentListener()
     })
   }
 
@@ -31,72 +34,85 @@ export default class extends Controller {
     }
   }
 
-  setupCursorListener() {
+  setupContentListener() {
     if (!this.editor) return
 
-    // カーソル位置の変更を監視
-    this.editor.onDidChangeCursorPosition((e) => {
-      this.detectWordAtCursor(e.position)
+    // コンテンツの変更を監視
+    this.editor.onDidChangeModelContent(() => {
+      this.scanAndDisplayMethods()
     })
 
     // 初回実行
-    const position = this.editor.getPosition()
-    if (position) {
-      this.detectWordAtCursor(position)
-    }
+    this.scanAndDisplayMethods()
   }
 
-  detectWordAtCursor(position) {
-    if (!this.editor) return
+  scanAndDisplayMethods() {
+    if (!this.editor || !this.hasContentTarget) return
 
-    const model = this.editor.getModel()
-    if (!model) return
+    const code = this.editor.getValue()
 
-    // カーソル位置の単語を取得
-    const wordInfo = model.getWordAtPosition(position)
-    if (!wordInfo) {
-      this.currentWord = null
-      this.updatePanel(null)
+    // 正規表現でメソッド呼び出しを全て検出
+    const methods = this.extractMethods(code)
+
+    if (methods.length === 0) {
+      this.contentTarget.innerHTML = `
+        <div class="text-xs text-slate-500 dark:text-slate-600 text-center py-4">
+          No methods detected
+        </div>
+      `
       return
     }
 
-    const word = wordInfo.word
-
-    // 同じ単語なら更新しない
-    if (word === this.currentWord) return
-    this.currentWord = word
-
-    // インデックスを検索
-    this.lookupAndDisplay(word)
+    // 各メソッドに対してパネルを生成
+    const html = methods.map(method => this.renderMethodCard(method)).join("")
+    this.contentTarget.innerHTML = html
   }
 
-  lookupAndDisplay(word) {
-    if (!this.index || !this.hasContentTarget) return
+  extractMethods(code) {
+    const methods = []
+    const seen = new Set()
+    let match
 
-    const matches = this.index[word]
+    // 正規表現でマッチを順番に取得
+    while ((match = METHOD_CALL_REGEX.exec(code)) !== null) {
+      const methodName = match[1]
+
+      // 重複を除外（出現順を維持）
+      if (!seen.has(methodName)) {
+        seen.add(methodName)
+        methods.push(methodName)
+      }
+    }
+
+    return methods
+  }
+
+  renderMethodCard(method) {
+    if (!this.index) return ""
+
+    const matches = this.index[method]
 
     if (matches && matches.length > 0) {
       // メソッドが見つかった場合
-      this.renderFoundMethod(word, matches)
+      return this.renderFoundMethod(method, matches)
     } else {
       // 見つからなかった場合
-      this.renderUnknownMethod(word)
+      return this.renderUnknownMethod(method)
     }
   }
 
-  renderFoundMethod(word, matches) {
-    const html = `
+  renderFoundMethod(method, matches) {
+    return `
       <div class="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-white/5 rounded-md overflow-hidden shadow-sm dark:shadow-none">
         <div class="px-3 py-2 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 flex items-center gap-2">
           <span class="text-blue-600 dark:text-blue-400 text-xs font-mono">&lt;&gt;</span>
-          <span class="text-slate-800 dark:text-slate-200 text-sm font-semibold font-mono">.${this.escapeHtml(word)}</span>
+          <span class="text-slate-800 dark:text-slate-200 text-sm font-semibold font-mono">.${this.escapeHtml(method)}</span>
         </div>
         <div class="p-3 space-y-2">
           ${matches.map(match => this.renderMatchLink(match)).join("")}
         </div>
       </div>
     `
-    this.contentTarget.innerHTML = html
   }
 
   renderMatchLink(match) {
@@ -106,7 +122,6 @@ export default class extends Controller {
     const [className, methodName] = match.split(separator)
 
     // るりまのURLを構築
-    // 例: https://docs.ruby-lang.org/ja/latest/method/Array/i/map.html
     const methodType = isInstanceMethod ? "i" : "s"
     const encodedMethod = this.encodeMethodName(methodName)
     const url = `${RUREMA_BASE_URL}/${className}/${methodType}/${encodedMethod}.html`
@@ -119,14 +134,14 @@ export default class extends Controller {
     `
   }
 
-  renderUnknownMethod(word) {
-    const searchUrl = `${RUREMA_SEARCH_URL}?q=${encodeURIComponent(word)}`
+  renderUnknownMethod(method) {
+    const searchUrl = `${RUREMA_SEARCH_URL}?q=${encodeURIComponent(method)}`
 
-    const html = `
+    return `
       <div class="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-white/5 rounded-md overflow-hidden shadow-sm dark:shadow-none">
         <div class="px-3 py-2 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 flex items-center gap-2">
-          <span class="text-slate-400 dark:text-slate-500 text-xs">&#x3F;</span>
-          <span class="text-slate-800 dark:text-slate-200 text-sm font-semibold font-mono">.${this.escapeHtml(word)}</span>
+          <span class="text-slate-400 dark:text-slate-500 text-sm">?</span>
+          <span class="text-slate-800 dark:text-slate-200 text-sm font-semibold font-mono">.${this.escapeHtml(method)}</span>
         </div>
         <div class="p-3">
           <a href="${searchUrl}" target="_blank" rel="noopener noreferrer"
@@ -139,24 +154,10 @@ export default class extends Controller {
         </div>
       </div>
     `
-    this.contentTarget.innerHTML = html
-  }
-
-  updatePanel(content) {
-    if (!this.hasContentTarget) return
-
-    if (content === null) {
-      this.contentTarget.innerHTML = `
-        <div class="text-xs text-slate-500 dark:text-slate-600 text-center py-4">
-          Select a method to see documentation
-        </div>
-      `
-    }
   }
 
   encodeMethodName(name) {
     // メソッド名のURLエンコード（るりま形式）
-    // 例: "[]" -> "=5b=5d", "+" -> "=2b"
     return name
       .replace(/\[/g, "=5b")
       .replace(/\]/g, "=5d")
