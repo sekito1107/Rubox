@@ -383,9 +383,9 @@ DEPENDENCIES
   jbuilder
   kamal
   propshaft
-  puma (>= 5.0)
-  rails (~> 8.1.2)
-  rspec-rails (~> 7.0)
+  puma
+  rails
+  rspec-rails
   rubocop-rails-omakase
   selenium-webdriver
   stimulus-rails
@@ -393,7 +393,7 @@ DEPENDENCIES
   thruster
   turbo-rails
   tzinfo-data
-  view_component (~> 4.2)
+  view_component
   web-console
 
 CHECKSUMS
