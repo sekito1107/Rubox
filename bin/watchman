@@ -1,0 +1,5 @@
+#!/bin/sh
+# Dummy watchman script to silence "Permission denied" errors in WSL
+# Tailwind CSS attempts to use watchman if found in PATH, but picks up Windows binary/script which fails.
+# This script does nothing and returns success to fallback to polling.
+exit 0

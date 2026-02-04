@@ -1,2 +1,2 @@
 web: bin/rails server
-css: bin/rails tailwindcss:watch -- --poll
+css: env PATH="./bin:$PATH" bin/rails tailwindcss:watch -- --poll
