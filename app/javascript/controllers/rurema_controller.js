@@ -19,10 +19,17 @@ export default class extends Controller {
     await this.loadIndex()
 
     // エディタの初期化を監視
-    document.addEventListener("editor--main:initialized", (e) => {
-      this.editor = e.detail.editor
-      this.setupContentListener()
-    })
+    this.boundHandleEditorInit = this.handleEditorInit.bind(this)
+    document.addEventListener("editor--main:initialized", this.boundHandleEditorInit)
+  }
+
+  disconnect() {
+    document.removeEventListener("editor--main:initialized", this.boundHandleEditorInit)
+  }
+
+  handleEditorInit(e) {
+    this.editor = e.detail.editor
+    this.setupContentListener()
   }
 
   async loadIndex() {
