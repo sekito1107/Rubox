@@ -4,6 +4,9 @@ export default class extends Controller {
   static targets = ["container"]
 
   async connect() {
+    this.boundHandleSettingsUpdate = this.handleSettingsUpdate.bind(this)
+    window.addEventListener("settings:updated", this.boundHandleSettingsUpdate)
+
     try {
       await this.loadEditor()
       this.initEditor()
@@ -14,6 +17,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    window.removeEventListener("settings:updated", this.boundHandleSettingsUpdate)
+
     if (this.editor) {
       this.editor.dispose()
     }
@@ -66,6 +71,8 @@ export default class extends Controller {
   }
 
   initEditor() {
+    const savedSettings = JSON.parse(localStorage.getItem("rubpad_settings") || "{}")
+
     this.editor = monaco.editor.create(this.containerTarget, {
       value: [
         "# Welcome to RubPad!",
@@ -85,8 +92,13 @@ export default class extends Controller {
       language: "ruby",
       theme: this.currentTheme,
       automaticLayout: true,
-      minimap: { enabled: false },
-      fontSize: 14,
+      minimap: savedSettings.minimap || { enabled: false },
+      fontSize: parseInt(savedSettings.fontSize || 14),
+      tabSize: parseInt(savedSettings.tabSize || 2),
+      wordWrap: savedSettings.wordWrap || 'off',
+      autoClosingBrackets: savedSettings.autoClosingBrackets || 'always',
+      mouseWheelZoom: savedSettings.mouseWheelZoom || false,
+      renderWhitespace: savedSettings.renderWhitespace || 'none',
       scrollBeyondLastLine: false,
       renderLineHighlight: "all",
       fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace"
@@ -116,5 +128,20 @@ export default class extends Controller {
   get currentTheme() {
     const isDark = document.documentElement.classList.contains("dark")
     return isDark ? "vs-dark" : "vs"
+  }
+
+  handleSettingsUpdate(event) {
+    if (!this.editor) return
+    const s = event.detail.settings
+    
+    this.editor.updateOptions({
+      fontSize: parseInt(s.fontSize),
+      tabSize: parseInt(s.tabSize),
+      wordWrap: s.wordWrap,
+      autoClosingBrackets: s.autoClosingBrackets,
+      minimap: s.minimap,
+      mouseWheelZoom: s.mouseWheelZoom,
+      renderWhitespace: s.renderWhitespace
+    })
   }
 }
