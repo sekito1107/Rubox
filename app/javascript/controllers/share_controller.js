@@ -61,10 +61,17 @@ export default class extends Controller {
       if (code && this.editor) {
         this.editor.setValue(code)
         // persistence_controller と同じキーを使用
-        localStorage.setItem("rubpad_code", code)
+        localStorage.setItem("rubpad_content", code)
       }
     } catch (err) {
       console.error("URLからのコード復元に失敗しました:", err)
+    } finally {
+      // 復元成功・失敗に関わらず、URLハッシュをクリアする (Consume-once)
+      // これにより、ユーザーが編集後にリロードしても
+      // LocalStorageの内容 (persistence_controller) が優先されるようになる
+      const urlObj = new URL(window.location.href)
+      urlObj.hash = ""
+      window.history.replaceState({}, "", urlObj.toString())
     }
   }
 
