@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 const WASM_API_URL = "https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@2.8.1/dist/browser/+esm"
-const RUBY_WASM_URL = "https://cdn.jsdelivr.net/npm/@ruby/4.0-wasm-wasi/dist/ruby+stdlib.wasm"
+const RUBY_WASM_URL = "https://cdn.jsdelivr.net/npm/@ruby/3.4-wasm-wasi@2.8.1/dist/ruby+stdlib.wasm"
 
 export default class extends Controller {
   static targets = ["output"]

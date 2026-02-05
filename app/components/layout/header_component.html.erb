@@ -41,6 +41,42 @@
 
     <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
 
+    <!-- Examples Dropdown -->
+    <div class="relative" data-controller="examples">
+      <button
+        class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+        data-action="click->examples#toggle"
+        title="サンプルコード"
+      >
+        <%= inline_svg_tag "icons/code.svg", class: "w-4 h-4" %>
+        <span>Examples</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 text-slate-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <!-- Dropdown Menu -->
+      <div
+        class="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#1C2128] rounded-md shadow-lg border border-slate-200 dark:border-white/10 py-1 hidden z-50 transform origin-top-right transition-all duration-100 ease-out"
+        data-examples-target="menu"
+      >
+        <button class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5" data-action="click->examples#load" data-key="hello">
+          Hello World
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5" data-action="click->examples#load" data-key="fizzbuzz">
+          FizzBuzz
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5" data-action="click->examples#load" data-key="fibonacci">
+          Fibonacci
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5" data-action="click->examples#load" data-key="primes">
+          Prime Numbers
+        </button>
+      </div>
+    </div>
+
+    <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
+
     <button
       class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10"
       data-controller="share"
