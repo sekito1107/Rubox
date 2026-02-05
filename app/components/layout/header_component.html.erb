@@ -30,12 +30,13 @@
     <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
 
     <button
-      class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors"
+      class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10"
       title="コードを保存"
       data-controller="download"
       data-action="click->download#download"
     >
       <%= inline_svg_tag "icons/download.svg", class: "w-4 h-4" %>
+      <span>Download</span>
     </button>
 
     <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
