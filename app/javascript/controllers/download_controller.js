@@ -27,7 +27,7 @@ export default class extends Controller {
     if (window.showSaveFilePicker) {
       try {
         const handle = await window.showSaveFilePicker({
-          suggestedName: 'main.rb',
+          suggestedName: 'rubpad.rb',
           types: [{
             description: 'Ruby Script',
             accept: { 'text/x-ruby': ['.rb'] },
@@ -50,7 +50,7 @@ export default class extends Controller {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "main.rb"
+    a.download = "rubpad.rb"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
