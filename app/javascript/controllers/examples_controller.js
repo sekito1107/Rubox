@@ -1,9 +1,28 @@
 import { Controller } from "@hotwired/stimulus"
 
 const EXAMPLES = {
-  hello: `# Hello World
-puts "Hello, RubPad!"
+  hello: `# Debug Info
 puts "Ruby Version: #{RUBY_VERSION}"
+puts "\n$LOAD_PATH:"
+puts $LOAD_PATH
+
+puts "\nChecking prime.rb:"
+found = false
+$LOAD_PATH.each do |path|
+  file = File.join(path, "prime.rb")
+  if File.exist?(file)
+    puts "Found: #{file}"
+    found = true
+  end
+end
+puts "Not found in any path" unless found
+
+begin
+  require 'prime'
+  puts "\nSuccessfully required 'prime'"
+rescue LoadError => e
+  puts "\nError: #{e.message}"
+end
 `,
   fizzbuzz: `# FizzBuzz
 (1..20).each do |i|
