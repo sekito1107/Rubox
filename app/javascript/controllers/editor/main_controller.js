@@ -4,6 +4,9 @@ export default class extends Controller {
   static targets = ["container"]
 
   async connect() {
+    this.boundHandleSettingsUpdate = this.handleSettingsUpdate.bind(this)
+    window.addEventListener("settings:updated", this.boundHandleSettingsUpdate)
+
     try {
       await this.loadEditor()
       this.initEditor()
@@ -14,6 +17,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    window.removeEventListener("settings:updated", this.boundHandleSettingsUpdate)
+
     if (this.editor) {
       this.editor.dispose()
     }
@@ -26,35 +31,36 @@ export default class extends Controller {
     if (window.monaco) return
 
     const LOADER_ID = "editor-loader"
-    if (document.getElementById(LOADER_ID)) {
-      await this.waitForMonaco()
-      return
+    if (!document.getElementById(LOADER_ID)) {
+      const LOADER_URL = "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js"
+      await this.loadScript(LOADER_URL, LOADER_ID)
     }
 
-    const LOADER_URL = "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js"
-    await this.injectScript(LOADER_URL, LOADER_ID)
-    await this.configureAndLoadModule()
+    await this.waitForMonaco()
+    await this.configureMonaco()
   }
 
-  injectScript(src, id) {
+  loadScript(src, id) {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script")
       script.id = id
       script.src = src
-      script.onload = () => resolve()
+      script.onload = resolve
       script.onerror = reject
       document.head.appendChild(script)
     })
   }
 
-  configureAndLoadModule() {
+  configureMonaco() {
     return new Promise((resolve) => {
       require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } })
-      require(['vs/editor/editor.main'], () => resolve())
+      require(['vs/editor/editor.main'], resolve)
     })
   }
 
   waitForMonaco() {
+    if (window.monaco) return Promise.resolve()
+    
     return new Promise((resolve) => {
       const check = setInterval(() => {
         if (window.monaco) {
@@ -66,6 +72,8 @@ export default class extends Controller {
   }
 
   initEditor() {
+    const savedSettings = JSON.parse(localStorage.getItem("rubpad_settings") || "{}")
+
     this.editor = monaco.editor.create(this.containerTarget, {
       value: [
         "# Welcome to RubPad!",
@@ -85,8 +93,13 @@ export default class extends Controller {
       language: "ruby",
       theme: this.currentTheme,
       automaticLayout: true,
-      minimap: { enabled: false },
-      fontSize: 14,
+      minimap: savedSettings.minimap || { enabled: false },
+      fontSize: parseInt(savedSettings.fontSize || 14),
+      tabSize: parseInt(savedSettings.tabSize || 2),
+      wordWrap: savedSettings.wordWrap || 'off',
+      autoClosingBrackets: savedSettings.autoClosingBrackets || 'always',
+      mouseWheelZoom: savedSettings.mouseWheelZoom || false,
+      renderWhitespace: savedSettings.renderWhitespace || 'none',
       scrollBeyondLastLine: false,
       renderLineHighlight: "all",
       fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace"
@@ -116,5 +129,20 @@ export default class extends Controller {
   get currentTheme() {
     const isDark = document.documentElement.classList.contains("dark")
     return isDark ? "vs-dark" : "vs"
+  }
+
+  handleSettingsUpdate(event) {
+    if (!this.editor) return
+    const s = event.detail.settings
+    
+    this.editor.updateOptions({
+      fontSize: parseInt(s.fontSize),
+      tabSize: parseInt(s.tabSize),
+      wordWrap: s.wordWrap,
+      autoClosingBrackets: s.autoClosingBrackets,
+      minimap: s.minimap,
+      mouseWheelZoom: s.mouseWheelZoom,
+      renderWhitespace: s.renderWhitespace
+    })
   }
 }
