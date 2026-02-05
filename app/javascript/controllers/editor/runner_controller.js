@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 const WASM_API_URL = "https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@2.8.1/dist/browser/+esm"
-const RUBY_WASM_URL = "https://cdn.jsdelivr.net/npm/@ruby/3.3-wasm-wasi@2.8.1/dist/ruby+stdlib.wasm"
+const RUBY_WASM_URL = "https://cdn.jsdelivr.net/npm/@ruby/4.0-wasm-wasi/dist/ruby+stdlib.wasm"
 
 export default class extends Controller {
   static targets = ["output"]
@@ -33,6 +33,7 @@ export default class extends Controller {
       if (window.__rubyVM) {
         this.vm = window.__rubyVM
         this.updateOutput("// Ruby WASM ready! Click Run to execute code.")
+        this.broadcastVersion()
         return
       }
 
@@ -43,6 +44,11 @@ export default class extends Controller {
       
       // WASM モジュールの取得とコンパイル
       const response = await fetch(RUBY_WASM_URL)
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch WASM: ${response.statusText} (${RUBY_WASM_URL})`)
+      }
+
       const module = await WebAssembly.compileStreaming(response)
       
       // VM の初期化
@@ -53,9 +59,23 @@ export default class extends Controller {
       window.__rubyVM = vm
       
       this.updateOutput("// Ruby WASM ready! Click Run to execute code.")
+      this.broadcastVersion()
     } catch (error) {
       console.error("Ruby VM の初期化に失敗しました:", error)
       this.updateOutput(`// Error: Failed to initialize Ruby VM: ${error.message}`)
+    }
+  }
+
+  broadcastVersion() {
+    if (!this.vm) return
+    try {
+      const version = this.vm.eval("RUBY_VERSION").toString()
+      const event = new CustomEvent("editor--runner:version-loaded", {
+        detail: { version: `Ruby ${version}` }
+      })
+      window.dispatchEvent(event)
+    } catch (e) {
+      console.error("Ruby バージョンの取得に失敗:", e)
     }
   }
 

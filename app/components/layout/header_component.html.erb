@@ -1,12 +1,12 @@
-<header class="h-14 border-b border-slate-200 dark:border-white/5 bg-white dark:bg-[#0D1117] flex items-center justify-between px-4 shrink-0 transition-colors">
+<header class="h-14 border-b border-slate-200 dark:border-white/5 bg-white dark:bg-[#0D1117] flex items-center justify-between px-4 shrink-0 transition-colors" data-controller="header">
   <div class="flex items-center gap-3">
     <div class="flex items-center gap-2">
       <%= inline_svg_tag "icons/ruby.svg", class: "w-6 h-6" %>
       <span class="text-lg font-logo font-bold text-slate-800 dark:text-gray-100 tracking-tight">
         RubPad
       </span>
-      <span class="ml-1 text-[10px] font-medium text-slate-500">
-        v1.0 (MVP)
+      <span class="ml-1 text-[10px] font-medium text-slate-500" data-header-target="version">
+        Running...
       </span>
     </div>
   </div>
