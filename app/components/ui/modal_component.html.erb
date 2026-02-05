@@ -1,0 +1,25 @@
+<dialog 
+  id="<%= @id %>"
+  class="backdrop:bg-gray-900/50 open:animate-fade-in open:backdrop:animate-fade-in p-0 rounded-lg shadow-xl bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 w-full max-w-lg text-slate-800 dark:text-gray-200" 
+  data-controller="modal" 
+  data-action="click->modal#clickOutside"
+>
+  <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/10">
+    <h3 class="text-lg font-semibold"><%= @title %></h3>
+    <form method="dialog">
+      <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+        <%= inline_svg_tag "icons/x.svg", class: "w-5 h-5" %>
+      </button>
+    </form>
+  </div>
+  
+  <div class="p-6">
+    <%= body %>
+  </div>
+
+  <% if footer? %>
+    <div class="px-6 py-4 bg-slate-50 dark:bg-white/5 border-t border-slate-200 dark:border-white/10 flex justify-end gap-2">
+      <%= footer %>
+    </div>
+  <% end %>
+</dialog>
