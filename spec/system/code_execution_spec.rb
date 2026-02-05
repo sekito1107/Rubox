@@ -4,7 +4,12 @@ require "rails_helper"
 
 RSpec.describe "Code Execution", type: :system do
   before do
-    driven_by(:selenium_chrome_headless)
+    driven_by(:selenium_chrome_headless) do |options|
+      options.add_argument("--no-sandbox")
+      options.add_argument("--disable-dev-shm-usage")
+      options.add_argument("--disable-gpu")
+      options.add_argument("--window-size=1400,1400")
+    end
   end
 
   it "Rubyコードを実行して結果を表示する" do

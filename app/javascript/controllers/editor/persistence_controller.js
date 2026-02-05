@@ -22,6 +22,9 @@ export default class extends Controller {
   }
 
   loadContent() {
+    // URLハッシュがある場合は share_controller に任せるためスキップ
+    if (window.location.hash.startsWith("#code=")) return
+    
     const savedContent = localStorage.getItem("rubpad_content")
     if (savedContent) {
       this.editor.setValue(savedContent)

@@ -10,17 +10,32 @@ export default class extends Controller {
     this.editor = null
     this.vm = null
     
-    // エディタの初期化を監視
-    document.addEventListener("editor--main:initialized", (e) => {
-      this.editor = e.detail.editor
-    })
+    // エディタの初期化を監視 (bindして保持することでdisconnect時に解除可能にする)
+    this.boundHandleEditorInit = this.handleEditorInit.bind(this)
+    document.addEventListener("editor--main:initialized", this.boundHandleEditorInit)
     
     // バックグラウンドで Ruby VM を初期化
     this.initializeVM()
   }
 
+  disconnect() {
+    // イベントリスナーを解除してメモリリークを防ぐ
+    document.removeEventListener("editor--main:initialized", this.boundHandleEditorInit)
+  }
+
+  handleEditorInit(event) {
+    this.editor = event.detail.editor
+  }
+
   async initializeVM() {
     try {
+      // 既にグローバルにVMがキャッシュされていれば再利用
+      if (window.__rubyVM) {
+        this.vm = window.__rubyVM
+        this.updateOutput("// Ruby WASM ready! Click Run to execute code.")
+        return
+      }
+
       this.updateOutput("// Ruby WASM initializing...")
       
       // Ruby WASM API を動的インポート (ESM版)
@@ -33,6 +48,9 @@ export default class extends Controller {
       // VM の初期化
       const { vm } = await DefaultRubyVM(module)
       this.vm = vm
+      
+      // グローバルにキャッシュ (同一セッション内での再利用のため)
+      window.__rubyVM = vm
       
       this.updateOutput("// Ruby WASM ready! Click Run to execute code.")
     } catch (error) {
