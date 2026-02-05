@@ -6,9 +6,9 @@ puts "Ruby Version: #{RUBY_VERSION}"
 puts "\n$LOAD_PATH:"
 puts $LOAD_PATH
 
-puts "\nChecking /usr/local/lib/ruby/4.0.0:"
+puts "\nChecking /usr/local/lib/ruby/3.3.0:"
 begin
-  entries = Dir.entries("/usr/local/lib/ruby/4.0.0")
+  entries = Dir.entries("/usr/local/lib/ruby/3.3.0")
   puts "Entries found: #{entries.size}"
   puts entries.first(20).join(", ")
   
