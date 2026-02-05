@@ -1,32 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
 const EXAMPLES = {
-  hello: `# Debug Info
+  hello: `# Hello World
+puts "Hello, RubPad!"
 puts "Ruby Version: #{RUBY_VERSION}"
-puts "\n$LOAD_PATH:"
-puts $LOAD_PATH
-
-puts "\nChecking /usr/local/lib/ruby/3.3.0:"
-begin
-  entries = Dir.entries("/usr/local/lib/ruby/3.3.0")
-  puts "Entries found: #{entries.size}"
-  puts entries.first(20).join(", ")
-  
-  if entries.include?("prime.rb")
-    puts "prime.rb exists in directory!"
-  else
-    puts "prime.rb NOT found in directory."
-  end
-rescue => e
-  puts "Error listing dir: #{e.message}"
-end
-
-begin
-  require 'prime'
-  puts "\nSuccessfully required 'prime'"
-rescue LoadError => e
-  puts "\nError: #{e.message}"
-end
 `,
   fizzbuzz: `# FizzBuzz
 (1..20).each do |i|
