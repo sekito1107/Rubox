@@ -100,6 +100,9 @@ export default class extends Controller {
     if (window.rubyLSP === this.lspClient) {
       delete window.rubyLSP
     }
+    if (window.rubpadLSPInteractor === this.interactor) {
+      delete window.rubpadLSPInteractor
+    }
   }
 
   handleEditorInitialized(event) {
@@ -112,6 +115,10 @@ export default class extends Controller {
     if (this.lspClient && this.editor && !this.interactor && window.__rubyVMReady) {
       this.interactor = new LSPInteractor(this.lspClient, this.editor)
       this.interactor.activate()
+      window.rubpadLSPInteractor = this.interactor
+      
+      // Notify other controllers that LSP is ready
+      window.dispatchEvent(new CustomEvent("rubpad:lsp-ready"))
     }
   }
 

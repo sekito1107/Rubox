@@ -49,14 +49,14 @@ RSpec.describe "Share Feature", type: :system do
     # モックからコピーされたURLを取得
     shared_url = page.evaluate_script("window.__lastCopiedText")
     expect(shared_url).to include("#code=")
-    
+
     # ----------------------------------------------------------------
     # 2. ページ遷移と復元 (Restore)
     # ----------------------------------------------------------------
-    
+
     # 一度 about:blank に遷移して状態をリセット
     visit "about:blank"
-    
+
     # 生成された共有URLにアクセス
     visit shared_url
 

@@ -12,10 +12,10 @@ RSpec.describe 'Version Display', type: :system do
 
   it 'displays Ruby version in header' do
     visit root_path
-    
+
     # 初期表示 (Loading state)
     expect(page).to have_content('Running...')
-    
+
     # WASMロード後の表示 (Dynamic update)
     # Ruby 4.0 系を期待しているが、パッケージの実態によるので "Ruby" で始まることを確認
     expect(page).to have_content(/^Ruby \d+\.\d+\.\d+/, wait: 60)

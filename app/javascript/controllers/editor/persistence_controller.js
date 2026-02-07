@@ -1,6 +1,4 @@
 import { Controller } from "@hotwired/stimulus"
-// Use lodash.debounce if available, or a simple implementation
-// Since we don't have lodash pinned yet, simple debounce implementation here
 
 export default class extends Controller {
   connect() {
@@ -33,7 +31,6 @@ export default class extends Controller {
 
   saveContent(content) {
     localStorage.setItem("rubpad_content", content)
-    // console.log("Content saved to localStorage")
   }
 
   debounce(func, wait) {

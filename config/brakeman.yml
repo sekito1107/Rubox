@@ -1,0 +1,2 @@
+skip_files:
+  - public/js/bootstrap.rb

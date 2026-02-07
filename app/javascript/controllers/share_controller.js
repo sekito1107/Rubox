@@ -40,9 +40,9 @@ export default class extends Controller {
       window.history.replaceState({}, "", newUrl.toString())
 
       await navigator.clipboard.writeText(newUrl.toString())
-      
+
       this.dispatchToast("URL copied to clipboard!", "success")
-      
+
     } catch (err) {
       console.error("共有処理でエラーが発生しました:", err)
       this.dispatchToast("Failed to copy URL", "error")
@@ -66,9 +66,9 @@ export default class extends Controller {
     } catch (err) {
       console.error("URLからのコード復元に失敗しました:", err)
     } finally {
-      // 復元成功・失敗に関わらず、URLハッシュをクリアする (Consume-once)
+      // 復元成功・失敗に関わらず、URLハッシュをクリアする
       // これにより、ユーザーが編集後にリロードしても
-      // LocalStorageの内容 (persistence_controller) が優先されるようになる
+      // LocalStorageの内容が優先されるようになる
       const urlObj = new URL(window.location.href)
       urlObj.hash = ""
       window.history.replaceState({}, "", urlObj.toString())

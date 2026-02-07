@@ -31,7 +31,6 @@ export default class extends Controller {
     }
 
     this.updateUI()
-    // 初回ロード時も適用イベントを発行する（エディタ初期化タイミング待ち受ける側で処理するため不要かもしれないが、念のため）
     this.applySettings()
   }
 
