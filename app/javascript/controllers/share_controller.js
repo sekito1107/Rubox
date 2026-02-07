@@ -40,9 +40,9 @@ export default class extends Controller {
       window.history.replaceState({}, "", newUrl.toString())
 
       await navigator.clipboard.writeText(newUrl.toString())
-      
+
       this.dispatchToast("URL copied to clipboard!", "success")
-      
+
     } catch (err) {
       console.error("共有処理でエラーが発生しました:", err)
       this.dispatchToast("Failed to copy URL", "error")
