@@ -47,7 +47,7 @@ export class RuremaUtils {
 
   /**
    * 検索用URLを生成する
-   * @param {string} query 
+   * @param {string} query
    * @returns {string}
    */
   static generateSearchUrl(query) {

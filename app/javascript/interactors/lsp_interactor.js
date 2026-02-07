@@ -25,12 +25,12 @@ export class LSPInteractor {
   activate() {
     this.registerProviders()
     this.startDiagnostics()
-    
+
     // 初期状態を通知 (didOpen)
     // TypeProfは didOpen されたファイルのみを解析対象とする可能性があるため必須
     const content = this.model.getValue()
     const version = this.model.getVersionId()
-    
+
     this.client.sendNotification("textDocument/didOpen", {
       textDocument: {
         uri: "inmemory:///workspace/main.rb",
@@ -41,7 +41,7 @@ export class LSPInteractor {
     })
 
     this.syncDocument()
-    
+
     // Inlay Hintsを強制的に有効化
     this.editor.updateOptions({ inlayHints: { enabled: "on" } })
   }
@@ -55,17 +55,17 @@ export class LSPInteractor {
       onDidChangeInlayHints: this.inlayHintsEmitter.event,
       provideInlayHints: (model, range, token) => {
         const hints = []
-        
+
         // 計測された値をInlay Hintとして表示
         for (const [line, value] of this.measuredValues.entries()) {
           const lineNum = Number(line)
 
           // 範囲外ならスキップ (range.endLineNumber は inclusive)
           if (lineNum < range.startLineNumber || lineNum > range.endLineNumber) continue
-          
+
           // 行の末尾に表示
           const maxCol = model.getLineMaxColumn(lineNum)
-          
+
           hints.push({
             kind: this.monaco.languages.InlayHintKind.Type,
             position: { lineNumber: lineNum, column: maxCol },
@@ -73,7 +73,7 @@ export class LSPInteractor {
             paddingLeft: true
           })
         }
-        
+
         return {
           hints: hints,
           dispose: () => {}
@@ -94,7 +94,7 @@ export class LSPInteractor {
           })
 
           if (!response || !response.contents) return null
-          
+
           // TypeProfからのレスポンス(Markdown)を取得
           let markdownContent = response.contents
           if (typeof markdownContent === "object" && markdownContent.value) {
@@ -148,10 +148,10 @@ export class LSPInteractor {
              const line = params.line
              if (line) {
                this.measuredValues.set(line, result)
-               
+
                // Inlay Hints を更新
                this.inlayHintsEmitter.fire()
-               
+
                // イベント発火で更新されない場合のための強制リフレッシュ (Toggle)
                // Monaco EditorはInlay Hintsの更新を即座に反映しない場合があるため、
                // オプションをトグルすることで再描画を強制する
@@ -336,21 +336,21 @@ export class LSPInteractor {
       // ```
       // または
       // **Type**: `ClassName`
-      
+
       // 単純な実装: Markdown内のコードブロックやバッククォートから型名を探す
       // 例: `String` -> String
-      
+
       // TypeProf 0.30.1 の挙動を確認しつつ、汎用的な抽出を行う
       // 現状のTypeProfは以下のような形式を返すことが多い:
       // ```ruby
       // Integer
       // ```
-      
+
       console.log("[LSP] getTypeAtPosition response:", markdownContent) // Debug
 
       // TypeProfのレスポンス形式 (Markdownコードブロックの場合と、生のシグネチャ文字列の場合がある)
       // 例: "[Integer, Integer, Integer]#collect : -> ::Array[...] | -> ::Enumerator[...]"
-      
+
       let typeName = null
 
       // 1. Markdownコードブロック内のクラス名抽出
@@ -369,7 +369,7 @@ export class LSPInteractor {
             //    およびタプル記法 (例: "[Integer, Integer]")
             const typeMatch = markdownContent.match(/^([A-Z][a-zA-Z0-9_:]*(?:\[.*\])?)$/)
             const tupleMatch = markdownContent.match(/^(\[.*\])$/)
-            
+
             if (typeMatch) {
                 typeName = typeMatch[1]
             } else if (tupleMatch) {
@@ -381,7 +381,7 @@ export class LSPInteractor {
       if (typeName) {
         // 型名の正規化
         typeName = typeName.trim()
-        
+
         // タプル [Type, Type] は Array とみなす
         if (typeName.startsWith("[")) {
           return "Array"
@@ -391,7 +391,7 @@ export class LSPInteractor {
         if (typeName.startsWith("::")) {
           typeName = typeName.substring(2)
         }
-        
+
         // ジェネリクス的な表記があれば除去 (例: Array[Integer] -> Array)
         // TypeProfがどう返すかはバージョンによるが、念のため
         const genericMatch = typeName.match(/^([a-zA-Z0-9_:]+)\[.*\]$/)
@@ -401,7 +401,7 @@ export class LSPInteractor {
 
         return typeName
       }
-      
+
       return null
     } catch (e) {
       console.error("[LSP] getTypeAtPosition error:", e)

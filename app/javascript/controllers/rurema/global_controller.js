@@ -54,7 +54,7 @@ export default class extends Controller {
 
     const code = this.editor.getValue()
     const foundMethods = this.extractMethodsWithPosition(code)
-    
+
     if (foundMethods.length === 0) {
       this.globalListTarget.innerHTML = `
         <div class="text-xs text-slate-500 dark:text-slate-600 text-center py-4">
@@ -65,11 +65,11 @@ export default class extends Controller {
     }
 
     this.globalListTarget.innerHTML = ""
-    
+
     foundMethods.forEach(item => {
       const card = this.createGlobalMethodCard(item)
       this.globalListTarget.appendChild(card)
-      
+
       this.resolveMethodType(item, card)
     })
   }
@@ -80,15 +80,15 @@ export default class extends Controller {
     let match
 
     const lines = code.split("\n")
-    
+
     lines.forEach((lineText, lineIndex) => {
       const lineMethodRegex = /(?:\.|&:[ ]*)([a-zA-Z_][a-zA-Z0-9_]*[!?]?)/g
       while ((match = lineMethodRegex.exec(lineText)) !== null) {
         const methodName = match[1]
-        
+
         // Col calculation: Match start + 1
-        const col = match.index + 1 
-        
+        const col = match.index + 1
+
         if (!seen.has(methodName)) {
              seen.add(methodName)
              methods.push({
@@ -114,7 +114,7 @@ export default class extends Controller {
 
     const offset = item.fullMatch.indexOf(item.name)
     const probeCol = item.col + offset
-    
+
     const type = await window.rubpadLSPInteractor.getTypeAtPosition(item.line, probeCol)
 
     if (type) {
@@ -129,7 +129,7 @@ export default class extends Controller {
     cardNode.querySelector('[data-role="methodName"]').textContent = `.${item.name}`
     const detailsContainer = cardNode.querySelector('[data-role="linksDetails"]')
     const icon = cardNode.querySelector('[data-role="icon"]')
-    
+
     icon.textContent = "?"
     icon.classList.remove("text-blue-600", "dark:text-blue-400")
     icon.classList.add("text-slate-400", "dark:text-slate-500")
@@ -149,12 +149,12 @@ export default class extends Controller {
     if (match) {
         const detailsContainer = cardElement.querySelector('[data-role="linksDetails"]')
         const icon = cardElement.querySelector('[data-role="icon"]')
-        
+
         detailsContainer.innerHTML = ""
         icon.textContent = "<>"
         icon.classList.remove("text-slate-400", "dark:text-slate-500")
         icon.classList.add("text-blue-600", "dark:text-blue-400")
-        
+
         const linkNode = this.createLinkFromSignature(match)
         detailsContainer.appendChild(linkNode)
     }
@@ -166,7 +166,7 @@ export default class extends Controller {
 
     const anchor = node.querySelector("a")
     anchor.href = info.url
-    
+
     node.querySelector('[data-role="className"]').textContent = info.className
     node.querySelector('[data-role="separatorMethod"]').textContent = info.separator + info.methodName
 

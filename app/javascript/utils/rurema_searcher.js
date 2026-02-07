@@ -56,7 +56,7 @@ class RuremaSearcher {
     if (!this.index) return []
 
     const results = []
-    
+
     // インデックス全体を走査して、指定されたクラスのメソッドを探す
     for (const [methodName, candidates] of Object.entries(this.index)) {
       const classMethods = candidates.filter(candidate => {

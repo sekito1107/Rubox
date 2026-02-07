@@ -57,11 +57,11 @@ export default class extends Controller {
     if (!type) {
       const lineContent = this.editor.getModel().getLineContent(position.lineNumber)
       const charBefore = lineContent[position.column - 2]
-      
+
       if (charBefore === ".") {
          // ドット除去によるリトライ
          const tempLine = lineContent.substring(0, position.column - 2) + " " + lineContent.substring(position.column - 1)
-         
+
          const model = this.editor.getModel()
          const fullContent = model.getValue()
          const lines = fullContent.split("\n")
@@ -116,17 +116,17 @@ export default class extends Controller {
     // 検索ボックス
     const searchContainer = document.createElement("div")
     searchContainer.className = "px-2 py-1 border-b border-slate-200 dark:border-white/10"
-    
+
     const searchInput = document.createElement("input")
     searchInput.type = "text"
     searchInput.placeholder = "Filter methods..."
     searchInput.className = "w-full px-2 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded focus:outline-none focus:border-blue-500 text-slate-700 dark:text-slate-300 placeholder-slate-400"
-    
+
     // 検索イベント
     searchInput.addEventListener("input", (e) => {
       const query = e.target.value.toLowerCase()
       const cards = listContainer.querySelectorAll('[data-role="method-card"]')
-      
+
       cards.forEach(card => {
         const methodName = card.getAttribute("data-method-name").toLowerCase()
         if (methodName.includes(query)) {
@@ -139,7 +139,7 @@ export default class extends Controller {
     // Summary click propagation prevention logic handles itself by structure (input sibling to summary)
 
     searchContainer.appendChild(searchInput)
-    
+
     const listContainer = document.createElement("div")
     listContainer.className = "pl-2 pt-2 space-y-1"
 
@@ -150,7 +150,7 @@ export default class extends Controller {
       card.setAttribute("data-method-name", `.${item.methodName}`)
       listContainer.appendChild(card)
     })
-    
+
     container.appendChild(searchContainer)
     container.appendChild(listContainer)
     this.contextualListTarget.appendChild(container)
@@ -183,7 +183,7 @@ export default class extends Controller {
 
     const anchor = node.querySelector("a")
     anchor.href = info.url
-    
+
     node.querySelector('[data-role="className"]').textContent = info.className
     node.querySelector('[data-role="separatorMethod"]').textContent = info.separator + info.methodName
 
