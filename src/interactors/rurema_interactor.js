@@ -21,6 +21,22 @@ export class RuremaInteractor {
   }
 
   /**
+   * 主要なクラスの継承/ミックスイン関係（るりま検索用）
+   */
+  static INHERITANCE_MAP = {
+    "Array": ["Array", "Enumerable", "Object", "Kernel", "BasicObject"],
+    "String": ["String", "Comparable", "Object", "Kernel", "BasicObject"],
+    "Hash": ["Hash", "Enumerable", "Object", "Kernel", "BasicObject"],
+    "Integer": ["Integer", "Numeric", "Comparable", "Object", "Kernel", "BasicObject"],
+    "Float": ["Float", "Numeric", "Comparable", "Object", "Kernel", "BasicObject"],
+    "Symbol": ["Symbol", "Comparable", "Object", "Kernel", "BasicObject"],
+    "Range": ["Range", "Enumerable", "Object", "Kernel", "BasicObject"],
+    "Enumerator": ["Enumerator", "Enumerable", "Object", "Kernel", "BasicObject"],
+    "Module": ["Module", "Object", "Kernel", "BasicObject"],
+    "Class": ["Class", "Module", "Object", "Kernel", "BasicObject"]
+  }
+
+  /**
    * 指定されたクラス名とメソッド名に合致するるりま情報を解決する
    * @param {string} className 
    * @param {string} methodName 
@@ -30,14 +46,22 @@ export class RuremaInteractor {
     const candidates = this.searcher.findMethod(methodName)
     if (!candidates) return null
 
-    // className#methodName または className.methodName に完全一致するものを探す
-    const match = candidates.find(c => c.startsWith(`${className}#`) || c.startsWith(`${className}.`))
-    if (!match) return null
+    // 1. 継承チェーンを取得
+    const chain = RuremaInteractor.INHERITANCE_MAP[className] || [className, "Object", "Kernel", "BasicObject"]
 
-    return {
-      signature: match,
-      ...RuremaUtils.generateUrlInfo(match)
+    // 2. 順にマッチするものを探す（自クラス -> 継承先 -> Object...）
+    for (const ancestor of chain) {
+      const match = candidates.find(c => c.startsWith(`${ancestor}#`) || c.startsWith(`${ancestor}.`))
+      if (match) {
+        // console.log(`[RuremaInteractor] [TRACE] Found match for ${methodName} in ${ancestor}`)
+        return {
+          signature: match,
+          ...RuremaUtils.generateUrlInfo(match)
+        }
+      }
     }
+
+    return null
   }
 
   /**
