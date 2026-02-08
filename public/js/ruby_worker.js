@@ -47,14 +47,44 @@ async function initializeVM(wasmUrl) {
     
     try {
       const module = await WebAssembly.compile(buffer);
-      const result = await DefaultRubyVM(module)
-      vm = result.vm
+      // DefaultRubyVM がスコープ内にあることを確認
+      const ruby = { DefaultRubyVM }; 
+      const result = await ruby.DefaultRubyVM(module);
+      vm = result.vm;
+
+      // RBS標準ライブラリの取得と配置
+      try {
+        const rbsResponse = await fetch('/rbs/ruby-stdlib.rbs');
+        if (rbsResponse.ok) {
+          const buffer = await rbsResponse.arrayBuffer();
+          const bytes = new Uint8Array(buffer);
+          const CHUNK_SIZE = 64 * 1024; // 64KB 単位で分割
+          
+          vm.eval(`Dir.mkdir('/workspace') unless Dir.exist?('/workspace')`);
+          
+          for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+            const chunk = bytes.slice(i, i + CHUNK_SIZE);
+            const hexChunk = Array.from(chunk)
+              .map(b => b.toString(16).padStart(2, '0'))
+              .join('');
+            
+            const mode = (i === 0) ? 'wb' : 'ab';
+            vm.eval(`File.open('/workspace/stdlib.rbs', '${mode}') { |f| f.write(['${hexChunk}'].pack('H*')) }`);
+          }
+        } else {
+          // 失敗時のフォールバックは現状行わない
+        }
+      } catch (e) {
+        // エラー時はコンソールに出力
+        console.error('RBS fetch error:', e);
+      }
+
+      // ブートストラップ実行
     } catch (e) {
       // 失敗した場合の詳細ログ（デバッグ用）
       const firstChars = new Uint8Array(buffer.slice(0, 100));
       const text = new TextDecoder().decode(firstChars);
       const msg = `WASM Compile Error: ${e.message}\nStatus: ${response.status}\nContent-Type: ${response.headers.get('Content-Type')}\nBody start: ${text}`;
-      console.error(msg);
       throw new Error(msg);
     }
 
@@ -68,10 +98,9 @@ async function initializeVM(wasmUrl) {
     // ディレクトリを作成
     vm.eval(`Dir.mkdir("/src") unless Dir.exist?("/src")`)
     
-    // bootstrap.rb の内容を書き込む
-    // JSの文字列をRubyの文字列リテラルとして安全に渡すため、JSON.stringifyを使用する
-    // これにより、エスケープシーケンスなどが正しく処理される
-    vm.eval(`File.write("/src/bootstrap.rb", ${JSON.stringify(bootstrapCode)})`)
+    // bootstrap.rb の内容を書き込む (Rubyのインターポレーション #{...} による事故を避けるためBase64経由で渡す)
+    const bootstrapB64 = btoa(unescape(encodeURIComponent(bootstrapCode)))
+    vm.eval(`File.write("/src/bootstrap.rb", "${bootstrapB64}".unpack1("m"))`)
     
     // LSPからのレスポンスをMain Threadに転送する関数
     self.sendLspResponse = (jsonString) => {
