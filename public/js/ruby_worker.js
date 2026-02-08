@@ -26,7 +26,7 @@ self.onmessage = async (event) => {
          vm.eval(`$server.add_msg(JS.global[:_tmpLspMsg].to_s)`)
          self._tmpLspMsg = null
        } catch (e) {
-         console.error("LSP Error:", e)
+         // failed silently
        }
        break
   }
