@@ -156,13 +156,24 @@ export class LSPInteractor {
     this.client.onNotification("textDocument/publishDiagnostics", (params) => {
       const markers = params.diagnostics
         .filter(diag => {
-          // puts または print に関する overload 解決失敗の誤報をフィルタリング
-          // メッセージは "failed to resolve overload" または "failed to resolve overloads" を含む場合がある
-          const isFalsePositive = (
-            diag.message.toLowerCase().includes("failed to resolve overload") && 
-            (diag.message.includes("puts") || diag.message.includes("print"))
-          );
-          return !isFalsePositive;
+          if (!diag || !diag.message) return true;
+          
+          const msg = String(diag.message);
+          const msgLower = msg.toLowerCase();
+          
+          // puts, print, printf に関するあらゆる解決失敗エラーを遮断する
+          // 正規表現を使用して、複数行や多少のゆれ（overload/overloads）をカバーする
+          const isTargetMethod = /puts|print|printf/.test(msg);
+          const isResolutionError = /failed to resolve overload|::_tos/i.test(msg);
+          
+          // メッセージそのものが "Object#puts" などで始まる場合も除外対象にする
+          const isSignatureHeader = /^(Object|Kernel)#(puts|print)/i.test(msg);
+
+          if (isTargetMethod && (isResolutionError || isSignatureHeader)) {
+            return false; // 除外
+          }
+          
+          return true;
         })
         .map(diag => ({
           severity: this.mapSeverity(diag.severity),
