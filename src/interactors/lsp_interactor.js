@@ -154,6 +154,7 @@ export class LSPInteractor {
    */
   startDiagnostics() {
     this.client.onNotification("textDocument/publishDiagnostics", (params) => {
+      // console.log("[LSP] Received diagnostics:", params);
       const markers = params.diagnostics
         .filter(diag => {
           if (!diag || !diag.message) return true;
@@ -161,15 +162,19 @@ export class LSPInteractor {
           const msg = String(diag.message);
           const msgLower = msg.toLowerCase();
           
-          // puts, print, printf に関するあらゆる解決失敗エラーを遮断する
-          // 正規表現を使用して、複数行や多少のゆれ（overload/overloads）をカバーする
-          const isTargetMethod = /puts|print|printf/.test(msg);
-          const isResolutionError = /failed to resolve overload|::_tos/i.test(msg);
-          
-          // メッセージそのものが "Object#puts" などで始まる場合も除外対象にする
-          const isSignatureHeader = /^(Object|Kernel)#(puts|print)/i.test(msg);
+          // 誤報を構成する可能性のあるパーツを網羅的にチェック (OR条件)
+          const isFalsePositive = (
+            msgLower.includes("failed to resolve overload") ||
+            msgLower.includes("object#puts") ||
+            msgLower.includes("object#print") ||
+            msgLower.includes("kernel#puts") ||
+            msgLower.includes("kernel#print") ||
+            msgLower.includes("::_tos") ||
+            msgLower.includes("*::_tos")
+          );
 
-          if (isTargetMethod && (isResolutionError || isSignatureHeader)) {
+          if (isFalsePositive) {
+            // console.warn("[LSP] Filtering false positive warning:", msg);
             return false; // 除外
           }
           
@@ -182,9 +187,13 @@ export class LSPInteractor {
           endLineNumber: diag.range.end.line + 1,
           endColumn: diag.range.end.character + 1,
           message: diag.message,
-          source: "TypeProf"
+          source: "TypeProf (Filtered)"
         }))
-      monaco.editor.setModelMarkers(this.model, "lsp", markers)
+      
+      const currentModel = this.editor.getModel();
+      if (currentModel) {
+        monaco.editor.setModelMarkers(currentModel, "lsp", markers)
+      }
     })
 
     this.client.onNotification("rubpad/syntaxCheck", (params) => {
