@@ -86,35 +86,6 @@ class Server
     @error = nil
 
     # TypeProfコアの初期化
-    # puts/print における _ToS 解決失敗の誤報を根本から抑制するパッチ
-    # 具体的な警告メッセージ "failed to resolve overload: ...#puts" などを無視するように Scratch#error を拡張する
-    module ::TypeProf
-      class Core
-        class Scratch
-          alias _original_error error
-          def error(ep, msg)
-            # puts, print, printf に関する _ToS (failed to resolve overload) 警告を無視
-            if msg.include?("failed to resolve overload") && (msg.include?("#puts") || msg.include?("#print"))
-              return
-            end
-            _original_error(ep, msg)
-          end
-
-          # conv_type のパッチも念のため残すが、error 抑制が本命
-          class Import
-            alias _original_conv_type conv_type
-            def conv_type(ty)
-              return Type.any if ty.is_a?(Array) && ty == [:instance, ["::_ToS"]]
-              _original_conv_type(ty)
-            end
-          end
-        end
-      end
-    end
-
-    # TypeProf::Core 側の初期化で使われる可能性のある場所をさらにケア
-    # (TypeProf 0.21.2 の場合、Import.import_builtin で JSON から読み込まれる)
-
     rbs_list = File.exist?("/workspace/stdlib.rbs") ? ["/workspace/stdlib.rbs"] : []
     @core = TypeProf::Core::Service.new(rbs_files: rbs_list)
     

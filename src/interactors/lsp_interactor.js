@@ -154,15 +154,25 @@ export class LSPInteractor {
    */
   startDiagnostics() {
     this.client.onNotification("textDocument/publishDiagnostics", (params) => {
-      const markers = params.diagnostics.map(diag => ({
-        severity: this.mapSeverity(diag.severity),
-        startLineNumber: diag.range.start.line + 1,
-        startColumn: diag.range.start.character + 1,
-        endLineNumber: diag.range.end.line + 1,
-        endColumn: diag.range.end.character + 1,
-        message: diag.message,
-        source: "TypeProf"
-      }))
+      const markers = params.diagnostics
+        .filter(diag => {
+          // puts または print に関する overload 解決失敗の誤報をフィルタリング
+          // メッセージは "failed to resolve overload" または "failed to resolve overloads" を含む場合がある
+          const isFalsePositive = (
+            diag.message.toLowerCase().includes("failed to resolve overload") && 
+            (diag.message.includes("puts") || diag.message.includes("print"))
+          );
+          return !isFalsePositive;
+        })
+        .map(diag => ({
+          severity: this.mapSeverity(diag.severity),
+          startLineNumber: diag.range.start.line + 1,
+          startColumn: diag.range.start.character + 1,
+          endLineNumber: diag.range.end.line + 1,
+          endColumn: diag.range.end.character + 1,
+          message: diag.message,
+          source: "TypeProf"
+        }))
       monaco.editor.setModelMarkers(this.model, "lsp", markers)
     })
 
