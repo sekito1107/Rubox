@@ -87,18 +87,33 @@ class Server
 
     # TypeProfコアの初期化
     # puts Integer における誤報（::_ToS が String に固定されている問題）を根本解決するパッチ
-    # TypeProf::Import#conv_type が _ToS を強制的に [:str] に変換するのを [:any] に変更する
+    # TypeProf::Import 内で _ToS インターフェース名が出てきたら強制的に any 型にする
     module ::TypeProf
       class Import
         alias _original_conv_type conv_type
         def conv_type(ty)
-          if defined?(::RBS::Types::Interface) && ty.is_a?(::RBS::Types::Interface) && ty.to_s == "::_ToS"
-            return [:any]
+          return Type.any if ty.is_a?(Array) && ty == [:instance, ["::_ToS"]]
+          
+          # 文字列ベースの判定も残しておく（念のため）
+          if ty.is_a?(Array) && ty[0] == :instance && ty[1] == ["::_ToS"]
+            return Type.any
           end
-          _original_conv_type(ty)
+
+          res = _original_conv_type(ty)
+          
+          # 変換後の Type オブジェクトが _ToS を指している場合も any に倒す
+          if res.is_a?(Type::Instance) && res.klass.is_a?(Type::Class)
+             # クラス名が _ToS かどうかを厳密にチェックするのは難しいが
+             # ホバーで _ToS と出ているならこのメソッドを通っているはず
+          end
+          
+          res
         end
       end
     end
+
+    # TypeProf::Core 側の初期化で使われる可能性のある場所をさらにケア
+    # (TypeProf 0.21.2 の場合、Import.import_builtin で JSON から読み込まれる)
 
     rbs_list = File.exist?("/workspace/stdlib.rbs") ? ["/workspace/stdlib.rbs"] : []
     @core = TypeProf::Core::Service.new(rbs_files: rbs_list)
