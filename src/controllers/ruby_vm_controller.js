@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { LSPClient } from "../lsp/client"
-import { LSPManager } from "../lsp/manager"
+import { LSP } from "../lsp"
 import { Reference } from "../reference"
 import { AnalysisCoordinator } from "../analysis"
 
@@ -94,7 +94,7 @@ export default class extends Controller {
 
   async tryActivateDomains() {
     if (this.lspClient && this.editor && !this.lspManager && window.__rubyVMReady) {
-      this.lspManager = new LSPManager(this.lspClient, this.editor)
+      this.lspManager = new LSP(this.lspClient, this.editor)
       
       try {
         await this.lspManager.initialize()
