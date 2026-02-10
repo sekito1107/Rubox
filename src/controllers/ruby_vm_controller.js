@@ -19,7 +19,7 @@ export default class extends Controller {
 
     // エディタの初期化イベントを監視
     this.boundHandleEditorInitialized = this.handleEditorInitialized.bind(this)
-    window.addEventListener("editor--main:initialized", this.boundHandleEditorInitialized)
+    window.addEventListener("editor:initialized", this.boundHandleEditorInitialized)
     
     if (window.monacoEditor) {
       this.handleEditorInitialized({ detail: { editor: window.monacoEditor } })
@@ -59,7 +59,7 @@ export default class extends Controller {
         case "ready":
             window.__rubyVMReady = true
             delete window.__rubyVMInitializing
-            this.dispatch("version-loaded", { detail: { version: payload.version } })
+            this.dispatch("ready", { detail: { version: payload.version } })
             this.verifyLSP()
             break
         case "error":
@@ -81,7 +81,7 @@ export default class extends Controller {
   }
   
   disconnect() {
-    window.removeEventListener("editor--main:initialized", this.boundHandleEditorInitialized)
+    window.removeEventListener("editor:initialized", this.boundHandleEditorInitialized)
     if (this.worker) this.worker.terminate()
     if (window.rubyLSP === this.lspClient) delete window.rubyLSP
     if (window.rubpadLSPManager === this.lspManager) delete window.rubpadLSPManager

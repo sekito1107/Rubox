@@ -40,7 +40,7 @@ export default class extends Controller {
   connect() {
     this.editor = null
     this.boundHandleEditorInit = this.handleEditorInit.bind(this)
-    document.addEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.addEventListener("editor:initialized", this.boundHandleEditorInit)
     
     // ウィンドウクリックで閉じる処理
     this.boundClose = this.close.bind(this)
@@ -48,7 +48,7 @@ export default class extends Controller {
   }
 
   disconnect() {
-    document.removeEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.removeEventListener("editor:initialized", this.boundHandleEditorInit)
     window.removeEventListener("click", this.boundClose)
   }
 

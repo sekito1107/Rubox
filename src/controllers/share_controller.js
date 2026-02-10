@@ -7,16 +7,17 @@ import { Share } from "persistence/share"
 export default class extends Controller {
   connect() {
     this.editor = null
-    this.shareService = new Share()
+    this.persistence = new Persistence()
+    this.shareService = this.persistence.share
     this.boundHandleEditorInit = (e) => {
       this.editor = e.detail.editor
       this.restoreFromUrl()
     }
-    document.addEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.addEventListener("editor:initialized", this.boundHandleEditorInit)
   }
 
   disconnect() {
-    document.removeEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.removeEventListener("editor:initialized", this.boundHandleEditorInit)
   }
 
   share() {

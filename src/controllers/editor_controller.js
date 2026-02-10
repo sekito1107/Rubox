@@ -1,7 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import * as monaco from 'monaco-editor'
-import { Settings } from "../persistence/settings"
-import { CodePersistence } from "../persistence/code"
+import { Settings, CodePersistence } from "../persistence"
 
 // Import Monaco workers directly for Vite
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
@@ -24,8 +23,9 @@ export default class extends Controller {
   static targets = ["container"]
 
   async connect() {
-    this.settings = new Settings()
-    this.codePersistence = new CodePersistence()
+    this.persistence = new Persistence()
+    this.settings = this.persistence.settings
+    this.codePersistence = this.persistence.code
     this.boundHandleSettingsUpdate = this.handleSettingsUpdate.bind(this)
     window.addEventListener("settings:updated", this.boundHandleSettingsUpdate)
 

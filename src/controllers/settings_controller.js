@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { Settings } from "persistence/settings"
+import { Settings } from "../persistence"
 
 export default class extends Controller {
   static targets = [
@@ -9,7 +9,8 @@ export default class extends Controller {
   ]
 
   connect() {
-    this.settingsStore = new Settings()
+    this.persistence = new Persistence()
+    this.settingsStore = this.persistence.settings
     this.loadSettings()
   }
 
