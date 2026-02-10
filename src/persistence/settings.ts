@@ -2,7 +2,8 @@
  * エディタ設定等の LocalStorage への保存と復元を担当する
  */
 export class Settings {
-  static STORAGE_KEY = "rubpad_settings"
+  static readonly STORAGE_KEY = "rubpad_settings"
+  private data: Record<string, any>
 
   constructor() {
     this.data = this._load()
@@ -11,19 +12,19 @@ export class Settings {
   /**
    * 全ての設定を取得
    */
-  getAll() {
+  getAll(): Record<string, any> {
     return this.data
   }
 
   /**
    * 特定のキーの設定を更新
    */
-  update(key, value) {
+  update(key: string, value: any): void {
     this.data[key] = value
     this._save()
   }
 
-  _load() {
+  private _load(): Record<string, any> {
     try {
       const stored = localStorage.getItem(Settings.STORAGE_KEY)
       return stored ? JSON.parse(stored) : {}
@@ -33,7 +34,7 @@ export class Settings {
     }
   }
 
-  _save() {
+  private _save(): void {
     localStorage.setItem(Settings.STORAGE_KEY, JSON.stringify(this.data))
   }
 }
