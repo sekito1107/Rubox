@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Share } from '../../../src/persistence/share'
 
 describe('Share', () => {
-  let share
+  let share: Share
 
   beforeEach(() => {
     share = new Share()
