@@ -15,7 +15,7 @@ export class Share {
       .replace(/=+$/, "")
     
     const url = new URL(window.location.href)
-    url.hash = base64
+    url.hash = `code=${base64}`
     return url.toString()
   }
 
@@ -25,7 +25,9 @@ export class Share {
   decompress(hash) {
     if (!hash) return null
     try {
-      const base64 = hash.replace(/-/g, "+").replace(/_/g, "/")
+      // Remove 'code=' prefix if exists
+      const cleanHash = hash.replace(/^#?code=/, "")
+      const base64 = cleanHash.replace(/-/g, "+").replace(/_/g, "/")
       const binary = atob(base64)
       const bytes = new Uint8Array(binary.length)
       for (let i = 0; i < binary.length; i++) {

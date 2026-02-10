@@ -1,6 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 import * as monaco from 'monaco-editor'
 import { Settings } from "persistence/settings"
+import { CodePersistence } from "persistence/code"
 
 // Import Monaco workers directly for Vite
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
@@ -24,6 +25,7 @@ export default class extends Controller {
 
   async connect() {
     this.settings = new Settings()
+    this.codePersistence = new CodePersistence()
     this.boundHandleSettingsUpdate = this.handleSettingsUpdate.bind(this)
     window.addEventListener("settings:updated", this.boundHandleSettingsUpdate)
 
@@ -39,13 +41,15 @@ export default class extends Controller {
     window.removeEventListener("settings:updated", this.boundHandleSettingsUpdate)
     if (this.editor) this.editor.dispose()
     if (this.observer) this.observer.disconnect()
+    if (this.saveTimer) clearTimeout(this.saveTimer)
   }
 
   initEditor() {
-    const saved = this.settings.getAll()
+    const savedSettings = this.settings.getAll()
+    const savedCode = this.codePersistence.load()
 
     this.editor = monaco.editor.create(this.containerTarget, {
-      value: [
+      value: savedCode || [
         "# Welcome to RubPad!",
         "# Type code here and see Rurima links appear on the right.",
         "",
@@ -63,19 +67,27 @@ export default class extends Controller {
       language: "ruby",
       theme: this.currentTheme,
       automaticLayout: true,
-      minimap: saved.minimap || { enabled: false },
-      fontSize: parseInt(saved.fontSize || 14),
-      tabSize: parseInt(saved.tabSize || 2),
-      wordWrap: saved.wordWrap || 'off',
-      autoClosingBrackets: saved.autoClosingBrackets || 'always',
-      mouseWheelZoom: saved.mouseWheelZoom || false,
-      renderWhitespace: saved.renderWhitespace || 'none',
+      minimap: savedSettings.minimap || { enabled: false },
+      fontSize: parseInt(savedSettings.fontSize || 14),
+      tabSize: parseInt(savedSettings.tabSize || 2),
+      wordWrap: savedSettings.wordWrap || 'off',
+      autoClosingBrackets: savedSettings.autoClosingBrackets || 'always',
+      mouseWheelZoom: savedSettings.mouseWheelZoom || false,
+      renderWhitespace: savedSettings.renderWhitespace || 'none',
       scrollBeyondLastLine: false,
       renderLineHighlight: "all",
       fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace"
     })
 
     window.monacoEditor = this.editor
+
+    // コードの永続化
+    this.editor.onDidChangeModelContent(() => {
+      if (this.saveTimer) clearTimeout(this.saveTimer)
+      this.saveTimer = setTimeout(() => {
+        this.codePersistence.save(this.editor.getValue())
+      }, 1000)
+    })
 
     this.observer = new MutationObserver(() => this.updateTheme())
     this.observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
