@@ -1,7 +1,7 @@
-import { Scanner } from "./scanner"
-import { Tracker } from "./tracker"
-import { Resolver } from "./resolver"
-import { AnalysisStore } from "./store"
+import { Scanner } from "./analysis/scanner"
+import { Tracker } from "./analysis/tracker"
+import { Resolver } from "./analysis/resolver"
+import { AnalysisStore } from "./analysis/store"
 
 /**
  * コード解析ドメインを統括する Coordinator

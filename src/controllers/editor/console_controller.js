@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { Executor } from "runtime/executor"
+import { Runtime } from "../../runtime"
 
 export default class extends Controller {
   static targets = ["output"]
@@ -10,7 +10,7 @@ export default class extends Controller {
     
     // エディタの初期化を監視する
     this.boundHandleEditorInit = this.handleEditorInit.bind(this)
-    document.addEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.addEventListener("editor:initialized", this.boundHandleEditorInit)
     
     // Ruby VMイベントを監視する
     this.element.addEventListener("ruby-vm:output", this.handleRubyOutput.bind(this))
@@ -18,7 +18,7 @@ export default class extends Controller {
   }
 
   disconnect() {
-    document.removeEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.removeEventListener("editor:initialized", this.boundHandleEditorInit)
   }
 
   handleEditorInit(event) {
@@ -37,7 +37,8 @@ export default class extends Controller {
     if (!this.runner) {
       const vmController = this.application.getControllerForElementAndIdentifier(this.element, "ruby-vm")
       if (vmController) {
-        this.runner = new Executor(vmController)
+        this.runtime = new Runtime(vmController)
+        this.runner = this.runtime // executor の実体
       }
     }
 

@@ -32,7 +32,6 @@
     "vite": "^7.3.1"
   },
   "dependencies": {
-    "@hotwired/stimulus": "^3.2.2",
     "monaco-editor": "^0.55.1",
     "pako": "^2.1.0"
   }

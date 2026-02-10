@@ -1,15 +1,15 @@
-import { SyncDocument } from "./sync_document"
-import { HandleDiagnostics } from "./handle_diagnostics"
-import { ProvideHover } from "./provide_hover"
-import { ProvideInlayHints } from "./provide_inlay_hints"
-import { ExecuteCommand } from "./execute_command"
-import { ResolveType } from "./resolve_type"
-import { BootLSP } from "./boot_lsp"
+import { SyncDocument } from "./lsp/sync"
+import { HandleDiagnostics } from "./lsp/diagnostics"
+import { ProvideHover } from "./lsp/hover"
+import { ProvideInlayHints } from "./lsp/inlay_hints"
+import { ExecuteCommand } from "./lsp/execute_command"
+import { ResolveType } from "./lsp/resolve_type"
+import { BootLSP } from "./lsp/boot_lsp"
 
 /**
- * LSP ドメインの機能を統括し、外部へのインターフェースを提供する Manager
+ * LSP ドメインの機能を統括し、エディタへの接続・同期を管理するクラス
  */
-export class LSPManager {
+export class LSP {
   constructor(client, editor) {
     this.client = client
     this.editor = editor

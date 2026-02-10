@@ -144,6 +144,7 @@ export default class extends Controller {
 
       const searchNode = this.searchTemplateTarget.content.cloneNode(true)
       searchNode.querySelector("a").href = `https://docs.ruby-lang.org/ja/latest/search/query:${encodeURIComponent(item.name)}`
+      searchNode.querySelector("span").textContent = "Search in Reference"
       detailsContainer.appendChild(searchNode)
     }
   }

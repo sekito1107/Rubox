@@ -32,13 +32,11 @@
     <main class="flex flex-col h-full w-full">
 
       <!-- Layout::MainComponent -->
-      <div class="flex flex-col h-full bg-white dark:bg-[#0D1117] transition-colors"
-        data-controller="editor--console ruby-vm">
+      <div class="flex flex-col h-full bg-white dark:bg-[#0D1117] transition-colors">
 
         <!-- Layout::HeaderComponent -->
         <header
-          class="h-14 border-b border-slate-200 dark:border-white/5 bg-white dark:bg-[#0D1117] flex items-center justify-between px-4 shrink-0 transition-colors"
-          data-controller="header">
+          class="h-14 border-b border-slate-200 dark:border-white/5 bg-white dark:bg-[#0D1117] flex items-center justify-between px-4 shrink-0 transition-colors">
           <div class="flex items-center gap-3">
             <div class="flex items-center gap-2">
               <!-- icons/ruby.svg -->
@@ -53,7 +51,7 @@
               <span class="text-lg font-logo font-bold text-slate-800 dark:text-gray-100 tracking-tight">
                 RubPad
               </span>
-              <span class="ml-1 text-[10px] font-medium text-slate-500" data-header-target="version">
+              <span id="ruby-version" class="ml-1 text-[10px] font-medium text-slate-500">
                 Running...
               </span>
             </div>
@@ -62,7 +60,7 @@
           <div class="flex items-center gap-3">
             <button id="theme-toggle"
               class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors"
-              title="テーマ切り替え" data-controller="theme" data-action="click->theme#toggle">
+              title="テーマ切り替え">
               <span class="dark:hidden">
                 <!-- icons/moon.svg -->
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -116,9 +114,9 @@
 
             <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
 
-            <button
+            <button id="download-button"
               class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10"
-              title="コードを保存" data-controller="download" data-action="click->download#download">
+              title="コードを保存">
               <!-- icons/download.svg -->
               <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor">
@@ -131,10 +129,10 @@
             <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
 
             <!-- Examples Dropdown -->
-            <div class="relative" data-controller="examples">
-              <button
+            <div class="relative">
+              <button id="examples-button"
                 class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10"
-                data-action="click->examples#toggle" title="サンプルコード">
+                title="サンプルコード">
                 <!-- icons/code.svg -->
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                   stroke-width="1.5" stroke="currentColor">
@@ -149,27 +147,26 @@
               </button>
 
               <!-- Dropdown Menu -->
-              <div
-                class="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#1C2128] rounded-md shadow-lg border border-slate-200 dark:border-white/10 py-1 hidden z-50 transform origin-top-right transition-all duration-100 ease-out"
-                data-examples-target="menu">
+              <div id="examples-menu"
+                class="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#1C2128] rounded-md shadow-lg border border-slate-200 dark:border-white/10 py-1 hidden z-50 transform origin-top-right transition-all duration-100 ease-out">
                 <button
                   class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                  data-action="click->examples#load" data-key="hello">
+                  data-key="hello">
                   Hello World
                 </button>
                 <button
                   class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                  data-action="click->examples#load" data-key="fizzbuzz">
+                  data-key="fizzbuzz">
                   FizzBuzz
                 </button>
                 <button
                   class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                  data-action="click->examples#load" data-key="fibonacci">
+                  data-key="fibonacci">
                   Fibonacci
                 </button>
                 <button
                   class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                  data-action="click->examples#load" data-key="primes">
+                  data-key="primes">
                   Prime Numbers
                 </button>
               </div>
@@ -177,9 +174,8 @@
 
             <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
 
-            <button
-              class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10"
-              data-controller="share" data-action="click->share#share">
+            <button id="share-button"
+              class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10">
               <!-- icons/share.svg -->
               <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -192,9 +188,8 @@
               <span>Share</span>
             </button>
 
-            <button
-              class="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 dark:bg-red-600/90 dark:hover:bg-red-600 rounded-md transition-colors shadow-sm dark:shadow-red-900/20"
-              data-action="click->editor--console#run">
+            <button id="run-button"
+              class="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 dark:bg-red-600/90 dark:hover:bg-red-600 rounded-md transition-colors shadow-sm dark:shadow-red-900/20">
               <!-- icons/play.svg -->
               <svg class="w-3 h-3 fill-current" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -224,13 +219,13 @@
           </div>
 
           <div class="px-6 py-4">
-            <div class="space-y-6" data-controller="settings">
+            <div class="space-y-6">
               <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1">
                   <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Font Size</label>
                   <select
                     class="form-select w-full text-sm rounded-md border-slate-300 dark:border-white/10 dark:bg-slate-800 dark:text-white focus:border-blue-500 focus:ring-blue-500"
-                    data-settings-target="fontSize" data-action="change->settings#save">
+                    data-setting="fontSize">
                     <option value="12">12px</option>
                     <option value="14">14px</option>
                     <option value="16">16px</option>
@@ -242,7 +237,7 @@
                   <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Indent Size</label>
                   <select
                     class="form-select w-full text-sm rounded-md border-slate-300 dark:border-white/10 dark:bg-slate-800 dark:text-white focus:border-blue-500 focus:ring-blue-500"
-                    data-settings-target="tabSize" data-action="change->settings#save">
+                    data-setting="tabSize">
                     <option value="2">2 spaces</option>
                     <option value="4">4 spaces</option>
                     <option value="8">8 spaces</option>
@@ -255,8 +250,7 @@
                 <div class="flex items-center justify-between">
                   <label class="font-medium text-slate-700 dark:text-slate-200">Word Wrap</label>
                   <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="sr-only peer" data-settings-target="wordWrap"
-                      data-action="change->settings#save">
+                    <input type="checkbox" class="sr-only peer" data-setting="wordWrap">
                     <div
                       class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
                     </div>
@@ -265,8 +259,7 @@
                 <div class="flex items-center justify-between">
                   <label class="font-medium text-slate-700 dark:text-slate-200">Auto Closing Brackets</label>
                   <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="sr-only peer" data-settings-target="autoClosingBrackets"
-                      data-action="change->settings#save">
+                    <input type="checkbox" class="sr-only peer" data-setting="autoClosingBrackets">
                     <div
                       class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
                     </div>
@@ -275,8 +268,7 @@
                 <div class="flex items-center justify-between">
                   <label class="font-medium text-slate-700 dark:text-slate-200">Minimap</label>
                   <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="sr-only peer" data-settings-target="minimap"
-                      data-action="change->settings#save">
+                    <input type="checkbox" class="sr-only peer" data-setting="minimap">
                     <div
                       class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
                     </div>
@@ -285,8 +277,7 @@
                 <div class="flex items-center justify-between">
                   <label class="font-medium text-slate-700 dark:text-slate-200">Mouse Wheel Zoom</label>
                   <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="sr-only peer" data-settings-target="mouseWheelZoom"
-                      data-action="change->settings#save">
+                    <input type="checkbox" class="sr-only peer" data-setting="mouseWheelZoom">
                     <div
                       class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
                     </div>
@@ -295,8 +286,7 @@
                 <div class="flex items-center justify-between">
                   <label class="font-medium text-slate-700 dark:text-slate-200">Render Whitespace</label>
                   <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="sr-only peer" data-settings-target="renderWhitespace"
-                      data-action="change->settings#save">
+                    <input type="checkbox" class="sr-only peer" data-setting="renderWhitespace">
                     <div
                       class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
                     </div>
@@ -390,15 +380,12 @@
         </dialog>
 
         <!-- Ui::ToastComponent -->
-        <div data-controller="toast" data-action="show-toast@window->toast#show"
-          class="fixed top-4 right-4 z-50 transition-all duration-300 transform translate-y-[-100%] opacity-0 pointer-events-none"
-          data-toast-hidden-class="translate-y-[-100%] opacity-0 pointer-events-none"
-          data-toast-visible-class="translate-y-0 opacity-100">
+        <div id="toast-container"
+          class="fixed top-4 right-4 z-50 transition-all duration-300 transform translate-y-[-100%] opacity-0 pointer-events-none">
           <div
-            class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg min-w-[300px] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#161b22] text-slate-800 dark:text-slate-200"
-            data-toast-target="container">
+            class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg min-w-[300px] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#161b22] text-slate-800 dark:text-slate-200">
             <!-- アイコンエリア -->
-            <div data-toast-target="icon">
+            <div data-toast="icon">
               <!-- Success Icon -->
               <svg data-type="success" class="w-5 h-5 text-green-500" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
@@ -413,10 +400,10 @@
             </div>
 
             <!-- メッセージエリア -->
-            <div class="flex-1 text-sm font-medium" data-toast-target="message"></div>
+            <div class="flex-1 text-sm font-medium" data-toast="message"></div>
 
             <!-- 閉じるボタン -->
-            <button data-action="click->toast#hide"
+            <button data-toast="close"
               class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -428,8 +415,8 @@
         <div class="flex-1 flex min-h-0">
           <div class="flex-1 flex flex-col min-w-0">
             <!-- Editor::MainComponent -->
-            <div class="flex-1 relative bg-white dark:bg-[#0D1117]" data-controller="editor--main editor--persistence">
-              <div data-editor--main-target="container" class="absolute inset-0 z-10 text-base"></div>
+            <div class="flex-1 relative bg-white dark:bg-[#0D1117]">
+              <div id="editor-container" class="absolute inset-0 z-10 text-base"></div>
             </div>
 
             <!-- Terminal::OutputComponent -->
@@ -438,11 +425,11 @@
               <div
                 class="flex items-center justify-between px-4 py-1 bg-slate-100 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
                 <span class="text-xs font-medium text-slate-600 dark:text-slate-400">Terminal / Output</span>
-                <button class="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                  data-action="click->editor--console#clear">Clear</button>
+                <button id="clear-button"
+                  class="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Clear</button>
               </div>
-              <div class="flex-1 p-4 font-mono text-sm text-slate-600 dark:text-slate-400 overflow-auto"
-                data-editor--console-target="output">
+              <div id="terminal-output"
+                class="flex-1 p-4 font-mono text-sm text-slate-600 dark:text-slate-400 overflow-auto">
 
               </div>
             </div>
@@ -450,8 +437,7 @@
 
           <!-- Rurima::SidebarComponent -->
           <aside
-            class="w-80 border-l border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0D1117] flex flex-col shrink-0"
-            data-controller="rurima--method-list rurima--cursor-doc">
+            class="w-80 border-l border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0D1117] flex flex-col shrink-0">
             <div
               class="h-10 border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 bg-slate-100 dark:bg-white/5">
               <div class="flex items-center gap-2">
@@ -466,79 +452,101 @@
                     d="M64 8L8 64l20 56h72l20-56L64 8zm0 16l40 40-12 36H36L24 64l40-40z" />
                   <polygon fill="#cc1515" points="64,24 104,64 92,100 36,100 24,64" />
                 </svg>
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Rurima Context</span>
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Reference Context</span>
               </div>
               <span class="text-[10px] text-slate-500 dark:text-slate-600 tracking-wider font-medium">LIVE</span>
             </div>
-
-            <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <!-- Contextual List (Cursor based) -->
-              <div class="shrink-0 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-                <div
-                  class="px-3 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                  <span>Contextual</span>
-                  <span class="text-blue-500 dark:text-blue-400 opacity-0 transition-opacity"
-                    data-rurima--cursor-doc-target="contextualLoader">●</span>
+            <!-- Reference::MethodListComponent -->
+            <div id="method-list-container" class="flex-1 overflow-y-auto min-h-0">
+              <!-- Loading State -->
+              <div id="method-list-loader" class="py-12 px-6 hidden">
+                <div class="loading-bar-container mb-4">
+                  <div class="loading-bar"></div>
                 </div>
-                <div class="px-3 pb-2 space-y-2 max-h-[400px] overflow-y-auto"
-                  data-rurima--cursor-doc-target="contextualList">
-                  <div class="text-xs text-slate-400 dark:text-slate-600 text-center py-2 italic">
-                    Hover to see methods...
-                  </div>
-                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-600 text-center animate-pulse">Initializing analysis
+                  engine...</div>
               </div>
 
-              <!-- Global List (Regex based) -->
-              <div class="flex-1 flex flex-col min-h-0">
-                <div
-                  class="px-3 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider sticky top-0 bg-slate-50 dark:bg-[#0D1117] z-10">
-                  Global
-                </div>
-                <div class="flex-1 px-3 pb-3 overflow-y-auto space-y-3" data-rurima--method-list-target="globalList">
-                  <div class="py-12 px-6" data-rurima--method-list-target="globalLoader">
-                    <div class="loading-bar-container mb-4">
-                      <div class="loading-bar"></div>
+              <!-- List Container -->
+              <div id="method-list" class="divide-y divide-slate-100 dark:divide-white/5">
+                <!-- Template for Method Card -->
+                <template id="method-card-template">
+                  <div class="p-2 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer group" data-status="pending">
+                    <div class="flex items-center justify-between mb-1">
+                      <code class="text-xs font-bold text-slate-700 dark:text-slate-300" data-role="methodName"></code>
+                      <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono" data-role="icon"></span>
                     </div>
-                    <div class="text-xs text-slate-500 dark:text-slate-600 text-center animate-pulse">Initializing
-                      analysis engine...</div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400 space-y-1" data-role="linksDetails">
+                    </div>
                   </div>
-                </div>
+                </template>
+
+                <!-- Template for Link -->
+                <template id="link-template">
+                  <div class="flex items-center justify-between group/link">
+                    <a href="#" target="_blank" class="hover:text-blue-500 dark:hover:text-blue-400 truncate flex-1"
+                      onclick="window.electronAPI?.openExternal(this.href); return false;">
+                      <span data-role="className"></span><span data-role="separatorMethod"></span>
+                    </a>
+                  </div>
+                </template>
+
+                <!-- Template for Search Link -->
+                <template id="search-template">
+                  <div class="flex items-center justify-between group/link">
+                    <a href="#" target="_blank"
+                      class="flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400 truncate flex-1"
+                      onclick="window.electronAPI?.openExternal(this.href); return false;">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                      <span data-role="message">Search in Reference</span>
+                    </a>
+                  </div>
+                </template>
               </div>
             </div>
 
-            <!-- Templates -->
-            <template data-rurima--method-list-target="cardTemplate" data-rurima--cursor-doc-target="cardTemplate">
+            <!-- Reference::CursorDocController -->
+            <div id="cursor-doc-container"
+              class="h-1/3 border-t border-slate-200 dark:border-white/5 flex flex-col min-h-0 bg-slate-50/50 dark:bg-[#0D1117]/50">
               <div
-                class="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-white/5 rounded-md overflow-hidden shadow-sm dark:shadow-none mb-3">
-                <div
-                  class="px-3 py-2 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 flex items-center gap-2">
-                  <span class="text-blue-600 dark:text-blue-400 text-xs font-mono" data-role="icon">&lt;&gt;</span>
-                  <span class="text-slate-800 dark:text-slate-200 text-sm font-semibold font-mono"
-                    data-role="methodName"></span>
-                </div>
-                <div class="p-3 space-y-2" data-role="linksDetails">
+                class="px-3 py-2 border-b border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/5 flex items-center justify-between shrink-0">
+                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Context</span>
+                <div id="cursor-doc-loader" class="opacity-0 transition-opacity duration-200">
+                  <svg class="animate-spin h-3 w-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                  </svg>
                 </div>
               </div>
-            </template>
-
-            <template data-rurima--method-list-target="linkTemplate" data-rurima--cursor-doc-target="linkTemplate">
-              <a href="#" target="_blank" rel="noopener noreferrer"
-                class="block text-xs text-slate-600 dark:text-slate-400 font-mono hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                <span data-role="className"></span><span class="text-red-500 dark:text-red-400"
-                  data-role="separatorMethod"></span>
-              </a>
-            </template>
-
-            <template data-rurima--method-list-target="searchTemplate">
-              <a href="#" target="_blank" rel="noopener noreferrer"
-                class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                Search in Rurima
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </a>
-            </template>
+              <div id="cursor-doc-list" class="flex-1 overflow-y-auto p-2 space-y-2">
+                <!-- Contextual List Content -->
+                <template id="cursor-doc-card-template">
+                  <div
+                    class="p-2 bg-white dark:bg-white/5 rounded shadow-sm border border-slate-200 dark:border-white/5">
+                    <div class="flex items-center justify-between mb-1">
+                      <code class="text-xs font-bold text-slate-700 dark:text-slate-300" data-role="methodName"></code>
+                    </div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400 space-y-1" data-role="linksDetails">
+                    </div>
+                  </div>
+                </template>
+                <template id="cursor-doc-link-template">
+                  <div class="flex items-center justify-between group/link">
+                    <a href="#" target="_blank"
+                      class="hover:text-blue-500 dark:hover:text-blue-400 truncate flex-1 block"
+                      onclick="window.electronAPI?.openExternal(this.href); return false;">
+                      <span data-role="className"></span><span data-role="separatorMethod"></span>
+                    </a>
+                  </div>
+                </template>
+              </div>
+            </div>
           </aside>
         </div>
       </div>

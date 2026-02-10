@@ -1,7 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import * as monaco from 'monaco-editor'
-import { Settings } from "persistence/settings"
-import { CodePersistence } from "persistence/code"
+import { Settings, CodePersistence } from "../persistence"
 
 // Import Monaco workers directly for Vite
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
@@ -24,15 +23,18 @@ export default class extends Controller {
   static targets = ["container"]
 
   async connect() {
-    this.settings = new Settings()
-    this.codePersistence = new CodePersistence()
+    this.persistence = new Persistence()
+    this.settings = this.persistence.settings
+    this.codePersistence = this.persistence.code
     this.boundHandleSettingsUpdate = this.handleSettingsUpdate.bind(this)
     window.addEventListener("settings:updated", this.boundHandleSettingsUpdate)
 
     try {
       this.initEditor()
     } catch (error) {
-      this.containerTarget.innerText = "Failed to load editor."
+      if (this.hasContainerTarget) {
+        this.containerTarget.innerText = "Failed to load editor."
+      }
       console.error(error)
     }
   }
@@ -51,7 +53,7 @@ export default class extends Controller {
     this.editor = monaco.editor.create(this.containerTarget, {
       value: savedCode || [
         "# Welcome to RubPad!",
-        "# Type code here and see Rurima links appear on the right.",
+        "# Type code here and see Reference links appear on the right.",
         "",
         "names = ['Ruby', 'Python', 'JavaScript']",
         "",
@@ -92,7 +94,7 @@ export default class extends Controller {
     this.observer = new MutationObserver(() => this.updateTheme())
     this.observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
 
-    this.element.dispatchEvent(new CustomEvent("editor--main:initialized", {
+    this.element.dispatchEvent(new CustomEvent("editor:initialized", {
       detail: { editor: this.editor },
       bubbles: true 
     }))
@@ -119,5 +121,13 @@ export default class extends Controller {
       mouseWheelZoom: s.mouseWheelZoom,
       renderWhitespace: s.renderWhitespace
     })
+  }
+
+  /**
+   * Alias for compatibility with console controller run action
+   */
+  run() {
+    const consoleCtrl = this.application.getControllerForElementAndIdentifier(this.element, "editor--console")
+    if (consoleCtrl) consoleCtrl.run()
   }
 }

@@ -16,7 +16,7 @@ export default class extends Controller {
       this.editor = e.detail.editor
       this.setupListeners()
     }
-    document.addEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.addEventListener("editor:initialized", this.boundHandleEditorInit)
 
     this.boundHandleAnalysisFinished = () => this.updateContextualList()
     window.addEventListener("rubpad:lsp-analysis-finished", this.boundHandleAnalysisFinished)
@@ -34,7 +34,7 @@ export default class extends Controller {
   }
 
   disconnect() {
-    document.removeEventListener("editor--main:initialized", this.boundHandleEditorInit)
+    document.removeEventListener("editor:initialized", this.boundHandleEditorInit)
     window.removeEventListener("rubpad:lsp-analysis-finished", this.boundHandleAnalysisFinished)
     window.removeEventListener("rubpad:lsp-ready", this.boundHandleLSPReady)
   }
@@ -81,7 +81,7 @@ export default class extends Controller {
     const position = this.editor.getPosition()
     if (!position) return
 
-    // 新しい Resolution API を使用
+    // 1. LSP で型を解決
     const type = await analysis.resolution.resolveAtPosition(position.lineNumber, position.column)
 
     // type が前回と同じでも、現在ローディングが表示されている場合は強制的に更新する
@@ -98,8 +98,8 @@ export default class extends Controller {
       return
     }
 
-    // Rurima ドメインの新しい API を使用
-    const methods = analysis.rurima.fetchMethods(type)
+    // 2. Reference ドメインから情報を取得
+    const methods = analysis.reference.fetchMethods(type)
 
     if (methods.length === 0) {
       this.contextualListTarget.innerHTML = `
