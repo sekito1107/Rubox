@@ -23,12 +23,12 @@ export class DownloadComponent {
     }
   }
 
-  public download(): void {
+  public async download(): Promise<void> {
     // "rubbit.rb" seems correct based on JS implementation
     // However, JS code had `this.exporter.export("rubbit.rb")`.
     // The previous implementation used "rubPad" or similar, now standardized to "rubbit.rb"
     // The Exporter class has `export(filename: string = "main.rb")`.
     // If I pass "rubbit.rb", it overrides the default.
-    this.exporter.export("rubbit.rb");
+    await this.exporter.export("rubbit.rb");
   }
 }

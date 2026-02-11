@@ -24,7 +24,7 @@ describe('DownloadComponent', () => {
   });
 
   it('クリック時にrubbit.rbをエクスポートすること', () => {
-    component = new DownloadComponent(button, mockEditor);
+    new DownloadComponent(button, mockEditor);
     
     // コンストラクタでExporterがインスタンス化される
     expect(Exporter).toHaveBeenCalledWith(mockEditor);
