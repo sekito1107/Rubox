@@ -83,5 +83,19 @@ describe('Scanner', () => {
       expect(matches[0].name).toBe('method1')
       expect(matches[1].name).toBe('method2')
     })
+
+    it('Symbol#to_proc (&:method) 構文のメソッドを抽出できること', () => {
+      const code = 'names.map(&:upcase)\n[1,2,3].select(&:odd?)'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0, 1])
+
+      const line1 = results.get(0)!
+      expect(line1.some(m => m.name === 'map')).toBe(true)
+      expect(line1.some(m => m.name === 'upcase')).toBe(true)
+
+      const line2 = results.get(1)!
+      expect(line2.some(m => m.name === 'select')).toBe(true)
+      expect(line2.some(m => m.name === 'odd?')).toBe(true)
+    })
   })
 })

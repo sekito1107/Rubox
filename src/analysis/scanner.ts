@@ -18,8 +18,8 @@ export class Scanner {
     const results = new Map<number, ScannedMethod[]>()
     
     // 定義済みの重要なメソッド名のパターン
-    // .member や member() や member do ... を捕捉
-    const methodPattern = /(?:\.)([a-z_][a-zA-Z0-9_]*[!?]?)|([a-z_][a-zA-Z0-9_]*[!?]?)\s*[({]|([a-z_][a-zA-Z0-9_]*[!?]?)\s+do\b/g
+    // .member や member() や member do ... や &:member を捕捉
+    const methodPattern = /(?:\.)([a-z_][a-zA-Z0-9_]*[!?]?)|([a-z_][a-zA-Z0-9_]*[!?]?)\s*[({]|([a-z_][a-zA-Z0-9_]*[!?]?)\s+do\b|&:([a-z_][a-zA-Z0-9_]*[!?]?)/g
 
     lineIndices.forEach(idx => {
       // コメントを除去しつつインデックスを維持するため、空白で置換する
@@ -29,12 +29,12 @@ export class Scanner {
 
       // 簡易的な正規表現マッチング
       while ((match = methodPattern.exec(lineContent)) !== null) {
-        const name = match[1] || match[2] || match[3]
+        const name = match[1] || match[2] || match[3] || match[4]
         if (name && !this._isBlacklisted(name)) {
           matches.push({
             name: name,
             line: idx + 1,
-            col: match.index + 2 // 1-indexed かつ、ドットが含まれる場合はそれをスキップした位置
+            col: match.index + 2 // 1-indexed かつ、ドットや&:が含まれる場合はそれをスキップした位置
           })
         }
       }

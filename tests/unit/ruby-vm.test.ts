@@ -64,8 +64,8 @@ describe('RubyVM', () => {
 
   it('Workerからのreadyメッセージを処理すること', () => {
     vm = new RubyVM();
-    const onReady = vi.fn();
-    vm.onReady = onReady;
+    const readyEventHandler = vi.fn();
+    window.addEventListener('ruby-vm:ready', readyEventHandler);
 
     expect(mockWorker.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
 
@@ -75,13 +75,17 @@ describe('RubyVM', () => {
     messageHandler({
       data: {
         type: 'ready',
-        payload: { version: '3.2.0' },
+        payload: { version: '4.0.0' },
       },
     });
 
     expect(window.__rubyVMReady).toBe(true);
     expect(window.__rubyVMInitializing).toBeUndefined();
-    expect(onReady).toHaveBeenCalledWith('3.2.0');
+    expect(readyEventHandler).toHaveBeenCalled();
+    const eventDetail = readyEventHandler.mock.calls[0][0].detail;
+    expect(eventDetail.version).toBe('4.0.0');
+
+    window.removeEventListener('ruby-vm:ready', readyEventHandler);
   });
 
   it('Workerからのoutputメッセージを処理すること', () => {

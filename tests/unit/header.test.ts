@@ -13,11 +13,11 @@ describe('HeaderComponent', () => {
     new HeaderComponent(versionElement);
     
     const event = new CustomEvent('ruby-vm:ready', {
-      detail: { version: '3.2.0' }
+      detail: { version: '4.0.0' }
     });
     window.dispatchEvent(event);
     
-    expect(versionElement.textContent).toBe('3.2.0');
+    expect(versionElement.textContent).toBe('Ruby 4.0.0');
   });
 
   it('要素が存在しない場合でもエラーにならないこと', () => {
@@ -25,7 +25,7 @@ describe('HeaderComponent', () => {
     
     // イベント発火
     const event = new CustomEvent('ruby-vm:ready', {
-      detail: { version: '3.2.0' }
+      detail: { version: '4.0.0' }
     });
     window.dispatchEvent(event);
   });
