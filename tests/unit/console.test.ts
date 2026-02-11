@@ -43,6 +43,8 @@ describe('ConsoleComponent', () => {
   });
 
   it('実行ボタンクリック時にコードを実行すること', () => {
+    // コンストラクタでrunButtonがdisabledになっているため解除する
+    runButton.removeAttribute('disabled');
     mockEditor.getValue.mockReturnValue('puts "Hello"');
     runButton.click();
     expect(mockEditor.getValue).toHaveBeenCalled();
@@ -74,11 +76,19 @@ describe('ConsoleComponent', () => {
   });
 
   it('RubyVMの準備完了メッセージを表示すること', () => {
-    expect(mockRubyVM.onReady).toBeDefined();
+    // onFullyReady 内で loading-container が存在すると setTimeout(500ms) で遅延実行される
+    vi.useFakeTimers();
+
+    // リファクタリングにより rubpad:lsp-ready イベント経由で通知される
+    window.dispatchEvent(new CustomEvent('rubpad:lsp-ready', {
+      detail: { version: '4.0.0' }
+    }));
     
-    mockRubyVM.onReady('3.2.0');
+    // setTimeout(500ms) を進める
+    vi.advanceTimersByTime(500);
     
-    expect(outputElement.textContent).toContain('Ruby WASM ready! (Version: 3.2.0)');
+    expect(outputElement.textContent).toContain('Ruby WASM ready! (Version: 4.0.0)');
+    vi.useRealTimers();
   });
   
   it('既存のonOutputコールバックを維持すること', () => {
