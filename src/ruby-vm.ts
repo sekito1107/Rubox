@@ -3,17 +3,7 @@ import { LSP } from "./lsp";
 import { Reference } from "./reference";
 import { AnalysisCoordinator } from "./analysis";
 
-// DOM等の型定義拡張
-declare global {
-  interface Window {
-    monacoEditor?: any;
-    __rubyVMInitializing?: boolean;
-    __rubyVMReady?: boolean;
-    rubyLSP?: LSPClient;
-    rubpadLSPManager?: LSP;
-    rubpadAnalysisCoordinator?: AnalysisCoordinator;
-  }
-}
+// グローバル定義は src/types.d.ts に移動
 
 const RUBY_WASM_URL = "/js/rubpad.wasm";
 const WORKER_URL = "/js/ruby_worker.js";

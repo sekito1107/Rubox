@@ -1,8 +1,11 @@
 /**
- * エディタ機能 (Vanilla JS Component)
- * editor/index.js
+ * エディタ機能 (Vanilla TS Component)
+ * editor/index.ts
  */
 import * as monaco from 'monaco-editor'
+import { Persistence } from './persistence'
+import { CodePersistence } from './persistence/code'
+import { Settings } from './persistence/settings'
 
 // Vite用にMonaco workerを直接インポート
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
@@ -11,6 +14,9 @@ import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 
+// グローバル定義は src/types.d.ts に移動
+
+// 既存のJSロジックをベースに Worker 提供関数を設定
 window.MonacoEnvironment = {
   getWorker(_, label) {
     if (label === 'json') return new jsonWorker()
@@ -22,21 +28,28 @@ window.MonacoEnvironment = {
 }
 
 export class EditorComponent {
+  private container: HTMLElement | null
+  private settings: Settings
+  private codePersistence: CodePersistence
+  
+  private saveTimer: number | null = null
+  private editor: monaco.editor.IStandaloneCodeEditor | null = null
+  private boundHandleSettingsUpdate: (event: Event) => void
+  private observer: MutationObserver | null = null
+
   /**
-   * @param {HTMLElement} containerElement - エディタを表示するコンテナ
-   * @param {Persistence} persistence - 永続化ドメイン
+   * @param containerElement - エディタを表示するコンテナ
+   * @param persistence - 永続化ドメイン
    */
-  constructor(containerElement, persistence) {
+  constructor(containerElement: HTMLElement | null, persistence: Persistence) {
     this.container = containerElement
     this.settings = persistence.settings
     this.codePersistence = persistence.code
     
-    this.saveTimer = null
-
     this.initEditor()
     
     // 設定変更イベントの監視 (SettingsComponentからの通知)
-    this.boundHandleSettingsUpdate = this.handleSettingsUpdate.bind(this)
+    this.boundHandleSettingsUpdate = this.handleSettingsUpdate.bind(this) as EventListener
     window.addEventListener("settings:updated", this.boundHandleSettingsUpdate)
     
     // テーマ監視
@@ -44,7 +57,7 @@ export class EditorComponent {
     this.observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
   }
 
-  initEditor() {
+  private initEditor(): void {
     if (!this.container) return
 
     const savedSettings = this.settings.getAll()
@@ -70,8 +83,8 @@ export class EditorComponent {
       theme: this.currentTheme,
       automaticLayout: true,
       minimap: savedSettings.minimap || { enabled: false },
-      fontSize: parseInt(savedSettings.fontSize || 14),
-      tabSize: parseInt(savedSettings.tabSize || 2),
+      fontSize: parseInt(savedSettings.fontSize || "14"),
+      tabSize: parseInt(savedSettings.tabSize || "2"),
       wordWrap: savedSettings.wordWrap || 'off',
       autoClosingBrackets: savedSettings.autoClosingBrackets || 'always',
       mouseWheelZoom: savedSettings.mouseWheelZoom || false,
@@ -87,8 +100,11 @@ export class EditorComponent {
     // コードの永続化
     this.editor.onDidChangeModelContent(() => {
       if (this.saveTimer) clearTimeout(this.saveTimer)
-      this.saveTimer = setTimeout(() => {
-        this.codePersistence.save(this.editor.getValue())
+      // window.setTimeout の戻り値は number
+      this.saveTimer = window.setTimeout(() => {
+        if (this.editor) {
+          this.codePersistence.save(this.editor.getValue())
+        }
       }, 1000)
     })
 
@@ -99,25 +115,26 @@ export class EditorComponent {
     }))
   }
 
-  updateTheme() {
+  private updateTheme(): void {
     if (this.editor) monaco.editor.setTheme(this.currentTheme)
   }
 
-  get currentTheme() {
+  private get currentTheme(): string {
     return document.documentElement.classList.contains("dark") ? "vs-dark" : "vs"
   }
 
-  getValue() {
+  public getValue(): string {
     return this.editor ? this.editor.getValue() : ""
   }
 
-  setValue(code) {
+  public setValue(code: string): void {
     if (this.editor) this.editor.setValue(code)
   }
 
-  handleSettingsUpdate(event) {
+  private handleSettingsUpdate(event: Event): void {
     if (!this.editor) return
-    const s = event.detail.settings
+    const customEvent = event as CustomEvent
+    const s = customEvent.detail.settings
     
     this.editor.updateOptions({
       fontSize: parseInt(s.fontSize),
@@ -130,7 +147,7 @@ export class EditorComponent {
     })
   }
 
-  dispose() {
+  public dispose(): void {
     window.removeEventListener("settings:updated", this.boundHandleSettingsUpdate)
     if (this.editor) this.editor.dispose()
     if (this.observer) this.observer.disconnect()

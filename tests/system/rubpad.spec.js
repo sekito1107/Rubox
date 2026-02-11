@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('RubPad E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
+    page.on('console', msg => console.log(`[Browser Console] ${msg.text()}`));
+    page.on('pageerror', err => console.log(`[Browser PageError] ${err.message}`));
+    page.on('requestfailed', req => console.log(`[Browser RequestFailed] ${req.url()} - ${req.failure().errorText}`));
     await page.goto('/');
   });
 
