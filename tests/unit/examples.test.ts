@@ -46,7 +46,7 @@ describe('ExamplesComponent', () => {
     const helloBtn = menu.querySelector('button[data-key="hello"]') as HTMLElement;
     helloBtn.click();
     
-    expect(mockEditor.setValue).toHaveBeenCalledWith(expect.stringContaining('Hello, RubPad!'));
+    expect(mockEditor.setValue).toHaveBeenCalledWith(expect.stringContaining('Hello, Rubbit!'));
     expect(menu.classList.contains('hidden')).toBe(true);
   });
 

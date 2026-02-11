@@ -23,7 +23,7 @@ describe('DownloadComponent', () => {
     vi.clearAllMocks();
   });
 
-  it('クリック時にrubpad.rbをエクスポートすること', () => {
+  it('クリック時にrubbit.rbをエクスポートすること', () => {
     component = new DownloadComponent(button, mockEditor);
     
     // コンストラクタでExporterがインスタンス化される
@@ -32,7 +32,7 @@ describe('DownloadComponent', () => {
 
     button.click();
 
-    expect(mockExporterInstance.export).toHaveBeenCalledWith('rubpad.rb');
+    expect(mockExporterInstance.export).toHaveBeenCalledWith('rubbit.rb');
   });
 
   it('ボタンが存在しない場合でもエラーにならないこと', () => {

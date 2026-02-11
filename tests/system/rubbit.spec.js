@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('RubPad E2E Tests', () => {
+test.describe('Rubbit E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     page.on('console', msg => console.log(`[Browser Console] ${msg.text()}`));
     page.on('pageerror', err => console.log(`[Browser PageError] ${err.message}`));
@@ -177,7 +177,7 @@ test.describe('RubPad E2E Tests', () => {
 
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toBe('rubpad.rb');
+    expect(download.suggestedFilename()).toBe('rubbit.rb');
     await download.path();
   });
 });
