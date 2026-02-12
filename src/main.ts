@@ -1,6 +1,10 @@
 import "./main.css"
 // Stimulus setup removed
 
+import * as monaco from 'monaco-editor'
+
+// テスト用にグローバル公開
+window.monaco = monaco;
 
 // Features
 import { ThemeComponent } from "./theme"
@@ -34,6 +38,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const editorComponent = new EditorComponent(document.getElementById("editor-container")!, persistence)
   console.log("[Main] Created EditorComponent:", editorComponent)
   
+  // テスト用にエディタインスタンスを公開 (EditorComponent内部でもやっているが念のため)
+  // EditorComponent の public getter を使うか、any キャストで内部 editor にアクセス
+  window.monacoEditor = (editorComponent as any).editor;
+
   new ConsoleComponent(
     document.getElementById("terminal-output")!,
     document.getElementById("run-button")!,

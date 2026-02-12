@@ -43,12 +43,31 @@ export class ResolveSignature {
     const chain = ResolveSignature.INHERITANCE_MAP[className] || [className, "Object", "Kernel", "BasicObject"]
 
     // 2. 順にマッチするものを探す（自クラス -> 継承先 -> Object...）
+    // 2. 順にマッチするものを探す（自クラス -> 継承先 -> Object...）
     for (const ancestor of chain) {
-      const match = candidates.find(c => c.startsWith(`${ancestor}#`) || c.startsWith(`${ancestor}.`))
-      if (match) {
+      // 優先順位: インスタンスメソッド (#) -> 特異メソッド (.)
+      const matchI = candidates.find(c => c.startsWith(`${ancestor}#`))
+      if (matchI) {
         return {
-          signature: match,
-          ...URLGenerator.generateUrlInfo(match)
+          signature: matchI,
+          ...URLGenerator.generateUrlInfo(matchI)
+        }
+      }
+
+      const matchS = candidates.find(c => c.startsWith(`${ancestor}.`))
+      if (matchS) {
+        const info = URLGenerator.generateUrlInfo(matchS)
+        
+        // 特例: Kernelモジュールのメソッドとして検出された場合、
+        // 実態がモジュール関数（かつ暗黙的メソッド）の場合はモジュール関数のURL (/m/) に誘導する
+        if (ancestor === "Kernel" && (info.url.includes("/s/") || info.url.includes("/i/"))) {
+           // Kernelメソッドは /i/ や /s/ ではなく /m/ で記録されていることが多いためリライト
+           info.url = info.url.replace(/\/[si]\//, "/m/")
+        }
+        
+        return {
+          signature: matchS,
+          ...info
         }
       }
     }

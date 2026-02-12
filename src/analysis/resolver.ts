@@ -1,4 +1,5 @@
 import { Resolution } from "./resolution"
+import { ImplicitMethods } from "./builtins"
 
 /**
  * 特定のメソッドシンボルに対して、LSP での型解決と Rurima 情報を紐づける
@@ -43,6 +44,23 @@ export class Resolver {
             url: info.url,
             separator: info.separator
           }
+        }
+      } else {
+        // 4. クラス名が不明だが、暗黙的メソッド（ホワイトリスト）に含まれる場合
+        // Kernel, Module, Object の順で解決を試みる
+        if (ImplicitMethods.has(methodName)) {
+           const candidates = ["Kernel", "Module", "Object"]
+           for (const candidate of candidates) {
+             const info = this.rurima.resolve(candidate, methodName)
+             if (info) {
+               return {
+                 status: 'resolved',
+                 className: info.className,
+                 url: info.url,
+                 separator: info.separator
+               }
+             }
+           }
         }
       }
       return { status: 'unknown' }

@@ -18,8 +18,8 @@ export class Resolution {
       if (model) {
         const lineContent = model.getLineContent(line)
         const commentIdx = lineContent.indexOf('#')
-        // 簡易的な判定: '#' 以降で、かつそれが現在の列より前にある場合はコメント内とみなす
-        if (commentIdx !== -1 && commentIdx < col - 1) {
+        // '#' が見つかり、かつその直後が '{' (式展開) でない場合のみコメントとみなす
+        if (commentIdx !== -1 && lineContent[commentIdx + 1] !== '{' && commentIdx < col - 1) {
           return null
         }
       }

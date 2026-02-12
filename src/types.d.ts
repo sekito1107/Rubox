@@ -15,6 +15,7 @@ declare global {
       getWorker(workerId: string, label: string): Worker;
     };
     showSaveFilePicker?: (options?: any) => Promise<FileSystemFileHandle>;
+    monaco?: any;
   }
 
   interface FileSystemFileHandle {

@@ -65,19 +65,35 @@ export class EditorComponent {
 
     this.editor = monaco.editor.create(this.container, {
       value: savedCode || [
-        "# Welcome to Rubbit!",
-        "# Type code here and see Reference links appear on the right.",
+        "# Rubbit: ブラウザ完結型 Ruby 実行・学習環境",
+        "# サーバー通信なしで、即座に Ruby コードの評価と解析を行います。",
         "",
-        "names = ['Ruby', 'Python', 'JavaScript']",
+        "# 【機能の活用方法】",
+        "# 1. 動的リファレンス (CONTEXT Panel)",
+        "#    メソッド名等にカーソルを合わせると、右パネルに候補が表示されます。",
+        "#    クリックすることで、公式リファレンスを直接参照可能です。",
+        "# 2. 変数値のインスペクション (Ghost Text)",
+        "#    変数名にマウスを合わせ、「値を確認」をクリックしてください。",
+        "#    実行時の具体的な値が行末に表示されます。",
         "",
-        "names.select { |n| n.include?('u') }",
-        "  .map(&:upcase)",
-        "  .each do |n|",
-        "    puts \"Hello, #{n}!\"",
+        "class DataProcessor",
+        "  def self.format(text)",
+        "    # ⬇️ strip や capitalize のリファレンスを Context パネルで確認できます",
+        "    text.strip.capitalize",
         "  end",
+        "end",
         "",
-        "# Try typing .split or .size below:",
-        ""
+        "items = [\" ruby \", \" web-assembly \", \" rubbit \"]",
+        "",
+        "# ⬇️ ループ内の `output` 変数の上で「値を確認」を試してください",
+        "items.each do |item|",
+        "  output = DataProcessor.format(item)",
+        "  puts \"Processed: #{output}\"",
+        "end",
+        "",
+        "# 3. 組み込みメソッドの解析",
+        "sum = (1..100).sum",
+        "puts \"Sum (1..100): #{sum}\""
       ].join("\n"),
       language: "ruby",
       theme: this.currentTheme,
@@ -91,11 +107,21 @@ export class EditorComponent {
       renderWhitespace: savedSettings.renderWhitespace || 'none',
       scrollBeyondLastLine: false,
       renderLineHighlight: "all",
-      fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace"
+      fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace",
+      inlayHints: {
+        enabled: "on",
+        maximumLength: 150
+      }
+    })
+
+    // ショートカットキー登録: Ctrl+Enter (Cmd+Enter) で実行
+    this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      window.dispatchEvent(new CustomEvent("rubpad:run-trigger"))
     })
 
     // グローバルアクセス用 (テスト等で利用)
     window.monacoEditor = this.editor
+    window.monaco = monaco
 
     // コードの永続化
     this.editor.onDidChangeModelContent(() => {

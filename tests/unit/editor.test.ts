@@ -10,12 +10,19 @@ const { mockEditor, mockMonaco } = vi.hoisted(() => {
     updateOptions: vi.fn(),
     dispose: vi.fn(),
     onDidChangeModelContent: vi.fn(),
+    addCommand: vi.fn(),
   };
 
   const mockMonaco = {
     editor: {
       create: vi.fn(() => mockEditor),
       setTheme: vi.fn(),
+    },
+    KeyMod: {
+      CtrlCmd: 2048,
+    },
+    KeyCode: {
+      Enter: 3,
     },
   };
   
@@ -24,6 +31,8 @@ const { mockEditor, mockMonaco } = vi.hoisted(() => {
 
 vi.mock('monaco-editor', () => ({
   editor: mockMonaco.editor,
+  KeyMod: mockMonaco.KeyMod,
+  KeyCode: mockMonaco.KeyCode,
   // 他の必要なモジュールがあればここに追加
 }));
 

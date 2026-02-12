@@ -11,6 +11,7 @@ require "rubygems"
 
 # File.readable? は bjorn3/browser_wasi_shim では動作しないため代用
 def File.readable?(...) = File.file?(...)
+class RubPadStopExecution < StandardError; end
 
 # ワークスペースのセットアップ
 # TypeProfは /workspace などのディレクトリ構造を期待している可能性があるため
@@ -135,41 +136,37 @@ class Server
       text = json[:params][:textDocument][:text]
       File.write("/workspace/main.rb", text)
     end
-    if json[:method] == "textDocument/didChange"
+    if (json[:method] == "textDocument/didChange")
       changes = json[:params][:contentChanges]
       if changes
         current_text = File.read("/workspace/main.rb") rescue ""
+        lines = current_text.split("\n", -1)
+
         changes.each do |change|
           if change[:range]
-            # インクリメンタル同期
             start_pos = change[:range][:start]
             end_pos = change[:range][:end]
-            new_text = change[:text]
+            new_text_lines = (change[:text] || "").split("\n", -1)
 
-            lines = current_text.split("\n", -1)
-            
-            # 開始・終了行のテキストを取得
             start_line = lines[start_pos[:line]] || ""
             end_line = lines[end_pos[:line]] || ""
-            
-            # 置換対象の前の部分
+
             prefix = start_line[0...start_pos[:character]] || ""
-            # 置換対象の後の部分
-            suffix = end_line[end_pos[:character]..-1] || ""
+            suffix = end_line[end_pos[:character]...] || ""
             
-            # 行の置換
-            # start_pos[:line] から end_pos[:line] までの行を削除し、
-            # prefix + new_text + suffix を挿入する
-            mid = prefix + (new_text || "") + suffix
-            lines[start_pos[:line]..end_pos[:line]] = mid.split("\n", -1)
+            if new_text_lines.size == 1
+              new_text_lines[0] = prefix + (new_text_lines[0] || "") + suffix
+            else
+              new_text_lines[0] = prefix + (new_text_lines[0] || "")
+              new_text_lines[-1] = (new_text_lines[-1] || "") + suffix
+            end
             
-            current_text = lines.join("\n")
+            lines[start_pos[:line]..end_pos[:line]] = new_text_lines
           else
-            # フル同期
-            current_text = change[:text]
+            lines = (change[:text] || "").split("\n", -1)
           end
         end
-        File.write("/workspace/main.rb", current_text)
+        File.write("/workspace/main.rb", lines.join("\n"))
       end
     end
 
@@ -229,46 +226,153 @@ class Server
 
   def handle_execute_command(json)
     params = json[:params]
-    if params[:command] == "typeprof.measureValue"
-      # 引数は配列の最初の要素に入っている
-      args = params[:arguments][0]
-      expression = args[:expression]
-      # 1-based line number coming from Monaco
-      target_line = args[:line]
+    case params[:command]
+    when "typeprof.measureValue"
+      expression = json[:params][:arguments][0][:expression]
+      target_line = json[:params][:arguments][0][:line] + 1
       
-      result_str = ""
+      CapturedValue.reset
+      max_captures = 10 # 最大キャプチャ数
       
+      # 実行中のバインディング
       begin
         # Measure Value 用に独立したBindingを作成
         measure_binding = TOPLEVEL_BINDING.eval("binding")
         
-        # 最新のコードを読み込み、対象行まで（その行を含む）を実行してコンテキストを構築する
+        # 最新のコードを読み込む
         if File.exist?("/workspace/main.rb")
-          code_str = File.read("/workspace/main.rb")
-          lines = code_str.lines
-          
-          # target_line が指定されている場合は、その行までを実行対象とする
-          if target_line && target_line > 0
-            lines_to_run = lines.take(target_line)
-            code_to_run = lines_to_run.join
-          else
-            code_to_run = code_str
+          code_str = File.read("/workspace/main.rb") + "\nnil"
+
+          tp = TracePoint.new(:line, :call, :return, :class, :end, :b_call, :b_return) do |tp|
+            next unless tp.path == "(eval)"
+
+            if tp.lineno == target_line && !CapturedValue.target_triggered
+              # ターゲット行に到達した際、まだ実行が終わっていないためフラグを立ててスキップし、
+              # 次のイベント（行内の実行完了後など）で値をキャプチャする。
+              CapturedValue.target_triggered = true
+              next
+            end
+
+            if CapturedValue.target_triggered && tp.lineno != target_line
+               # ターゲット行から抜けたタイミング（次の行へ移動、あるいはメソッドから戻る時など）
+               # ただし、ループ内だと同じ行に戻ってくることもあるので注意が必要。
+               # ここでは「ターゲット行でトリガーされた後、何らかの次のステップに進んだ」時点で評価を試みる。
+               
+               # 単純化: ターゲット行を実行し終えた直後（次の行へ移るか、ブロック終了など）
+               # しかし、同一行で複数回呼ばれるケース（ループ）では、
+               # tp.lineno が target_line に戻ってくることもある。
+            end
+
+            if CapturedValue.target_triggered
+              begin
+                val = tp.binding.eval(expression)
+                CapturedValue.add(val)
+                
+                # キャプチャしたらトリガーをリセットして次のループに備える
+                CapturedValue.target_triggered = false
+                
+                if CapturedValue.count >= max_captures
+                  raise RubPadStopExecution
+                end
+              rescue RubPadStopExecution
+                raise
+              rescue => e
+                # まだ評価できない場合(NameError等)かつターゲット行内の場合は続行。
+                # 物理行を超えていたら（ターゲット行をスキップした場合など）諦めて記録。
+                if tp.lineno > target_line
+                  CapturedValue.add(e)
+                  CapturedValue.target_triggered = false
+                end
+              end
+            end
           end
 
           # 標準出力を抑制しつつ実行
-          eval("require 'stringio'; $stdout = StringIO.new; " + code_to_run, measure_binding)
+          measure_binding.eval("require 'stringio'; $stdout = StringIO.new")
+          
+          begin
+            tp.enable do
+              measure_binding.eval(code_str, "(eval)")
+            end
+          rescue RubPadStopExecution
+            # 正常停止（制限に達したなど）
+          rescue => e
+            # 実行時エラーがあればそれも記録
+            CapturedValue.add(e) unless CapturedValue.found?
+          end
         end
 
-        # 対象の式を評価
-        val = eval(expression, measure_binding)
-        result_str = val.inspect
+        if CapturedValue.found?
+          results = CapturedValue.get_all.map do |val|
+            if val.is_a?(Exception)
+              "(#{val.class}: #{val.message})"
+            else
+              # 評価結果の inspect 文字列を取得
+              result_str = val.inspect.to_s
+              limit = 200
+              if result_str.length > limit
+                result_str = result_str[0...limit] + "..."
+              end
+              result_str
+            end
+          end
+          # 結果を連結して返す
+          result_str = results.join(", ")
+        else
+          # 行に到達しなかった場合
+          result_str = ""
+        end
       rescue => e
-        result_str = "(Error: " + e.message + ")"
+        if CapturedValue.found?
+           # 部分的に取得できた場合
+           results = CapturedValue.get_all.map { |v| v.inspect }
+           result_str = results.join(", ")
+        else
+           if e.message == "RubPad::StopExecution"
+             results = CapturedValue.get_all.map { |v| v.inspect }
+             result_str = results.join(", ")
+           else
+             result_str = "(Error: " + e.message + ")"
+           end
+        end
       end
       
+      # クリーンアップ
+      CapturedValue.reset
+
       write(id: json[:id], result: result_str)
     else
       write(id: json[:id], error: { code: -32601, message: "Method not found" })
+    end
+  end
+
+  # 値の受け渡し用クラス
+  class CapturedValue
+    @vals = []
+    @target_triggered = false
+    class << self
+      attr_accessor :target_triggered
+      
+      def add(v)
+        @vals << v
+      end
+      
+      def get_all
+        @vals
+      end
+      
+      def found?
+        !@vals.empty?
+      end
+      
+      def count
+        @vals.size
+      end
+
+      def reset
+        @vals = []
+        @target_triggered = false
+      end
     end
   end
 

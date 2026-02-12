@@ -75,5 +75,29 @@ describe('Resolver', () => {
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
+
+    it('暗黙的メソッド (puts) の場合、LSP解決に失敗してもKernel等でフォールバック解決すること', async () => {
+      const resolution = resolver.resolution
+      vi.mocked(resolution.resolveMethodAt).mockResolvedValue(null)
+      vi.mocked(resolution.resolveAtPosition).mockResolvedValue(null)
+
+      // Kernel で解決されることを期待
+      mockRurima.resolve.mockImplementation((className: string, methodName: string) => {
+        if (className === 'Kernel' && methodName === 'puts') {
+          return {
+            className: 'Kernel',
+            url: 'https://docs.ruby-lang.org/ja/latest/method/Kernel/m/puts.html',
+            separator: '.'
+          }
+        }
+        return null
+      })
+
+      const result = await resolver.resolve('puts', 1, 1)
+
+      expect(result.status).toBe('resolved')
+      expect(result.className).toBe('Kernel')
+      expect(result.url).toContain('puts.html')
+    })
   })
 })
