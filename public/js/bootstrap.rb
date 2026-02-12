@@ -248,16 +248,16 @@ class Server
         if File.exist?("/workspace/main.rb")
           code_str = File.read("/workspace/main.rb")
           
-          # TracePoint を使用して、指定行に到達した時点での値をキャプチャする
-          # 部分実行(lines.take)はブロック内などで構文エラーになるため、全体を実行する方式に変更
           tp = TracePoint.new(:line) do |tp|
             if tp.lineno == target_line && tp.path == "(eval)"
               begin
-                val = tp.binding.eval(expression)
-                captured_val = val
-                found = true
+                CapturedValue.set(tp.binding.eval(expression))
+                CapturedValue.found = true
+                raise "RubPad::StopExecution"
               rescue => e
-                # 変数が未定義などの場合
+                if e.message == "RubPad::StopExecution"
+                  raise e
+                end
               end
             end
           end
@@ -268,36 +268,63 @@ class Server
           begin
             tp.enable
             measure_binding.eval(code_str, "(eval)")
+          rescue => e
+            # 想定通りの停止であれば無視
+            raise e if e.message != "RubPad::StopExecution"
           ensure
             tp.disable
           end
         end
 
-        if found
-          result_str = captured_val.inspect
+        if CapturedValue.found
+          result_str = CapturedValue.get.inspect
         else
-          # 行に到達しなかった、または空行/コメント行の場合
-          # 全体実行後の状態で評価を試みる（フォールバック）
-          # ただし、実行順序的に target_line より後になっている可能性があるため注意が必要だが、
-          # 構文エラーで何も出ないよりはマシである
+          # 行に到達しなかった場合(条件分岐等)、全体実行後の状態で評価を試みる
           begin
              val = measure_binding.eval(expression)
              result_str = val.inspect
           rescue
-             result_str = "" # 何も表示しない
+             result_str = "" 
           end
         end
       rescue => e
-        if found
-           result_str = captured_val.inspect
+        if CapturedValue.found
+           result_str = CapturedValue.get.inspect
         else
-           result_str = "(Error: " + e.message + ")"
+           # StopExecutionの場合はここには来ないはずだが念のため
+           if e.message == "RubPad::StopExecution"
+             result_str = CapturedValue.get.inspect
+           else
+             result_str = "(Error: " + e.message + ")"
+           end
         end
       end
       
+      # クリーンアップ
+      CapturedValue.reset
+
       write(id: json[:id], result: result_str)
     else
       write(id: json[:id], error: { code: -32601, message: "Method not found" })
+    end
+  end
+
+  # 値の受け渡し用クラス
+  class CapturedValue
+    @val = nil
+    @found = false
+    class << self
+      attr_accessor :found
+      def set(v)
+        @val = v
+      end
+      def get
+        @val
+      end
+      def reset
+        @val = nil
+        @found = false
+      end
     end
   end
 
