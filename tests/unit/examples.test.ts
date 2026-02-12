@@ -5,7 +5,6 @@ describe('ExamplesComponent', () => {
   let button: HTMLElement;
   let menu: HTMLElement;
   let mockEditor: any;
-  let component: ExamplesComponent;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -23,12 +22,12 @@ describe('ExamplesComponent', () => {
   it('初期化時にイベントリスナーを設定すること', () => {
     // コンストラクタでaddEventListenerが呼ばれるか確認するためにスパイを使う
     const buttonSpy = vi.spyOn(button, 'addEventListener');
-    component = new ExamplesComponent(button, menu, mockEditor);
+    new ExamplesComponent(button, menu, mockEditor);
     expect(buttonSpy).toHaveBeenCalledWith('click', expect.any(Function));
   });
 
   it('トグルボタンでメニューの表示/非表示を切り替えること', () => {
-    component = new ExamplesComponent(button, menu, mockEditor);
+    new ExamplesComponent(button, menu, mockEditor);
     
     // 開く
     button.click();
@@ -40,7 +39,7 @@ describe('ExamplesComponent', () => {
   });
 
   it('サンプルをクリックするとエディタにコードをロードしメニューを閉じること', () => {
-    component = new ExamplesComponent(button, menu, mockEditor);
+    new ExamplesComponent(button, menu, mockEditor);
     menu.classList.remove('hidden'); // 開いた状態にする
     
     const helloBtn = menu.querySelector('button[data-key="hello"]') as HTMLElement;
@@ -51,7 +50,7 @@ describe('ExamplesComponent', () => {
   });
 
   it('外部クリックでメニューを閉じること', () => {
-    component = new ExamplesComponent(button, menu, mockEditor);
+    new ExamplesComponent(button, menu, mockEditor);
     menu.classList.remove('hidden');
     
     document.body.click(); // bodyをクリック（外部）
@@ -60,7 +59,7 @@ describe('ExamplesComponent', () => {
   });
 
   it('メニュー内のクリックでは閉じないこと', () => {
-    component = new ExamplesComponent(button, menu, mockEditor);
+    new ExamplesComponent(button, menu, mockEditor);
     menu.classList.remove('hidden');
     
     menu.click(); // メニュー自体をクリック

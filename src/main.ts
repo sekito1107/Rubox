@@ -1,5 +1,4 @@
 import "./main.css"
-// Stimulus setup removed
 
 import * as monaco from 'monaco-editor'
 
@@ -88,7 +87,5 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("cursor-doc-link-template")! as HTMLTemplateElement
   )
 
-  // 注意: Stimulusアプリケーションは他のコントローラーのためにまだ稼働しています
-  // これらは順次移行していきます。
 })
 

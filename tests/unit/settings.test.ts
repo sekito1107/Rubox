@@ -5,7 +5,6 @@ import { Persistence } from '../../src/persistence';
 describe('SettingsComponent', () => {
   let container: HTMLElement;
   let mockPersistence: any;
-  let component: SettingsComponent;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -36,7 +35,7 @@ describe('SettingsComponent', () => {
       minimap: { enabled: true }
     });
 
-    component = new SettingsComponent(container, mockPersistence as Persistence);
+    new SettingsComponent(container, mockPersistence as Persistence);
 
     const fontSizeInput = container.querySelector('[data-setting="fontSize"]') as HTMLInputElement;
     const wordWrapInput = container.querySelector('[data-setting="wordWrap"]') as HTMLInputElement;
@@ -50,7 +49,7 @@ describe('SettingsComponent', () => {
   it('デフォルト値を正しく適用すること', () => {
     mockPersistence.settings.getAll.mockReturnValue({}); // 設定なし
 
-    component = new SettingsComponent(container, mockPersistence as Persistence);
+    new SettingsComponent(container, mockPersistence as Persistence);
 
     const fontSizeInput = container.querySelector('[data-setting="fontSize"]') as HTMLInputElement;
     const tabSizeInput = container.querySelector('[data-setting="tabSize"]') as HTMLInputElement;
@@ -60,7 +59,7 @@ describe('SettingsComponent', () => {
   });
 
   it('設定変更時に永続化し、イベントを発火すること', () => {
-    component = new SettingsComponent(container, mockPersistence as Persistence);
+    new SettingsComponent(container, mockPersistence as Persistence);
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
 
     const fontSizeInput = container.querySelector('[data-setting="fontSize"]') as HTMLInputElement;
@@ -78,7 +77,7 @@ describe('SettingsComponent', () => {
   });
 
   it('チェックボックスの設定変更を正しく処理すること', () => {
-    component = new SettingsComponent(container, mockPersistence as Persistence);
+    new SettingsComponent(container, mockPersistence as Persistence);
 
     const wordWrapInput = container.querySelector('[data-setting="wordWrap"]') as HTMLInputElement;
     wordWrapInput.checked = true;

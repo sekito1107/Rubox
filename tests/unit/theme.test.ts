@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ThemeComponent } from '../../src/theme';
 
 describe('ThemeComponent', () => {

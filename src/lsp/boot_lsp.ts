@@ -46,7 +46,7 @@ export class BootLSP {
   private setupInitialAnalysisListener(): void {
     window.__rubyLSPInitialAnalysisFinished = false;
 
-    const handler = (params: any): void => {
+    const handler = (): void => {
       if (!window.__rubyLSPInitialAnalysisFinished) {
         window.__rubyLSPInitialAnalysisFinished = true;
         // システム全体に初回の解析完了を通知
