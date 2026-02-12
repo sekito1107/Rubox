@@ -69,33 +69,23 @@ test.describe('Rubbit E2E Tests', () => {
     await expect(page.locator('#share-modal')).toBeVisible();
 
     // Copyボタンをクリック
-    // クリップボード書き込みが行われる
     await page.locator('#share-copy-btn').click();
 
-    // 通知を待機
-    // モーダルが閉じるのも確認できるとなお良い
+    // 通知を確認
     await expect(page.locator('[data-toast="message"]')).toContainText('Copied to clipboard!', { timeout: 10000 });
 
-    // クリップボードからの取得は環境によって難しいため、URLのハッシュを確認して遷移する
-    // Copyボタン押下時に history.replaceState で URL が更新されているはず
+    // URLハッシュから共有URLを取得 (history.replaceState で更新されていることを期待)
     const urlWithHash = await page.evaluate(() => window.location.href);
-    // URLハッシュが含まれていない場合、クリップボードの内容を確認する必要があるが、
-    // ShareComponentの実装では window.history.replaceState も呼んでいるため URL も変わっているはず。
-    // ただし、preview生成時に replaceState しているので、モーダルを開いた時点で変わっている可能性がある。
-    
-    // Check if hash is present
-    // If not, maybe read from clipboard?
-    // Let's assume replaceState logic works.
-    
-    // 新しいページで開く
+
+    // 新しいページで共有URLを開く
     const newPage = await context.newPage();
-    // ここで urlWithHash がハッシュ付きであることを期待
-    if (!urlWithHash.includes('#')) {
-        // Fallback: Read from clipboard if URL not updated (though it should be)
+    
+    if (urlWithHash.includes('#')) {
+         await newPage.goto(urlWithHash);
+    } else {
+         // URLが更新されていない場合はクリップボードから取得（フォールバック）
          const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
          await newPage.goto(clipboardText);
-    } else {
-         await newPage.goto(urlWithHash);
     }
     
     await expect(newPage.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
