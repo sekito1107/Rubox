@@ -65,19 +65,20 @@ export class EditorComponent {
 
     this.editor = monaco.editor.create(this.container, {
       value: savedCode || [
-        "# Welcome to Rubbit!",
-        "# Type code here and see Reference links appear on the right.",
+        "# Rubbitへようこそ！",
+        "# ブラウザ上でRubyが動く、サーバーレスな実行環境です。",
         "",
-        "names = ['Ruby', 'Python', 'JavaScript']",
+        "# 【機能紹介】",
+        "# 1. リアルタイム・リファレンス",
+        "#    カーソル位置に合わせて、レシーバが呼び出すことの出来るメソッドがContext欄に表示されます。",
+        "#    コード全体で使われているメソッド一覧がGLOBAL欄に表示されます。",
+        "#    表示されたメソッドはクリックすると、別タブで公式リファレンスが開きます。",
+        "# 2. 変数の値をチェック (Ghost Text)",
+        "#    変数にマウスを乗せて「値を確認」をクリックすると、",
+        "#    行末に値が浮かび上がります。",
         "",
-        "names.select { |n| n.include?('u') }",
-        "  .map(&:upcase)",
-        "  .each do |n|",
-        "    puts \"Hello, #{n}!\"",
-        "  end",
-        "",
-        "# Try typing .split or .size below:",
-        ""
+        "greeting = \"Hello, Rubbit!\"",
+        "puts greeting"
       ].join("\n"),
       language: "ruby",
       theme: this.currentTheme,
@@ -92,6 +93,11 @@ export class EditorComponent {
       scrollBeyondLastLine: false,
       renderLineHighlight: "all",
       fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace"
+    })
+
+    // ショートカットキー登録: Ctrl+Enter (Cmd+Enter) で実行
+    this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      window.dispatchEvent(new CustomEvent("rubpad:run-trigger"))
     })
 
     // グローバルアクセス用 (テスト等で利用)

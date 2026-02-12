@@ -62,7 +62,12 @@ export class ConsoleComponent {
     window.addEventListener("rubpad:loading-progress", (event: Event) => {
       const { percent, message } = (event as CustomEvent).detail;
       this.updateLoadingProgress(percent, message);
-    });
+    }); 
+
+    // ショートカット実行イベント (Editorから発火)
+    window.addEventListener("rubpad:run-trigger", () => {
+      this.run()
+    })
 
     // 全初期化完了イベントを購読
     window.addEventListener("rubpad:lsp-ready", (event: Event) => {
