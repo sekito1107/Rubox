@@ -7,43 +7,159 @@ import { Share } from "./persistence/share";
 
 export class ShareComponent {
   private button: HTMLElement | null;
+  private modal: HTMLDialogElement | null;
   private editor: EditorComponent;
   private service: Share;
 
+  // UI Elements inside modal
+  private tabUrl: HTMLElement | null = null;
+  private tabEmbed: HTMLElement | null = null;
+  private tabBlock: HTMLElement | null = null;
+  private previewArea: HTMLTextAreaElement | null = null;
+  private copyButton: HTMLElement | null = null;
+  
+  // Embed Preview
+  private embedPreviewContainer: HTMLElement | null = null;
+  private embedFrameWrapper: HTMLElement | null = null;
+
+  private currentType: 'url' | 'embed' | 'block' = 'url';
+
   /**
    * @param buttonElement - Shareボタン
+   * @param modalElement - Shareモーダル
    * @param editorComponent - エディタコンポーネント (getValue/setValue用)
    * @param shareService - 共有ロジック (Persistence.share)
    */
   constructor(
     buttonElement: HTMLElement | null,
+    modalElement: HTMLElement | null,
     editorComponent: EditorComponent,
     shareService: Share
   ) {
     this.button = buttonElement;
+    this.modal = modalElement as HTMLDialogElement;
     this.editor = editorComponent;
     this.service = shareService;
 
-    if (this.button) {
-      this.button.addEventListener("click", () => this.share());
+    // Modal UI references
+    if (this.modal) {
+      this.tabUrl = this.modal.querySelector('#share-tab-url');
+      this.tabEmbed = this.modal.querySelector('#share-tab-embed');
+      this.tabBlock = this.modal.querySelector('#share-tab-block');
+      this.previewArea = this.modal.querySelector('#share-preview');
+      this.copyButton = this.modal.querySelector('#share-copy-btn');
+      
+      this.embedPreviewContainer = this.modal.querySelector('#share-embed-preview-container');
+      this.embedFrameWrapper = this.modal.querySelector('#share-embed-frame-wrapper');
     }
+
+    this.bindEvents();
 
     // 初期化時にURLからコードを復元
     this.restoreFromUrl();
   }
 
-  public share(): void {
-    const code = this.editor.getValue();
-    try {
-      const url = this.service.compress(code);
-      // テスト用に現在のURLハッシュを更新
-      window.location.hash = new URL(url).hash;
-      navigator.clipboard.writeText(url);
+  private bindEvents(): void {
+    if (this.button) {
+      this.button.addEventListener("click", () => this.openModal());
+    }
+
+    if (this.modal) {
+      this.tabUrl?.addEventListener('click', () => this.switchTab('url'));
+      this.tabEmbed?.addEventListener('click', () => this.switchTab('embed'));
+      this.tabBlock?.addEventListener('click', () => this.switchTab('block'));
       
-      this.dispatchToast("URL copied to clipboard!", "success");
+      this.copyButton?.addEventListener('click', () => this.copyToClipboard());
+    }
+  }
+
+  public openModal(): void {
+    if (!this.modal) return;
+    
+    // Reset to default tab
+    this.switchTab('url');
+    this.modal.showModal();
+    this.updatePreview();
+  }
+
+  private switchTab(type: 'url' | 'embed' | 'block'): void {
+    this.currentType = type;
+    this.updateTabStyles();
+    this.updatePreview();
+  }
+
+  private updateTabStyles(): void {
+    // Helper to set active/inactive styles
+    const setActive = (el: HTMLElement | null, active: boolean) => {
+      if (!el) return;
+      if (active) {
+        el.classList.add('text-blue-600', 'border-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
+        el.classList.remove('text-slate-500', 'border-transparent', 'dark:text-slate-400');
+      } else {
+        el.classList.remove('text-blue-600', 'border-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
+        el.classList.add('text-slate-500', 'border-transparent', 'dark:text-slate-400');
+      }
+    };
+
+    setActive(this.tabUrl, this.currentType === 'url');
+    setActive(this.tabEmbed, this.currentType === 'embed');
+    setActive(this.tabBlock, this.currentType === 'block');
+  }
+
+  private updatePreview(): void {
+    if (!this.previewArea) return;
+    
+    const code = this.editor.getValue();
+    let content = "";
+    
+    // Reset Preview state
+    if (this.embedPreviewContainer) {
+      this.embedPreviewContainer.classList.add('hidden');
+    }
+    
+    try {
+      switch (this.currentType) {
+        case 'url':
+          const url = this.service.compress(code);
+          // Update hash for URL sharing
+          window.history.replaceState(null, "", url);
+          content = url;
+          break;
+        case 'embed':
+          content = this.service.generateEmbedTag(code);
+          
+          // Embed Preview
+          if (this.embedPreviewContainer && this.embedFrameWrapper) {
+            this.embedPreviewContainer.classList.remove('hidden');
+            // Extract src from iframe tag (simple parsing)
+            const srcMatch = content.match(/src="([^"]+)"/);
+            if (srcMatch && srcMatch[1]) {
+              this.embedFrameWrapper.innerHTML = `<iframe src="${srcMatch[1]}" width="100%" height="100%" frameborder="0"></iframe>`;
+            }
+          }
+          break;
+        case 'block':
+          content = this.service.generateCodeBlock(code);
+          break;
+      }
+      this.previewArea.value = content;
+    } catch (e) {
+      console.error("Failed to generate preview", e);
+      this.previewArea.value = "Error generating preview";
+    }
+  }
+
+  public async copyToClipboard(): Promise<void> {
+    if (!this.previewArea) return;
+    
+    try {
+      await navigator.clipboard.writeText(this.previewArea.value);
+      this.dispatchToast("Copied to clipboard!", "success");
+      
+      this.modal?.close();
     } catch (err) {
       console.error(err);
-      this.dispatchToast("Failed to share code", "error");
+      this.dispatchToast("Failed to copy", "error");
     }
   }
 

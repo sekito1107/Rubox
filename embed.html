@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html class="h-full">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Rubbit Embed</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap"
+      rel="stylesheet">
+
+    <script>
+      // 常にダークモードを使用するか、クエリパラメータで制御できると良いが、
+      // 一旦は親フレームやシステムの好みに関わらずダーク基調で見やすくする
+      document.documentElement.classList.add('dark');
+    </script>
+    <script type="module" src="/src/embed.ts"></script>
+    <style>
+      /* Embed特有のスタイル */
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #editor-container {
+        width: 100vw;
+        height: calc(100vh - 32px);
+      }
+
+      #footer {
+        height: 32px;
+      }
+    </style>
+  </head>
+
+  <body class="h-full bg-[#0D1117] text-zinc-100 flex flex-col">
+    <!-- Editor Area -->
+    <div id="editor-container" class="relative"></div>
+
+    <!-- Footer Bar -->
+    <div id="footer"
+      class="flex items-center justify-between px-3 bg-[#161b22] border-t border-white/10 text-xs select-none">
+      <div class="flex items-center gap-2">
+        <!-- Rubbit Logo (Small) -->
+        <span class="font-logo font-bold text-gray-100 tracking-tight">Rubbit</span>
+        <span class="text-slate-500">ReadOnly</span>
+      </div>
+
+      <a id="open-link" href="/" target="_blank" rel="noopener noreferrer"
+        class="flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors font-medium">
+        <span>Rubbitで開く</span>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+        </svg>
+      </a>
+    </div>
+  </body>
+
+</html>

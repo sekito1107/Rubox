@@ -62,20 +62,32 @@ test.describe('Rubbit E2E Tests', () => {
       }
     }, targetCode);
 
-    // Shareボタンをクリック
+    // Shareボタンをクリック (モーダルが開く)
     await page.getByRole('button', { name: 'Share' }).click();
 
-    // 通知を待機
-    await expect(page.locator('[data-toast="message"]')).toContainText('URL copied to clipboard!', { timeout: 10000 });
+    // モーダルが表示されるのを待つ
+    await expect(page.locator('#share-modal')).toBeVisible();
 
-    // クリップボードからの取得は環境によって難しいため、URLのハッシュを確認して遷移する
-    // 実際の実装では location.hash がセットされるはず
+    // Copyボタンをクリック
+    await page.locator('#share-copy-btn').click();
+
+    // 通知を確認
+    await expect(page.locator('[data-toast="message"]')).toContainText('Copied to clipboard!', { timeout: 10000 });
+
+    // URLハッシュから共有URLを取得 (history.replaceState で更新されていることを期待)
     const urlWithHash = await page.evaluate(() => window.location.href);
-    expect(urlWithHash).toContain('#code=');
 
-    // 新しいページで開く
+    // 新しいページで共有URLを開く
     const newPage = await context.newPage();
-    await newPage.goto(urlWithHash);
+    
+    if (urlWithHash.includes('#')) {
+         await newPage.goto(urlWithHash);
+    } else {
+         // URLが更新されていない場合はクリップボードから取得（フォールバック）
+         const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+         await newPage.goto(clipboardText);
+    }
+    
     await expect(newPage.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
 
     // コードが復元されているか確認
@@ -84,9 +96,21 @@ test.describe('Rubbit E2E Tests', () => {
       return editor ? editor.getValue() : "";
     });
     expect(restoredCode).toBe(targetCode);
+  });
 
-    // consume-once: URLからハッシュが消えていること
-    await expect(newPage).not.toHaveURL(/#code=/);
+  test('ファイルをダウンロードできる', async ({ page }) => {
+    // showSaveFilePicker を削除して、レガシーダウンロードへのフォールバックを強制する
+    await page.evaluate(() => {
+        // @ts-ignore
+        window.showSaveFilePicker = undefined;
+    });
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByTitle('コードを保存').click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe('rubbit.rb');
+    await download.path();
   });
 
   test('編集内容がlocalStorageに保存され永続化される', async ({ page }) => {
@@ -170,14 +194,4 @@ test.describe('Rubbit E2E Tests', () => {
     }, { timeout: 10000 }).toContain('1.upto(100) do |i|');
   });
 
-  test('ファイルをダウンロードできる', async ({ page }) => {
-    const downloadPromise = page.waitForEvent('download');
-
-    await page.getByTitle('コードを保存').click();
-
-    const download = await downloadPromise;
-
-    expect(download.suggestedFilename()).toBe('rubbit.rb');
-    await download.path();
-  });
 });

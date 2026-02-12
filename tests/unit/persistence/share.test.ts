@@ -77,4 +77,24 @@ describe('Share', () => {
       expect(share.decompress(hash)).toBe(complexCode)
     })
   })
+
+  describe('generateEmbedTag', () => {
+    it('正しい iframe タグを生成すること', () => {
+      const code = 'puts "embed"'
+      const tag = share.generateEmbedTag(code)
+      
+      expect(tag).toContain('<iframe')
+      expect(tag).toContain('src="http://localhost:5173/embed.html#code=')
+      expect(tag).toContain('width="100%"')
+    })
+  })
+
+  describe('generateCodeBlock', () => {
+    it('Rubyのコードブロック形式で生成すること', () => {
+      const code = 'puts "hello"'
+      const block = share.generateCodeBlock(code)
+      
+      expect(block).toBe('```ruby\nputs "hello"\n```')
+    })
+  })
 })

@@ -44,7 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   new SettingsComponent(document.getElementById("settings-modal")!, persistence)
   
-  new ShareComponent(document.getElementById("share-button")!, editorComponent, persistence.share)
+  new ShareComponent(
+    document.getElementById("share-button")!, 
+    document.getElementById("share-modal")!,
+    editorComponent, 
+    persistence.share
+  )
 
   new DownloadComponent(document.getElementById("download-button")!, editorComponent)
   
