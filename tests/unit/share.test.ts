@@ -17,6 +17,11 @@ describe('ShareComponent', () => {
         <button id="share-tab-url"></button>
         <button id="share-tab-embed"></button>
         <button id="share-tab-block"></button>
+        
+        <div id="share-embed-preview-container" class="hidden">
+          <div id="share-embed-frame-wrapper"></div>
+        </div>
+        
         <textarea id="share-preview"></textarea>
         <button id="share-copy-btn"></button>
       </dialog>
@@ -78,6 +83,8 @@ describe('ShareComponent', () => {
     // デフォルトでURLプレビューが表示されること
     expect(mockShare.compress).toHaveBeenCalledWith(code);
     expect((modal.querySelector('#share-preview') as HTMLTextAreaElement).value).toBe(compressedUrl);
+    // Embedプレビューは非表示であること
+    expect((modal.querySelector('#share-embed-preview-container') as HTMLElement).classList.contains('hidden')).toBe(true);
   });
 
   it('初期化時にURLハッシュからコードを復元すること', () => {
@@ -95,22 +102,31 @@ describe('ShareComponent', () => {
     new ShareComponent(button, modal, mockEditor, mockShare);
     mockEditor.getValue.mockReturnValue('code');
     mockShare.compress.mockReturnValue('url');
-    mockShare.generateEmbedTag.mockReturnValue('<iframe>');
+    mockShare.generateEmbedTag.mockReturnValue('<iframe src="http://embed"></iframe>');
     mockShare.generateCodeBlock.mockReturnValue('```');
 
     // Default (URL)
     button.click();
     expect(mockShare.compress).toHaveBeenCalled();
+    expect((modal.querySelector('#share-embed-preview-container') as HTMLElement).classList.contains('hidden')).toBe(true);
 
     // Switch to Embed
     (modal.querySelector('#share-tab-embed') as HTMLElement).click();
     expect(mockShare.generateEmbedTag).toHaveBeenCalledWith('code');
-    expect((modal.querySelector('#share-preview') as HTMLTextAreaElement).value).toBe('<iframe>');
+    expect((modal.querySelector('#share-preview') as HTMLTextAreaElement).value).toBe('<iframe src="http://embed"></iframe>');
+    
+    // Embedプレビューが表示され、iframeが挿入されていること
+    const previewContainer = modal.querySelector('#share-embed-preview-container') as HTMLElement;
+    const frameWrapper = modal.querySelector('#share-embed-frame-wrapper') as HTMLElement;
+    expect(previewContainer.classList.contains('hidden')).toBe(false);
+    expect(frameWrapper.innerHTML).toContain('<iframe src="http://embed"');
 
     // Switch to Code Block
     (modal.querySelector('#share-tab-block') as HTMLElement).click();
     expect(mockShare.generateCodeBlock).toHaveBeenCalledWith('code');
     expect((modal.querySelector('#share-preview') as HTMLTextAreaElement).value).toBe('```');
+    // Embedプレビューは非表示に戻ること
+    expect(previewContainer.classList.contains('hidden')).toBe(true);
   });
   
   it('コピーボタンでクリップボードにコピーしてモーダルを閉じること', async () => {

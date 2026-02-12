@@ -17,6 +17,10 @@ export class ShareComponent {
   private tabBlock: HTMLElement | null = null;
   private previewArea: HTMLTextAreaElement | null = null;
   private copyButton: HTMLElement | null = null;
+  
+  // Embed Preview
+  private embedPreviewContainer: HTMLElement | null = null;
+  private embedFrameWrapper: HTMLElement | null = null;
 
   private currentType: 'url' | 'embed' | 'block' = 'url';
 
@@ -44,6 +48,9 @@ export class ShareComponent {
       this.tabBlock = this.modal.querySelector('#share-tab-block');
       this.previewArea = this.modal.querySelector('#share-preview');
       this.copyButton = this.modal.querySelector('#share-copy-btn');
+      
+      this.embedPreviewContainer = this.modal.querySelector('#share-embed-preview-container');
+      this.embedFrameWrapper = this.modal.querySelector('#share-embed-frame-wrapper');
     }
 
     this.bindEvents();
@@ -105,6 +112,11 @@ export class ShareComponent {
     const code = this.editor.getValue();
     let content = "";
     
+    // Reset Preview state
+    if (this.embedPreviewContainer) {
+      this.embedPreviewContainer.classList.add('hidden');
+    }
+    
     try {
       switch (this.currentType) {
         case 'url':
@@ -115,6 +127,16 @@ export class ShareComponent {
           break;
         case 'embed':
           content = this.service.generateEmbedTag(code);
+          
+          // Embed Preview
+          if (this.embedPreviewContainer && this.embedFrameWrapper) {
+            this.embedPreviewContainer.classList.remove('hidden');
+            // Extract src from iframe tag (simple parsing)
+            const srcMatch = content.match(/src="([^"]+)"/);
+            if (srcMatch && srcMatch[1]) {
+              this.embedFrameWrapper.innerHTML = `<iframe src="${srcMatch[1]}" width="100%" height="100%" frameborder="0"></iframe>`;
+            }
+          }
           break;
         case 'block':
           content = this.service.generateCodeBlock(code);
