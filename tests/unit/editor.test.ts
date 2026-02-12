@@ -10,6 +10,7 @@ const { mockEditor, mockMonaco } = vi.hoisted(() => {
     updateOptions: vi.fn(),
     dispose: vi.fn(),
     onDidChangeModelContent: vi.fn(),
+    addCommand: vi.fn(),
   };
 
   const mockMonaco = {
