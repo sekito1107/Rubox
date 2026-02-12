@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Ghost Text Verification', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5182');
+    await page.goto('/');
     // 解析終了を待つ
     await page.waitForSelector('.monaco-editor');
     // カスタムイベントを待機して準備完了を確認
