@@ -162,6 +162,17 @@ describe('Scanner', () => {
         expect(matches[0]).toMatchObject({ name: 'first', col: 6 })
         expect(matches[1]).toMatchObject({ name: 'last', col: 18 })
       })
+
+      it('単語の途中 (Sum(等) から意図しないマッチ (um) が発生しないこと', () => {
+        const code = 'puts "Sum (1..100): #{sum}"'
+        const model = createMockModel(code)
+        const results = scanner.scanLines(model, [0])
+        const matches = results.get(0)!
+
+        // puts と sum (ホワイトリストに含まれる場合のみ) が抽出されるはず
+        // 'um' が Group 2 などで誤認されないことを確認
+        expect(matches.map(m => m.name)).not.toContain('um')
+      })
     })
   })
 })
