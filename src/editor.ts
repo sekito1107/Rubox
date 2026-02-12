@@ -107,7 +107,11 @@ export class EditorComponent {
       renderWhitespace: savedSettings.renderWhitespace || 'none',
       scrollBeyondLastLine: false,
       renderLineHighlight: "all",
-      fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace"
+      fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace",
+      inlayHints: {
+        enabled: "on",
+        maximumLength: 150
+      }
     })
 
     // ショートカットキー登録: Ctrl+Enter (Cmd+Enter) で実行
@@ -117,6 +121,7 @@ export class EditorComponent {
 
     // グローバルアクセス用 (テスト等で利用)
     window.monacoEditor = this.editor
+    window.monaco = monaco
 
     // コードの永続化
     this.editor.onDidChangeModelContent(() => {

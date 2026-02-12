@@ -45,7 +45,7 @@ export class ProvideInlayHints {
     
     // Inlay Hints を強制的に再描画させる
     this.editor.updateOptions({ inlayHints: { enabled: "off" } });
-    setTimeout(() => this.editor.updateOptions({ inlayHints: { enabled: "on" } }), 50);
+    setTimeout(() => this.editor.updateOptions({ inlayHints: { enabled: "on", maximumLength: 150 } }), 50);
   }
 
   /**
