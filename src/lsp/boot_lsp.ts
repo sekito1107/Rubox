@@ -50,7 +50,7 @@ export class BootLSP {
       if (!window.__rubyLSPInitialAnalysisFinished) {
         window.__rubyLSPInitialAnalysisFinished = true;
         // システム全体に初回の解析完了を通知
-        window.dispatchEvent(new CustomEvent("rubpad:lsp-analysis-finished"));
+        window.dispatchEvent(new CustomEvent("rubbit:lsp-analysis-finished"));
       }
     };
 

@@ -79,8 +79,8 @@ describe('ConsoleComponent', () => {
     // onFullyReady 内で loading-container が存在すると setTimeout(500ms) で遅延実行される
     vi.useFakeTimers();
 
-    // リファクタリングにより rubpad:lsp-ready イベント経由で通知される
-    window.dispatchEvent(new CustomEvent('rubpad:lsp-ready', {
+    // リファクタリングにより rubbit:lsp-ready イベント経由で通知される
+    window.dispatchEvent(new CustomEvent('rubbit:lsp-ready', {
       detail: { version: '4.0.0' }
     }));
     

@@ -9,8 +9,8 @@ declare global {
     __rubyVMInitializing?: boolean;
     __rubyVMReady?: boolean;
     rubyLSP?: LSPClient;
-    rubpadLSPManager?: LSP;
-    rubpadAnalysisCoordinator?: AnalysisCoordinator;
+    rubbitLSPManager?: LSP;
+    rubbitAnalysisCoordinator?: AnalysisCoordinator;
     MonacoEnvironment?: {
       getWorker(workerId: string, label: string): Worker;
     };

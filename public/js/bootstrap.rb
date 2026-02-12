@@ -11,7 +11,7 @@ require "rubygems"
 
 # File.readable? は bjorn3/browser_wasi_shim では動作しないため代用
 def File.readable?(...) = File.file?(...)
-class RubPadStopExecution < StandardError; end
+class RubbitStopExecution < StandardError; end
 
 # ワークスペースのセットアップ
 # TypeProfは /workspace などのディレクトリ構造を期待している可能性があるため
@@ -196,7 +196,7 @@ class Server
     begin
       RubyVM::InstructionSequence.compile(code)
       # 構文エラーなし -> クリア
-      write(method: "rubpad/syntaxCheck", params: { valid: true })
+      write(method: "rubbit/syntaxCheck", params: { valid: true })
     rescue SyntaxError => e
       # e.message 例: "(eval):1: syntax error, unexpected end-of-input, expecting end"
       msg = e.message
@@ -218,7 +218,7 @@ class Server
         message: msg,
         source: "RubyVM"
       }
-      write(method: "rubpad/syntaxCheck", params: { valid: false, diagnostics: [diag] })
+      write(method: "rubbit/syntaxCheck", params: { valid: false, diagnostics: [diag] })
     rescue => e
       # その他のエラーは無視
     end
@@ -272,9 +272,9 @@ class Server
                 CapturedValue.target_triggered = false
                 
                 if CapturedValue.count >= max_captures
-                  raise RubPadStopExecution
+                  raise RubbitStopExecution
                 end
-              rescue RubPadStopExecution
+              rescue RubbitStopExecution
                 raise
               rescue => e
                 # まだ評価できない場合(NameError等)かつターゲット行内の場合は続行。
@@ -294,7 +294,7 @@ class Server
             tp.enable do
               measure_binding.eval(code_str, "(eval)")
             end
-          rescue RubPadStopExecution
+          rescue RubbitStopExecution
             # 正常停止（制限に達したなど）
           rescue => e
             # 実行時エラーがあればそれも記録
@@ -328,7 +328,7 @@ class Server
            results = CapturedValue.get_all.map { |v| v.inspect }
            result_str = results.join(", ")
         else
-           if e.message == "RubPad::StopExecution"
+           if e.message == "Rubbit::StopExecution"
              results = CapturedValue.get_all.map { |v| v.inspect }
              result_str = results.join(", ")
            else

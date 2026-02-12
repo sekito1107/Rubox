@@ -2,7 +2,7 @@
  * エディタ設定等の LocalStorage への保存と復元を担当する
  */
 export class Settings {
-  static readonly STORAGE_KEY = "rubpad_settings"
+  static readonly STORAGE_KEY = "rubbit_settings"
   private data: Record<string, any>
 
   constructor() {

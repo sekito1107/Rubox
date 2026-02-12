@@ -12,15 +12,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sekito1107/RubPad.git"
+    "url": "git+https://github.com/sekito1107/Rubbit.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sekito1107/RubPad/issues"
+    "url": "https://github.com/sekito1107/Rubbit/issues"
   },
-  "homepage": "https://github.com/sekito1107/RubPad#readme",
+  "homepage": "https://github.com/sekito1107/Rubbit#readme",
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.1.18",

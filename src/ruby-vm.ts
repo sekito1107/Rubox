@@ -5,7 +5,7 @@ import { AnalysisCoordinator } from "./analysis";
 
 // グローバル定義は src/types.d.ts に移動
 
-const RUBY_WASM_URL = "/js/rubpad.wasm";
+const RUBY_WASM_URL = "/js/rubbit.wasm";
 const WORKER_URL = "/js/ruby_worker.js";
 
 /**
@@ -75,7 +75,7 @@ export class RubyVM {
         break;
       case "progress":
         // Workerからの進捗イベントを中継
-        window.dispatchEvent(new CustomEvent("rubpad:loading-progress", {
+        window.dispatchEvent(new CustomEvent("rubbit:loading-progress", {
           detail: { percent: payload.percent, message: payload.message }
         }));
         break;
@@ -130,7 +130,7 @@ export class RubyVM {
    */
   private async tryActivateDomains(): Promise<void> {
     if (this.lspClient && this.editor && !this.lspManager && window.__rubyVMReady) {
-      window.dispatchEvent(new CustomEvent("rubpad:loading-progress", {
+      window.dispatchEvent(new CustomEvent("rubbit:loading-progress", {
         detail: { percent: 70, message: "Starting Language Server..." }
       }));
       this.lspManager = new LSP(this.lspClient, this.editor);
@@ -138,24 +138,24 @@ export class RubyVM {
       try {
         await this.lspManager.initialize();
         this.lspManager.activate();
-        window.rubpadLSPManager = this.lspManager;
+        window.rubbitLSPManager = this.lspManager;
 
         // Reference ドメインの初期化
-        window.dispatchEvent(new CustomEvent("rubpad:loading-progress", {
+        window.dispatchEvent(new CustomEvent("rubbit:loading-progress", {
           detail: { percent: 85, message: "Loading Reference Index..." }
         }));
         this.reference = new Reference();
         await this.reference.loadIndex();
 
         // 解析コーディネーターの初期化
-        window.dispatchEvent(new CustomEvent("rubpad:loading-progress", {
+        window.dispatchEvent(new CustomEvent("rubbit:loading-progress", {
           detail: { percent: 100, message: "Ready!" }
         }));
         this.analysis = new AnalysisCoordinator(this.editor, this.lspManager, this.reference);
-        window.rubpadAnalysisCoordinator = this.analysis;
+        window.rubbitAnalysisCoordinator = this.analysis;
         this.analysis.start();
 
-        window.dispatchEvent(new CustomEvent("rubpad:lsp-ready", {
+        window.dispatchEvent(new CustomEvent("rubbit:lsp-ready", {
           detail: { version: this.rubyVersion }
         }));
       } catch (e) {
@@ -178,6 +178,6 @@ export class RubyVM {
     window.removeEventListener("editor:initialized", this.boundHandleEditorInitialized);
     if (this.worker) this.worker.terminate();
     if (window.rubyLSP === this.lspClient) delete window.rubyLSP;
-    if (window.rubpadLSPManager === this.lspManager) delete window.rubpadLSPManager;
+    if (window.rubbitLSPManager === this.lspManager) delete window.rubbitLSPManager;
   }
 }

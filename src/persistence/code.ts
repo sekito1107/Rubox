@@ -2,7 +2,7 @@
  * エディタのコード内容を LocalStorage に保存・復元する
  */
 export class CodePersistence {
-  static readonly STORAGE_KEY = "rubpad_code"
+  static readonly STORAGE_KEY = "rubbit_code"
 
   /**
    * コードを保存する

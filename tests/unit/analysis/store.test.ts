@@ -39,7 +39,7 @@ describe('AnalysisStore', () => {
   })
 
   describe('notify', () => {
-    it('rubpad:analysis-updated イベントを正しいペイロードで発火すること', () => {
+    it('rubbit:analysis-updated イベントを正しいペイロードで発火すること', () => {
       const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
       const data: MethodItem = { name: 'm1', line: 1, col: 1, status: 'resolved' }
       store.set('m1', data)
@@ -49,7 +49,7 @@ describe('AnalysisStore', () => {
       
       expect(dispatchSpy).toHaveBeenCalled()
       const event = dispatchSpy.mock.calls[0][0] as CustomEvent
-      expect(event.type).toBe('rubpad:analysis-updated')
+      expect(event.type).toBe('rubbit:analysis-updated')
       expect(event.detail.methods).toEqual([data])
       expect(event.detail.firstScanDone).toBe(true)
     })

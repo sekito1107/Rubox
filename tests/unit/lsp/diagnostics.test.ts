@@ -35,7 +35,7 @@ describe('HandleDiagnostics', () => {
   it('開始時に通知リスナーを登録すること', () => {
     handler.start();
     expect(mockClient.onNotification).toHaveBeenCalledWith('textDocument/publishDiagnostics', expect.any(Function));
-    expect(mockClient.onNotification).toHaveBeenCalledWith('rubpad/syntaxCheck', expect.any(Function));
+    expect(mockClient.onNotification).toHaveBeenCalledWith('rubbit/syntaxCheck', expect.any(Function));
   });
 
   it('publishDiagnostics を受信した際にマーカーを設定すること', () => {
@@ -86,7 +86,7 @@ describe('HandleDiagnostics', () => {
 
   it('構文チェック通知を処理できること', () => {
     handler.start();
-    const syntaxHandler = mockClient.onNotification.mock.calls.find((c: any) => c[0] === 'rubpad/syntaxCheck')[1];
+    const syntaxHandler = mockClient.onNotification.mock.calls.find((c: any) => c[0] === 'rubbit/syntaxCheck')[1];
     
     // 有効なケース
     syntaxHandler({ valid: true });

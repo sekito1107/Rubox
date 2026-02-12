@@ -76,13 +76,13 @@ export class HandleDiagnostics {
         // 解析完了を通知 (負荷軽減のためデバウンス)
         if (this.debounceTimer) clearTimeout(this.debounceTimer);
         this.debounceTimer = setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("rubpad:lsp-analysis-finished"));
+          window.dispatchEvent(new CustomEvent("rubbit:lsp-analysis-finished"));
         }, 100);
       }
     });
 
     // 2. カスタムの構文チェック
-    this.client.onNotification("rubpad/syntaxCheck", (params: SyntaxCheckParams) => {
+    this.client.onNotification("rubbit/syntaxCheck", (params: SyntaxCheckParams) => {
       const model = this.editor.getModel();
       if (!model) return;
 

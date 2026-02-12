@@ -63,7 +63,7 @@ export class AnalysisCoordinator {
     // 3. LSP の解析完了イベントを購読
     // LSP 側で外部的な要因（RBS読み込みなど）で解析が終わった際、
     // まだ解析が必要な状態であればスケジュールする
-    window.addEventListener("rubpad:lsp-analysis-finished", () => {
+    window.addEventListener("rubbit:lsp-analysis-finished", () => {
       if (this.needsReanalysis) {
         this.scheduleAnalysis()
       }
@@ -71,7 +71,7 @@ export class AnalysisCoordinator {
   }
 
   stop(): void {
-    window.removeEventListener("rubpad:lsp-analysis-finished", this.boundHandleLSPFinished)
+    window.removeEventListener("rubbit:lsp-analysis-finished", this.boundHandleLSPFinished)
   }
 
   scheduleAnalysis(delay: number = this.WAIT_MS): void {

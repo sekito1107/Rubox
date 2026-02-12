@@ -31,14 +31,14 @@ export class MethodListComponent {
     }
     this.boundInitData = () => {
       const g = window as any
-      if (g.rubpadAnalysisCoordinator) {
-        const { methods, firstScanDone } = g.rubpadAnalysisCoordinator.getAnalysis()
+      if (g.rubbitAnalysisCoordinator) {
+        const { methods, firstScanDone } = g.rubbitAnalysisCoordinator.getAnalysis()
         this.renderMethodList(methods, firstScanDone)
       }
     }
 
-    window.addEventListener("rubpad:analysis-updated", this.boundHandleAnalysisUpdated)
-    window.addEventListener("rubpad:lsp-ready", this.boundInitData)
+    window.addEventListener("rubbit:analysis-updated", this.boundHandleAnalysisUpdated)
+    window.addEventListener("rubbit:lsp-ready", this.boundInitData)
 
     this.boundInitData()
   }
@@ -150,7 +150,7 @@ export class MethodListComponent {
   }
 
   public dispose(): void {
-    window.removeEventListener("rubpad:analysis-updated", this.boundHandleAnalysisUpdated)
-    window.removeEventListener("rubpad:lsp-ready", this.boundInitData)
+    window.removeEventListener("rubbit:analysis-updated", this.boundHandleAnalysisUpdated)
+    window.removeEventListener("rubbit:lsp-ready", this.boundInitData)
   }
 }

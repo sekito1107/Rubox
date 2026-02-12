@@ -116,7 +116,7 @@ export class EditorComponent {
 
     // ショートカットキー登録: Ctrl+Enter (Cmd+Enter) で実行
     this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      window.dispatchEvent(new CustomEvent("rubpad:run-trigger"))
+      window.dispatchEvent(new CustomEvent("rubbit:run-trigger"))
     })
 
     // グローバルアクセス用 (テスト等で利用)

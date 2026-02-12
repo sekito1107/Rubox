@@ -66,7 +66,7 @@ export class AnalysisStore {
    * 状態が更新されたことをシステム全体に通知する
    */
   notify(): void {
-    const event = new CustomEvent("rubpad:analysis-updated", {
+    const event = new CustomEvent("rubbit:analysis-updated", {
       detail: { 
         methods: this.getAll(),
         firstScanDone: this.firstScanDone

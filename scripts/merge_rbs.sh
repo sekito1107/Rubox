@@ -1,5 +1,5 @@
 #!/bin/bash
-TARGET="/home/bonnmasa/app/rubpad/public/rbs/ruby-stdlib.rbs"
+TARGET="/home/bonnmasa/app/rubbit/public/rbs/ruby-stdlib.rbs"
 rm -f "$TARGET"
 mkdir -p "$(dirname "$TARGET")"
 cd /usr/lib/ruby/gems/3.1.0/gems/rbs-2.1.0 || exit 1
