@@ -29,8 +29,8 @@ export class ExecuteCommand {
         });
 
         if (result !== undefined) {
-          const line = params.line;
-          if (line && this.inlayHints) {
+          const line = params.line + 1; // Convert 0-based to 1-based for Monaco
+          if (this.inlayHints) {
             // インレイヒントを更新して表示
             this.inlayHints.update(line, result as string);
           } else {

@@ -41,7 +41,7 @@ export class ProvideHover {
           let additionalContents: { value: string; isTrusted: boolean }[] = [];
           
           if (this.shouldShowEvaluateLink(model, position, wordInfo, markdownContent)) {
-            const params = { expression: expression, line: position.lineNumber, character: position.column };
+            const params = { expression: expression, line: position.lineNumber - 1, character: position.column };
             const measureCmd = `command:typeprof.measureValue?${encodeURIComponent(JSON.stringify(params))}`;
             additionalContents.push({ value: `[値を確認: ${expression}](${measureCmd})`, isTrusted: true });
           }
