@@ -16,7 +16,11 @@ const { mockEditor, mockMonaco } = vi.hoisted(() => {
   const mockMonaco = {
     editor: {
       create: vi.fn(() => mockEditor),
+      createModel: vi.fn(),
       setTheme: vi.fn(),
+    },
+    Uri: {
+      parse: vi.fn((uri) => ({ toString: () => uri })),
     },
     KeyMod: {
       CtrlCmd: 2048,
@@ -31,9 +35,9 @@ const { mockEditor, mockMonaco } = vi.hoisted(() => {
 
 vi.mock('monaco-editor', () => ({
   editor: mockMonaco.editor,
+  Uri: mockMonaco.Uri,
   KeyMod: mockMonaco.KeyMod,
   KeyCode: mockMonaco.KeyCode,
-  // 他の必要なモジュールがあればここに追加
 }));
 
 // Persistenceのモック
@@ -86,10 +90,11 @@ describe('EditorComponent', () => {
 
     component = new EditorComponent(container, persistence);
 
-    expect(mockMonaco.editor.create).toHaveBeenCalledWith(container, expect.objectContaining({
-      value: 'puts "Hello"',
-      fontSize: 16,
-    }));
+    expect(mockMonaco.editor.createModel).toHaveBeenCalledWith(
+      'puts "Hello"',
+      'ruby',
+      expect.anything()
+    );
     expect(window.monacoEditor).toBe(mockEditor);
   });
 

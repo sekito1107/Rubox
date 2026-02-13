@@ -107,7 +107,7 @@ class Server
           new_text_lines[0] = prefix + (new_text_lines[0] || "") + suffix
         else
           new_text_lines[0] = prefix + (new_text_lines[0] || "")
-          new_text[-1] = (new_text[-1] || "") + suffix
+          new_text_lines[-1] = (new_text_lines[-1] || "") + suffix
         end
         lines[start_pos[:line]..end_pos[:line]] = new_text_lines
       else
@@ -172,7 +172,7 @@ class Server
     end
   end
 
-  def write(**json)
+  def write(json)
     json_obj = json.merge(jsonrpc: "2.0")
     # JS.global.call を使用してグローバル関数として呼び出す
     JS.global.call(:sendLspResponse, JSON.generate(json_obj))
