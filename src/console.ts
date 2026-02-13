@@ -69,7 +69,7 @@ export class ConsoleComponent {
       this.run()
     })
 
-    // 全初期化完了イベントを購読
+    // 全初期化完了イベントを購読 (BootLoader完了後にRubyVMから発火)
     window.addEventListener("rubbit:lsp-ready", (event: Event) => {
       const detail = (event as CustomEvent).detail;
       this.onFullyReady(detail?.version || "");
@@ -197,7 +197,7 @@ export class ConsoleComponent {
     }
   }
 
-  public run(): void {
+  public async run(): Promise<void> {
     // 無効化中はスキップ
     if (this.runButton?.hasAttribute("disabled")) return;
 
@@ -213,7 +213,8 @@ export class ConsoleComponent {
 
     try {
       const code = this.editor.getValue();
-      this.rubyVM.run(code);
+      const { Executor } = await import("./runtime/executor");
+      new Executor(this.rubyVM).execute(code);
     } catch (e: any) {
       this.appendOutput(`// エラー: ${e.message}`);
     }
