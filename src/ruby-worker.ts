@@ -99,9 +99,6 @@ async function initializeVM(wasmUrl: string) {
     writeRubyFile("/src/measure_value.rb", measureValueCode);
     writeRubyFile("/src/server.rb", serverCode);
 
-    vm.eval(`
-      $LOAD_PATH.unshift("/src")
-    `);
 
     // LSPからのレスポンスをMain Threadに転送する関数
     (self as any).sendLspResponse = (jsonString: string) => {

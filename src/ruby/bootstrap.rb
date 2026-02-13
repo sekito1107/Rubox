@@ -1,15 +1,17 @@
 require "js"
 require "rubygems"
 
-# 環境パッチを最優先
-require "env"
+# 自前ファイルを相対パスで読み込む（環境パッチを最優先）
+require_relative "env"
 
+# 外部ライブラリ
 require "typeprof"
 require "typeprof/lsp"
 
-require "workspace"
-require "measure_value"
-require "server"
+# 自前ファイル
+require_relative "workspace"
+require_relative "measure_value"
+require_relative "server"
 
 # TypeProfコアの初期化
 rbs_list = File.exist?("/workspace/stdlib.rbs") ? ["/workspace/stdlib.rbs"] : []
