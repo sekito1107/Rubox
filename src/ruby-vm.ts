@@ -70,11 +70,13 @@ export class RubyVM {
         break;
       case "progress":
         // Workerからの進捗イベントを中継
+        console.log(`[RubyVM] Progress: ${payload.percent}% - ${payload.message}`);
         window.dispatchEvent(new CustomEvent("rubbit:loading-progress", {
           detail: { percent: payload.percent, message: payload.message }
         }));
         break;
       case "ready":
+        console.log(`[RubyVM] Received READY from worker. Version: ${payload.version}`);
         window.__rubyVMReady = true;
         delete window.__rubyVMInitializing;
         // onReady はローディング統合のため版数を保存するのみ
@@ -132,6 +134,7 @@ export class RubyVM {
       try {
         await this.bootLoader.boot();
         
+        console.log("[RubyVM] LSP and Domains ready (rubbit:lsp-ready fired)");
         window.dispatchEvent(new CustomEvent("rubbit:lsp-ready", {
           detail: { version: this.rubyVersion }
         }));

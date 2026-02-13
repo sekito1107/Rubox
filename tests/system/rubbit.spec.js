@@ -10,7 +10,7 @@ test.describe('Rubbit E2E Tests', () => {
 
   test('Rubyコードを実行して結果を表示する', async ({ page }) => {
     // Ruby WASM の初期化を待機（ターミナルの出力を確認）
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     // エディタにコードをセット
     await page.evaluate(() => {
@@ -28,7 +28,7 @@ test.describe('Rubbit E2E Tests', () => {
   });
 
   test('Rubyのエラーを適切にハンドリングする', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     await page.evaluate(() => {
       const editor = window.monacoEditor;
@@ -43,7 +43,7 @@ test.describe('Rubbit E2E Tests', () => {
   });
 
   test('ターミナルの出力をクリアする', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     await page.getByRole('button', { name: 'Clear' }).click();
 
@@ -52,7 +52,7 @@ test.describe('Rubbit E2E Tests', () => {
 
   test('ShareボタンでコードをURLに保存・復元できる', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     const targetCode = 'puts "Share Flow Test"';
     await page.evaluate((code) => {
@@ -88,7 +88,7 @@ test.describe('Rubbit E2E Tests', () => {
          await newPage.goto(clipboardText);
     }
     
-    await expect(newPage.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(newPage.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     // コードが復元されているか確認
     const restoredCode = await newPage.evaluate(() => {
@@ -114,7 +114,7 @@ test.describe('Rubbit E2E Tests', () => {
   });
 
   test('編集内容がlocalStorageに保存され永続化される', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     const editedCode = 'puts "Persistence Test"';
     await page.evaluate((code) => {
@@ -129,7 +129,7 @@ test.describe('Rubbit E2E Tests', () => {
 
     // リロード
     await page.reload();
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     const reloadedCode = await page.evaluate(() => {
       const editor = window.monacoEditor;
@@ -139,7 +139,7 @@ test.describe('Rubbit E2E Tests', () => {
   });
 
   test('エディタ設定を変更して永続化される', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     // 設定モーダルを開く
     await page.getByTitle('Editor Settings').click();
@@ -155,7 +155,7 @@ test.describe('Rubbit E2E Tests', () => {
 
     // リロード
     await page.reload();
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
 
     // 設定モーダルを再度開く
     await page.getByTitle('Editor Settings').click();

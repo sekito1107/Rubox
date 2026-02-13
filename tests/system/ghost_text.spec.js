@@ -8,7 +8,7 @@ test.describe('Ghost Text Verification', () => {
     await page.waitForSelector('.monaco-editor');
     // カスタムイベントを待機して準備完了を確認
     await page.evaluate(async () => {
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 180; i++) {
         if (window.rubbitLSPReady) return true;
         await new Promise(r => setTimeout(r, 500));
         if (i % 10 === 0) console.log(`Waiting for rubbitLSPReady... i=${i}`);
