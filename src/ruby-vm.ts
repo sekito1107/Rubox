@@ -126,7 +126,14 @@ export class RubyVM {
    * 各ドメイン（LSP, Reference, Analysis）の有効化を試みる
    */
   private async tryActivateDomains(): Promise<void> {
+    console.log("[RubyVM] tryActivateDomains called", { 
+      hasLsp: !!this.lspClient, 
+      hasEditor: !!this.editor, 
+      hasBoot: !!this.bootLoader, 
+      ready: window.__rubyVMReady 
+    });
     if (this.lspClient && this.editor && !this.bootLoader && window.__rubyVMReady) {
+      console.log("[RubyVM] Starting BootLoader...");
       // BootLoaderの遅延読み込みと初期化
       const { BootLoader } = await import("./boot");
       this.bootLoader = new BootLoader(this, this.editor);

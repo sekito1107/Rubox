@@ -129,6 +129,7 @@ class Server
   end
 
   def add_msg(msg)
+    JS.global[:console].log("[RubyLSP] Received: #{msg}")
     json = JSON.parse(msg.to_s, symbolize_names: true)
     
     # ファイル内容の同期 (Measure Valueのため)
@@ -396,6 +397,7 @@ class Server
     json_str = JSON.generate(json_obj)
     
     # JS.global.call を使用してグローバル関数として呼び出す
+    JS.global[:console].log("[RubyLSP] Write: #{json_str}")
     JS.global.call(:sendLspResponse, json_str)
   end
 end

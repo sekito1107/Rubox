@@ -23,15 +23,18 @@ export class BootLoader {
    * システム初期化を開始
    */
   public async boot(): Promise<void> {
+    console.log("[BootLoader] Starting boot sequence...");
     if (!this.rubyVM.lspClient) {
       console.warn("LSP Client is not ready in RubyVM");
       return;
     }
 
     // 1. LSPの初期化
+    console.log("[BootLoader] Step 1: Initializing LSP...");
     this.dispatchProgress(70, "Starting Language Server...");
     this.lspManager = new LSP(this.rubyVM.lspClient, this.editor);
     await this.lspManager.initialize();
+    console.log("[BootLoader] LSP initialized, activating...");
     this.lspManager.activate();
     
     // 互換性のためのグローバル公開
@@ -40,15 +43,19 @@ export class BootLoader {
     window.dispatchEvent(new CustomEvent("rubbit:lsp-analysis-finished"));
 
     // 2. リファレンスの読み込み
+    console.log("[BootLoader] Step 2: Loading Reference Index...");
     this.dispatchProgress(85, "Loading Reference Index...");
     this.reference = new Reference();
     await this.reference.loadIndex();
+    console.log("[BootLoader] Reference Index loaded.");
 
     // 3. 解析機能の起動
+    console.log("[BootLoader] Step 3: Starting Analysis Coordinator...");
     this.dispatchProgress(100, "Ready!");
     this.analysis = new AnalysisCoordinator(this.editor, this.lspManager, this.reference);
     window.rubbitAnalysisCoordinator = this.analysis;
     this.analysis.start();
+    console.log("[BootLoader] Analysis Coordinator started. Boot sequence complete.");
 
     // 初期化完了 (バージョン情報はVM側から通知されるため、ここでは解析完了のみ)
   }

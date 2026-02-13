@@ -49,6 +49,7 @@ export class LSPClient {
       // レスポンスが到着したときに呼び出されるPromiseのリゾルバを保存する
       this.pendingRequests.set(id, { resolve, reject });
 
+      console.log(`[LSPClient] Sending Request [${id}]: ${method}`);
       this.worker.postMessage({
         type: "lsp",
         payload: {
@@ -107,6 +108,7 @@ export class LSPClient {
   private handleMessage(event: MessageEvent): void {
     const { type, payload } = event.data;
     if (type !== "lsp") return;
+    console.log(`[LSPClient] Message received: ${payload}`);
 
     try {
       const message = JSON.parse(payload) as LSPResponse; // ペイロードは文字列化されたJSON-RPC
