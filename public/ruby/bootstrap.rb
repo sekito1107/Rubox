@@ -90,6 +90,7 @@ class Server
     # TypeProfコアの初期化
     rbs_list = File.exist?("/workspace/stdlib.rbs") ? ["/workspace/stdlib.rbs"] : []
     JS.global[:console].log("[RubyLSP] RBS list: #{rbs_list}")
+    JS.global[:console].log("[RubyLSP] RBS version: #{RBS::VERSION}")
     @core = TypeProf::Core::Service.new(rbs_files: rbs_list)
     JS.global[:console].log("[RubyLSP] TypeProf::Core::Service initialized")
     
