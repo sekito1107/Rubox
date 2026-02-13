@@ -47,11 +47,6 @@ class Server
     @user_binding = TOPLEVEL_BINDING.eval("binding")
   end
 
-  # ユーザーコードを実行し、ローカル変数を保持する
-  def run_code(code)
-    eval(code, @user_binding)
-  end
-
   def start
     @fiber = Fiber.new do
       # TypeProf LSPサーバーを開始
@@ -60,6 +55,7 @@ class Server
     @fiber.resume
   end
 
+  # LSPクライアントからのメッセージを受け取る
   def add_msg(msg)
     json = JSON.parse(msg.to_s, symbolize_names: true)
     
@@ -84,7 +80,73 @@ class Server
     end
   end
 
+  # LSPサーバーがメッセージを読み取るためのインターフェース
+  def read
+    while true
+      Fiber.yield until @read_msg
+      begin
+        yield @read_msg
+      rescue => e
+        @error = e
+      ensure
+        @read_msg = nil
+      end
+    end
+  end
+
+  # LSPサーバが応答を書き込むためのインターフェース
+  def write(json)
+    json_obj = json.merge(jsonrpc: "2.0")
+    # JS.global.call を使用してグローバル関数として呼び出す
+    JS.global.call(:sendLspResponse, JSON.generate(json_obj))
+  end
+
+  # ユーザーコードを実行し、ローカル変数を保持する
+  def run_code(code)
+    eval(code, @user_binding)
+  end
+
   private
+
+  def handle_execute_command(json)
+    params = json[:params]
+    case params[:command]
+    when "typeprof.measureValue"
+      expression = params[:arguments][0][:expression]
+      target_line = params[:arguments][0][:line] + 1
+      result = MeasureValue.run(expression, target_line, @user_binding)
+      write(id: json[:id], result: result)
+    else
+      write(id: json[:id], error: { code: -32601, message: "Method not found" })
+    end
+  end
+
+  def check_syntax
+    code = File.read("/workspace/main.rb")
+    begin
+      RubyVM::InstructionSequence.compile(code)
+      write(method: "rubbit/syntaxCheck", params: { valid: true })
+    rescue SyntaxError => e
+      msg = e.message
+      line = 0
+      if msg =~ /:(\d+): (.*)/
+        line = ($1.to_i || 1) - 1
+        msg = $2
+      end
+      
+      diag = {
+        range: {
+          start: { line: line, character: 0 },
+          end: { line: line, character: 999 }
+        },
+        severity: 1,
+        message: msg,
+        source: "RubyVM"
+      }
+      write(method: "rubbit/syntaxCheck", params: { valid: false, diagnostics: [diag] })
+    rescue
+    end
+  end
 
   def apply_changes_to_file(changes)
     return unless changes
@@ -115,66 +177,5 @@ class Server
       end
     end
     File.write("/workspace/main.rb", lines.join("\n"))
-  end
-
-  def check_syntax
-    code = File.read("/workspace/main.rb")
-    begin
-      RubyVM::InstructionSequence.compile(code)
-      write(method: "rubbit/syntaxCheck", params: { valid: true })
-    rescue SyntaxError => e
-      msg = e.message
-      line = 0
-      if msg =~ /:(\d+): (.*)/
-        line = ($1.to_i || 1) - 1
-        msg = $2
-      end
-      
-      diag = {
-        range: {
-          start: { line: line, character: 0 },
-          end: { line: line, character: 999 }
-        },
-        severity: 1,
-        message: msg,
-        source: "RubyVM"
-      }
-      write(method: "rubbit/syntaxCheck", params: { valid: false, diagnostics: [diag] })
-    rescue
-    end
-  end
-
-  def handle_execute_command(json)
-    params = json[:params]
-    case params[:command]
-    when "typeprof.measureValue"
-      expression = params[:arguments][0][:expression]
-      target_line = params[:arguments][0][:line] + 1
-      result = MeasureValue.run(expression, target_line, @user_binding)
-      write(id: json[:id], result: result)
-    else
-      write(id: json[:id], error: { code: -32601, message: "Method not found" })
-    end
-  end
-
-  public
-
-  def read
-    while true
-      Fiber.yield until @read_msg
-      begin
-        yield @read_msg
-      rescue => e
-        @error = e
-      ensure
-        @read_msg = nil
-      end
-    end
-  end
-
-  def write(json)
-    json_obj = json.merge(jsonrpc: "2.0")
-    # JS.global.call を使用してグローバル関数として呼び出す
-    JS.global.call(:sendLspResponse, JSON.generate(json_obj))
   end
 end
