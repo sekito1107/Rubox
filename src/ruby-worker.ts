@@ -75,8 +75,8 @@ async function initializeVM(wasmUrl: string) {
             vm.eval(`File.open('/rbs/ruby-stdlib.rbs', '${mode}') { |f| f.write("${b64}".unpack1("m")) }`);
           }
         }
-      } catch (e: any) {
-        postMessage({ type: "output", payload: { text: `// RBS Loading Error: ${e.message}` } });
+      } catch {
+        // Ignore RBS fetch errors
       }
 
     // bootstrap.rb (Polyfills & LSP Server) をロードする

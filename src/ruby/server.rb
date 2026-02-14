@@ -77,7 +77,6 @@ class Server
       @fiber.resume
     rescue => e
       write(method: "window/showMessage", params: { type: 1, message: "LSP Fatal Error: #{e.message}" })
-      postMessage({ type: "error", payload: { message: "LSP Fatal Error: #{e.message}\n#{e.backtrace.join("\n")}" } })
     end
 
     if @error
