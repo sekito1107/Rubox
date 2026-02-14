@@ -76,7 +76,6 @@ npm run build
   - `public/ruby/rubbit.wasm`: Ruby WASM 本体。
   - `public/ruby/bootstrap.rb`: 初期化スクリプト。
   - `public/rbs/ruby-stdlib.rbs`: マージされた RBS ファイル（`npm run setup` で生成）。
-- `scripts/`: メンテナンス用のスクリプト（RBS のマージなど）。
 - `index.html`: メインアプリケーションのレイアウト。
 
 ## 免責事項

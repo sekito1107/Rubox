@@ -54,3 +54,6 @@ playwright-report/
 test-results/
 .playwright/
 .vite-inspect/
+
+# Project Scripts
+/scripts/
