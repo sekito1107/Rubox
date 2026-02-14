@@ -1,5 +1,15 @@
 import "./main.css"
 
+// Diagnostics
+window.addEventListener('error', (e) => {
+  console.error('[Global Error]', e.message, e.error || e);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('[Unhandled Rejection]', e.reason);
+});
+console.log("[Diagnostics] SharedArrayBuffer:", typeof SharedArrayBuffer !== 'undefined' ? "Available" : "NOT Available");
+console.log("[Diagnostics] CrossOriginIsolated:", window.crossOriginIsolated);
+
 import * as monaco from 'monaco-editor'
 
 // テスト用にグローバル公開
