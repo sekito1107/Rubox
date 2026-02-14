@@ -193,5 +193,34 @@ test.describe('Rubbit E2E Tests', () => {
       });
     }, { timeout: 10000 }).toContain('1.upto(100) do |i|');
   });
+  
+  test('右側パネルでメソッドが正しく解決され表示される', async ({ page }) => {
+    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
+
+    // 1. 標準的なクラスのメソッド (puts)
+    await page.evaluate(() => {
+      const editor = window.monacoEditor;
+      if (editor) editor.setValue('puts "test"');
+    });
+
+    // 右側パネルに Kernel#puts が表示されるのを待つ
+    // data-role="methodName" が "puts" である最初のカードを探す
+    const putsCard = page.locator('#method-list >> [data-role="methodName"]:text-is("puts")').locator('..').locator('..').first();
+    await expect(putsCard).toBeVisible({ timeout: 10000 });
+    await expect(putsCard.locator('[data-role="className"]')).toHaveText('Kernel');
+    await expect(putsCard.locator('[data-role="separatorMethod"]')).toHaveText('#puts');
+
+    // 3. 継承されたメソッド ((1..100).sum -> Enumerable#sum)
+    await page.evaluate(() => {
+      const editor = window.monacoEditor;
+      if (editor) editor.setValue('(1..100).sum');
+    });
+
+    // 右側パネルに Enumerable#sum が表示されるのを待つ
+    const sumCard = page.locator('#method-list >> [data-role="methodName"]:text-is("sum")').locator('..').locator('..').first();
+    await expect(sumCard).toBeVisible({ timeout: 15000 });
+    await expect(sumCard.locator('[data-role="className"]')).toHaveText('Enumerable');
+    await expect(sumCard.locator('[data-role="separatorMethod"]')).toHaveText('#sum');
+  });
 
 });

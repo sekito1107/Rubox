@@ -52,8 +52,8 @@ describe('LSPResponseParser', () => {
       expect(LSPResponseParser.normalizeTypeName('false')).toBe('FalseClass');
     });
 
-    it('名前空間を最後のパーツで扱うこと', () => {
-      expect(LSPResponseParser.normalizeTypeName('Net::HTTP')).toBe('HTTP');
+    it('名前空間 (::) は維持すること', () => {
+      expect(LSPResponseParser.normalizeTypeName('Net::HTTP')).toBe('Net::HTTP');
     });
 
     it('Boolean を Object にマップすること', () => {

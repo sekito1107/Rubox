@@ -19,29 +19,48 @@ function parseRbs(filePath) {
     if (!line || line.startsWith('#')) continue;
 
     // クラス定義: class Name < Parent
-    const classMatch = line.match(/^class\s+([\w:]+)(?:\s*<\s*([\w:]+))?/);
+    const classMatch = line.match(/^class\s+([\w:]+)(?:\[[^\]]+\])?(?:\s*<\s*([\w:]+)(?:\[[^\]]+\])?)?/);
     if (classMatch) {
+      contextStack.push(classMatch[1]);
+      const currentContext = contextStack.join('::').replace(/^::/, '');
       let className = classMatch[1];
-      if (contextStack.length > 0 && !className.startsWith('::')) {
-          className = contextStack.join('::') + '::' + className;
+      if (contextStack.length > 1 && !className.startsWith('::')) {
+          className = currentContext;
       }
       className = className.replace(/^::/, '');
 
       const parentName = classMatch[2] || 'Object';
       relationships[className] = parentName;
-      contextStack.push(classMatch[1]);
       continue;
     }
 
     // モジュール定義: module Name
-    const moduleMatch = line.match(/^module\s+([\w:]+)/);
+    const moduleMatch = line.match(/^module\s+([\w:]+)(?:\[[^\]]+\])?(?:\s*:\s*([\w:]+)(?:\[[^\]]+\])?)?/);
     if (moduleMatch) {
       contextStack.push(moduleMatch[1]);
+      const currentContext = contextStack.join('::').replace(/^::/, '');
+      let moduleName = moduleMatch[1];
+      if (contextStack.length > 1 && !moduleName.startsWith('::')) {
+          moduleName = currentContext;
+      }
+      moduleName = moduleName.replace(/^::/, '');
+
+      if (moduleMatch[2]) {
+          if (!includes[moduleName]) includes[moduleName] = [];
+          includes[moduleName].push(moduleMatch[2]);
+      }
+      continue;
+    }
+
+    // インターフェース定義: interface Name
+    const interfaceMatch = line.match(/^interface\s+([\w:]+)(?:\[[^\]]+\])?/);
+    if (interfaceMatch) {
+      contextStack.push(interfaceMatch[1]);
       continue;
     }
 
     // インクルード: include Module
-    const includeMatch = line.match(/^include\s+([\w:]+)/);
+    const includeMatch = line.match(/^include\s+([\w:]+)(?:\[[^\]]+\])?/);
     if (includeMatch && contextStack.length > 0) {
       const currentContext = contextStack.join('::').replace(/^::/, '');
       if (!includes[currentContext]) includes[currentContext] = [];
@@ -50,16 +69,25 @@ function parseRbs(filePath) {
     }
 
     // メソッド定義: def name
-    const methodMatch = line.match(/^def\s+(?:self\.)?([\w=:!=\?\+-\/\*<>\[\]]+)/);
+    const methodMatch = line.match(/^def\s+(?:self\.|self\?\.)?([\w=!=\?\+-\/\*<>\[\]]+)/);
     if (methodMatch && contextStack.length > 0) {
       const methodName = methodMatch[1];
       const currentContext = contextStack.join('::').replace(/^::/, '');
-      const isSelf = line.includes('def self.');
-      const signature = `${currentContext}${isSelf ? '.' : '#'}${methodName}`;
       
+      const signatures = [];
+      if (line.includes('def self?.')) {
+        signatures.push(`${currentContext}#${methodName}`);
+        signatures.push(`${currentContext}.${methodName}`);
+      } else {
+        const isSelf = line.includes('def self.');
+        signatures.push(`${currentContext}${isSelf ? '.' : '#'}${methodName}`);
+      }
+
       if (!methods[methodName]) methods[methodName] = [];
-      if (!methods[methodName].includes(signature)) {
+      for (const signature of signatures) {
+        if (!methods[methodName].includes(signature)) {
           methods[methodName].push(signature);
+        }
       }
     }
     

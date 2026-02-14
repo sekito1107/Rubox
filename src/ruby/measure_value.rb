@@ -45,7 +45,7 @@ module MeasureValue
         tp = TracePoint.new(:line, :call, :return, :class, :end, :b_call, :b_return) do |tp|
           next unless tp.path == "(eval)"
 
-          if tp.lineno == target_line && !CapturedValue.target_triggered
+          if tp.lineno == target_line && !CapturedValue.target_triggered && tp.event != :call && tp.event != :return
             CapturedValue.target_triggered = true
             next
           end

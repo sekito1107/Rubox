@@ -71,8 +71,7 @@ export class LSPResponseParser {
     if (normalized === "false" || normalized === "FalseClass") return "FalseClass";
     if (normalized === "Boolean" || normalized === "bool") return "Object"; // RurimaにBooleanは存在しないためObjectで代用
     
-    // 名前空間 (::) の除去 (最後のパーツを取得)
-    const parts = normalized.split("::");
-    return parts[parts.length - 1];
+    // 名前空間 (::) は維持する (Rurimaインデックスと継承マップがフルネームを期待するため)
+    return normalized;
   }
 }

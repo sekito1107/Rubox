@@ -85,8 +85,13 @@ describe('ResolveSignature', () => {
       expect(result).not.toBeNull()
       expect(result!.signature).toBe('Exception#message')
     })
+    it('RangeクラスがEnumerableを継承していることを考慮してsumを解決できること', () => {
+      // Range は Enumerable をインクルードしている
+      mockSearcher.findMethod.mockReturnValue(['Enumerable#sum'])
+      const result = resolver.resolve('Range', 'sum')
 
-
-
+      expect(result).not.toBeNull()
+      expect(result!.signature).toBe('Enumerable#sum')
+    })
   })
 })
