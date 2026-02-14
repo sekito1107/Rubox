@@ -46,8 +46,16 @@ module MeasureValue
           next unless tp.path == "(eval)"
 
           if tp.lineno == target_line && !CapturedValue.target_triggered && tp.event != :call && tp.event != :return
-            CapturedValue.target_triggered = true
-            next
+            # 呼び出し元が未来にあるかチェック
+            eval_locs = caller_locations.select { |l| l.path == "(eval)" }
+            # ターゲット行以外からの呼び出しを探す
+            immediate_caller = eval_locs.find { |l| l.lineno != target_line }
+            is_future = immediate_caller && immediate_caller.lineno > target_line
+
+            unless is_future
+              CapturedValue.target_triggered = true
+              next
+            end
           end
 
           if CapturedValue.target_triggered
