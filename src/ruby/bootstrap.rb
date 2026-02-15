@@ -14,7 +14,7 @@ require_relative "measure_value"
 require_relative "server"
 
 # TypeProfコアの初期化
-rbs_path = "/rbs/ruby-stdlib.rbs"
+rbs_path = "/workspace/stdlib.rbs"
 rbs_list = File.exist?(rbs_path) ? [rbs_path] : []
 core = TypeProf::Core::Service.new(rbs_files: rbs_list)
 

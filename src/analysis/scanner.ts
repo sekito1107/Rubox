@@ -37,9 +37,9 @@ export class Scanner {
         
         // 単独形式（グループ4）のフィルタリング
         if (match[4]) {
-            // 定数（大文字開始）またはホワイトリストに含まれる場合のみ採用
-            const isConstant = /^[A-Z]/.test(name)
-            if (!isConstant && !ImplicitMethods.has(name)) {
+            // 暗黙のメソッド（ホワイトリスト）に含まれる場合のみ採用
+            // 定数（大文字開始）はメソッドではないので除外する
+            if (!ImplicitMethods.has(name)) {
               continue
             }
         }

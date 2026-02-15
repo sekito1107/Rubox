@@ -232,9 +232,9 @@ test.describe('Rubbit E2E Tests', () => {
       if (editor) editor.setValue("require 'prime'\nPrime");
     });
 
-    // Prime カードが表示されることを確認 (スキャナの動作確認)
-    const primeCard = page.locator('#method-list >> [data-role="methodName"]:text-is("Prime")').locator('..').locator('..').first();
-    await expect(primeCard).toBeVisible({ timeout: 15000 });
+    // Prime は定数なのでスキャナで検出されないことを確認
+    const primeCard = page.locator('#method-list >> [data-role="methodName"]:text-is("Prime")');
+    await expect(primeCard).not.toBeVisible({ timeout: 5000 });
 
     // 次にチェーン全体を入力
     await page.evaluate(() => {

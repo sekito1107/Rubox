@@ -69,8 +69,7 @@ describe('Scanner', () => {
       
       expect(results.get(0)).toHaveLength(0) // if
       expect(results.get(1)).toHaveLength(0) // def
-      expect(results.get(2)).toHaveLength(1) // class MyClass -> MyClass (定数)
-      expect(results.get(2)![0].name).toBe('MyClass')
+      expect(results.get(2)).toHaveLength(0) // class MyClass -> MyClass (定数は除外)
       expect(results.get(3)).toHaveLength(0) // end
     })
 
