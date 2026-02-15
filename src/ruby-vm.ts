@@ -124,20 +124,15 @@ export class RubyVM {
    */
   private async tryActivateDomains(): Promise<void> {
     if (this.lspClient && this.editor && !this.bootLoader && window.__rubyVMReady) {
-      console.log("[RubyVM] Starting BootLoader...");
       // BootLoaderの遅延読み込みと初期化
       const { BootLoader } = await import("./boot");
       this.bootLoader = new BootLoader(this, this.editor);
 
-      try {
-        await this.bootLoader.boot();
-        
-        window.dispatchEvent(new CustomEvent("rubbit:lsp-ready", {
-          detail: { version: this.rubyVersion }
-        }));
-      } catch (e) {
-        console.error("[RubyVM] Failed to initialize domains via BootLoader:", e);
-      }
+      await this.bootLoader.boot();
+      
+      window.dispatchEvent(new CustomEvent("rubbit:lsp-ready", {
+        detail: { version: this.rubyVersion }
+      }));
     }
   }
 

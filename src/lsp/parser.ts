@@ -16,9 +16,16 @@ export class LSPResponseParser {
 
   private static _doParse(content: string): string | null {
     // 1. "Class#method" or "Class.method" 形式を文中から最優先で探す
+    // `Prime.each` のようなケースに対応するため、[#.] の直前の識別子を柔軟に捕まえる
     const sigMatch = content.match(/([A-Z][a-zA-Z0-9_:]*)(?:\[.*\])?[#.]/);
     if (sigMatch) {
       return this.normalizeTypeName(sigMatch[1]);
+    }
+
+    // 1b. "module Prime", "class Array" などの明示的な開始
+    const explicitMatch = content.match(/^(?:module|class)\s+([A-Z][a-zA-Z0-9_:]*)/);
+    if (explicitMatch) {
+      return this.normalizeTypeName(explicitMatch[1]);
     }
 
     // 2. 配列/タプル形式 [Integer, String] -> Array とみなす

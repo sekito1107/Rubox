@@ -61,8 +61,6 @@ export class AnalysisCoordinator {
     this.scheduleAnalysis(0)
 
     // 3. LSP の解析完了イベントを購読
-    // LSP 側で外部的な要因（RBS読み込みなど）で解析が終わった際、
-    // まだ解析が必要な状態であればスケジュールする
     window.addEventListener("rubbit:lsp-analysis-finished", () => {
       if (this.needsReanalysis) {
         this.scheduleAnalysis()
@@ -77,6 +75,10 @@ export class AnalysisCoordinator {
   scheduleAnalysis(delay: number = this.WAIT_MS): void {
     if (this.debounceTimer) clearTimeout(this.debounceTimer)
     this.debounceTimer = setTimeout(() => this.performAnalysis(), delay)
+  }
+
+  private _getMethodId(item: ScannedMethod): string {
+    return `${item.name}:${item.line}:${item.col}`
   }
 
   /**
@@ -116,31 +118,22 @@ export class AnalysisCoordinator {
 
       // 2. 現在の全出現箇所をフラット化
       const allOccurrences = this.lineMethods.flat().filter((m): m is ScannedMethod => m !== null)
-      const currentNames = new Set(allOccurrences.map(m => m.name))
+      const currentIds = new Set(allOccurrences.map(m => this._getMethodId(m)))
 
       // 3. 不要になったメソッドの除去
-      let changed = this.store.keepOnly(currentNames)
+      let changed = this.store.keepOnly(currentIds)
 
       // 4. 新規メソッドの登録と位置更新
       for (const item of allOccurrences) {
-        let state = this.store.get(item.name)
+        const id = this._getMethodId(item)
+        let state = this.store.get(id)
         
         if (!state) {
           // 新規発見: 解決待ち状態で登録
           state = { ...item, status: 'pending', className: null, url: null, isResolving: false }
-          this.store.set(item.name, state)
+          this.store.set(id, state)
           changed = true
-          this.resolveSingleMethod(item.name)
-        } else {
-          // 位置がずれた場合は更新
-          if (state.line !== item.line || state.col !== item.col) {
-            state.line = item.line
-            state.col = item.col
-          }
-          // 未解決ならリトライ
-          if (state.status === 'unknown') {
-            this.resolveSingleMethod(item.name)
-          }
+          this.resolveSingleMethod(id)
         }
       }
 
@@ -154,27 +147,36 @@ export class AnalysisCoordinator {
       console.error("[AnalysisCoordinator] Analysis failed:", e)
     } finally {
       this.isAnalyzing = false
-      if (this.needsReanalysis) this.scheduleAnalysis()
+      if (this.needsReanalysis) {
+        this.scheduleAnalysis()
+      }
     }
   }
 
   /**
    * 単一メソッドの型解決依頼
    */
-  async resolveSingleMethod(name: string): Promise<void> {
-    const data = this.store.get(name)
-    if (!data || data.status === 'resolved' || data.isResolving) return
+  private async resolveSingleMethod(id: string): Promise<void> {
+    const item = this.store.get(id)
+    if (!item || item.isResolving || item.status === 'resolved') return
 
-    data.isResolving = true
-    try {
-      const info = await this.resolver.resolve(name, data.line, data.col)
-      if (info.status === 'resolved') {
-        this.store.set(name, { ...data, ...info })
+    item.isResolving = true
+    this.store.set(id, item)
+
+    const result = await this.resolver.resolve(item.name, item.line, item.col)
+    
+    const updatedItem = this.store.get(id)
+    if (updatedItem) {
+      updatedItem.isResolving = false
+      if (result.status === 'resolved') {
+        updatedItem.status = 'resolved'
+        updatedItem.className = result.className || null
+        updatedItem.url = result.url || null
+        updatedItem.separator = result.separator || '.'
       } else {
-        this.store.set(name, { ...data, status: 'unknown' })
+        updatedItem.status = 'unknown'
       }
-    } finally {
-      data.isResolving = false
+      this.store.set(id, updatedItem)
       this.store.notify()
     }
   }

@@ -83,6 +83,13 @@
     "Kernel",
     "BasicObject"
   ],
+  "Comparable": [
+    "Comparable",
+    "_WithSpaceshipOperator",
+    "Object",
+    "Kernel",
+    "BasicObject"
+  ],
   "Hash": [
     "Hash",
     "Enumerable",
@@ -125,6 +132,13 @@
   ],
   "Binding": [
     "Binding",
+    "Object",
+    "Kernel",
+    "BasicObject"
+  ],
+  "Enumerable": [
+    "Enumerable",
+    "_Each",
     "Object",
     "Kernel",
     "BasicObject"
@@ -2031,6 +2045,11 @@
     "Object",
     "Kernel",
     "BasicObject"
+  ],
+  "Kernel": [
+    "Kernel",
+    "BasicObject",
+    "Object"
   ],
   "File": [
     "File",
@@ -4836,6 +4855,13 @@
     "Kernel",
     "BasicObject"
   ],
+  "TSort": [
+    "TSort",
+    "TSort::_Sortable",
+    "Object",
+    "Kernel",
+    "BasicObject"
+  ],
   "Monitor": [
     "Monitor",
     "Object",
@@ -5121,25 +5147,6 @@
     "Kernel",
     "BasicObject"
   ],
-  "Comparable": [
-    "Comparable",
-    "_WithSpaceshipOperator",
-    "Object",
-    "Kernel",
-    "BasicObject"
-  ],
-  "Enumerable": [
-    "Enumerable",
-    "_Each",
-    "Object",
-    "Kernel",
-    "BasicObject"
-  ],
-  "Kernel": [
-    "Kernel",
-    "BasicObject",
-    "Object"
-  ],
   "URI": [
     "URI",
     "URI::RFC2396_REGEXP",
@@ -5178,13 +5185,6 @@
   "OpenSSL::X509::Extension::SubjectKeyIdentifier": [
     "OpenSSL::X509::Extension::SubjectKeyIdentifier",
     "OpenSSL::X509::Extension::Helpers",
-    "Object",
-    "Kernel",
-    "BasicObject"
-  ],
-  "TSort": [
-    "TSort",
-    "TSort::_Sortable",
     "Object",
     "Kernel",
     "BasicObject"

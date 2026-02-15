@@ -2,7 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Rubbit E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    page.on('console', msg => console.log(`[Browser Console] ${msg.text()}`));
+    // ブラウザのコンソールログをターミナルに表示させる
+    page.on('console', msg => {
+      console.log(`[Browser Console] ${msg.type().toUpperCase()}: ${msg.text()}`);
+    });
     page.on('pageerror', err => console.log(`[Browser PageError] ${err.message}`));
     page.on('requestfailed', req => console.log(`[Browser RequestFailed] ${req.url()} - ${req.failure().errorText}`));
     await page.goto('/');
@@ -221,6 +224,41 @@ test.describe('Rubbit E2E Tests', () => {
     await expect(sumCard).toBeVisible({ timeout: 15000 });
     await expect(sumCard.locator('[data-role="className"]')).toHaveText('Enumerable');
     await expect(sumCard.locator('[data-role="separatorMethod"]')).toHaveText('#sum');
+
+    // 4. Prime 関連のメソッド解決 (Prime.each(10).to_a.join)
+    // まず require 'prime' だけ入力して Prime カードを確認
+    await page.evaluate(() => {
+      const editor = window.monacoEditor;
+      if (editor) editor.setValue("require 'prime'\nPrime");
+    });
+
+    // Prime カードが表示されることを確認 (スキャナの動作確認)
+    const primeCard = page.locator('#method-list >> [data-role="methodName"]:text-is("Prime")').locator('..').locator('..').first();
+    await expect(primeCard).toBeVisible({ timeout: 15000 });
+
+    // 次にチェーン全体を入力
+    await page.evaluate(() => {
+      const editor = window.monacoEditor;
+      if (editor) editor.setValue("require 'prime'\nPrime.each(10).to_a.join");
+    });
+
+    // LSP 同期と解析待ち
+    await page.waitForTimeout(7000);
+
+    // each -> Prime.each (または Prime#each)
+    const eachCard = page.locator('#method-list >> [data-role="methodName"]:text-is("each")').locator('..').locator('..').first();
+    await expect(eachCard).toBeVisible({ timeout: 15000 });
+    await expect(eachCard.locator('[data-role="className"]')).toHaveText('Prime');
+
+    // to_a -> Enumerable#to_a (Prime::PseudoPrimeGenerator が Enumerable を include しているため)
+    const toACard = page.locator('#method-list >> [data-role="methodName"]:text-is("to_a")').locator('..').locator('..').first();
+    await expect(toACard).toBeVisible({ timeout: 15000 });
+    await expect(toACard.locator('[data-role="className"]')).toHaveText('Enumerable');
+
+    // join -> Array#join (to_a が Array を返すため)
+    const joinCard = page.locator('#method-list >> [data-role="methodName"]:text-is("join")').locator('..').locator('..').first();
+    await expect(joinCard).toBeVisible({ timeout: 15000 });
+    await expect(joinCard.locator('[data-role="className"]')).toHaveText('Array');
   });
 
 });

@@ -1,0 +1,148 @@
+
+> rubbit@1.0.0 test:unit
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/home/bonnmasa/app/rubpad[39m
+
+ [32m✓[39m tests/unit/reference/resolve_signature.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [31m❯[39m tests/unit/reference/index_searcher.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 27[2mms[22m[39m
+       [32m✓[39m インデックスファイルを正しく読み込めること[32m 3[2mms[22m[39m
+[31m       [31m×[31m エラー時に空のインデックスで初期化されること[39m[32m 5[2mms[22m[39m
+       [32m✓[39m findMethod でメソッド候補を取得できること[32m 1[2mms[22m[39m
+       [32m✓[39m findMethodsByClass でクラスに属するメソッド一覧を取得できること[32m 15[2mms[22m[39m
+ [31m❯[39m tests/unit/analysis/scanner.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 25[2mms[22m[39m
+       [32m✓[39m ドット記法のメソッドを正しく抽出できること[32m 5[2mms[22m[39m
+       [32m✓[39m 括弧付きのメソッド呼び出しを抽出できること[32m 0[2mms[22m[39m
+       [32m✓[39m doブロック付きのメソッドを抽出できること[32m 0[2mms[22m[39m
+       [32m✓[39m コメントアウトされた行のメソッドを無視し、インデックスを維持すること[32m 1[2mms[22m[39m
+[31m       [31m×[31m ブラックリストに含まれるキーワードを除外すること[39m[32m 10[2mms[22m[39m
+       [32m✓[39m 1行に複数のメソッドがある場合を処理できること[32m 1[2mms[22m[39m
+       [32m✓[39m Symbol#to_proc (&:method) 構文のメソッドを抽出できること[32m 1[2mms[22m[39m
+[31m       [31m×[31m ホワイトリストに含まれる暗黙的なメソッド (puts, p) を抽出できること[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m 式展開 (#{...}) 内のメソッドを抽出できること[39m[32m 2[2mms[22m[39m
+         [32m✓[39m 様々な開始位置で正確にカラムを特定できること[32m 1[2mms[22m[39m
+         [32m✓[39m 式展開が複数ある場合も正しく位置を特定できること[32m 1[2mms[22m[39m
+         [32m✓[39m 単語の途中 (Sum(等) から意図しないマッチ (um) が発生しないこと[32m 1[2mms[22m[39m
+ [32m✓[39m tests/unit/settings.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32m✓[39m tests/unit/examples.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m tests/unit/theme.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [31m❯[39m tests/unit/analysis/resolver.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 22[2mms[22m[39m
+       [32m✓[39m LSP でメソッドが直接解決された場合、Rurima 情報を返すこと[32m 7[2mms[22m[39m
+       [32m✓[39m 直接の解決が失敗した場合、レシーバ（ドットの左）の解決を試みること（フォールバック）[32m 2[2mms[22m[39m
+       [32m✓[39m LSP でクラス名は特定できたが、Rurima に該当がない場合は unknown を返すこと[32m 0[2mms[22m[39m
+[31m       [31m×[31m エラーが発生した場合、unknown を返しエラーログを出力すること[39m[32m 9[2mms[22m[39m
+       [32m✓[39m 暗黙的メソッド (puts) の場合、LSP解決に失敗してもKernel等でフォールバック解決すること[32m 1[2mms[22m[39m
+ [32m✓[39m tests/unit/share.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 87[2mms[22m[39m
+ [32m✓[39m tests/unit/toast.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+ [32m✓[39m tests/unit/editor.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m tests/unit/console.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 279[2mms[22m[39m
+ [32m✓[39m tests/unit/lsp/client.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/unit/analysis/coordinator.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/lsp/diagnostics.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/ruby-vm.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/unit/lsp/sync.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/unit/persistence/share.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/header.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/runtime/exporter.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m tests/unit/download.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m tests/unit/analysis/store.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/persistence/settings.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/analysis/tracker.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/reference/fetch_method_list.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/persistence/code.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/lsp/parser.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/reference/url_generator.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/runtime/executor.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/analysis/resolver.test.ts[2m > [22mResolver[2m > [22mresolve[2m > [22mエラーが発生した場合、unknown を返しエラーログを出力すること
+[31m[1mError[22m: LSP Error[39m
+[36m [2m❯[22m tests/unit/analysis/resolver.test.ts:[2m70:63[22m[39m
+    [90m 68| [39m      const consoleSpy = vi.spyOn(console, 'error').mockImplementation…
+    [90m 69| [39m      [35mconst[39m resolution [33m=[39m resolver[33m.[39mresolution
+    [90m 70| [39m      vi.mocked(resolution.resolveMethodAt).mockRejectedValue(new Erro…
+    [90m   | [39m                                                              [31m^[39m
+    [90m 71| [39m
+    [90m 72| [39m      [35mconst[39m result [33m=[39m [35mawait[39m resolver[33m.[39m[34mresolve[39m([32m'error_method'[39m[33m,[39m [34m1[39m[33m,[39m [34m1[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/analysis/scanner.test.ts[2m > [22mScanner[2m > [22mscanLines[2m > [22mブラックリストに含まれるキーワードを除外すること
+[31m[1mAssertionError[22m: expected [ Array(1) ] to have a length of +0 but got 1[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+[36m [2m❯[22m tests/unit/analysis/scanner.test.ts:[2m72:30[22m[39m
+    [90m 70| [39m      [34mexpect[39m(results[33m.[39m[35mget[39m([34m0[39m))[33m.[39m[34mtoHaveLength[39m([34m0[39m) [90m// if[39m
+    [90m 71| [39m      [34mexpect[39m(results[33m.[39m[35mget[39m([34m1[39m))[33m.[39m[34mtoHaveLength[39m([34m0[39m) [90m// def[39m
+    [90m 72| [39m      [34mexpect[39m(results[33m.[39m[35mget[39m([34m2[39m))[33m.[39m[34mtoHaveLength[39m([34m0[39m) [90m// class[39m
+    [90m   | [39m                             [31m^[39m
+    [90m 73| [39m      [34mexpect[39m(results[33m.[39m[35mget[39m([34m3[39m))[33m.[39m[34mtoHaveLength[39m([34m0[39m) [90m// end[39m
+    [90m 74| [39m    })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/analysis/scanner.test.ts[2m > [22mScanner[2m > [22mscanLines[2m > [22mホワイトリストに含まれる暗黙的なメソッド (puts, p) を抽出できること
+[31m[1mAssertionError[22m: expected [ …(2) ] to have a length of 1 but got 2[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 2[39m
+
+[36m [2m❯[22m tests/unit/analysis/scanner.test.ts:[2m108:21[22m[39m
+    [90m106| [39m
+    [90m107| [39m      [35mconst[39m line1 [33m=[39m results[33m.[39m[35mget[39m([34m0[39m)[33m![39m
+    [90m108| [39m      [34mexpect[39m(line1)[33m.[39m[34mtoHaveLength[39m([34m1[39m)
+    [90m   | [39m                    [31m^[39m
+    [90m109| [39m      [34mexpect[39m(line1[[34m0[39m][33m.[39mname)[33m.[39m[34mtoBe[39m([32m'puts'[39m)
+    [90m110| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/analysis/scanner.test.ts[2m > [22mScanner[2m > [22mscanLines[2m > [22m式展開 (#{...}) 内のメソッドを抽出できること
+[31m[1mAssertionError[22m: expected [ …(2) ] to have a length of 1 but got 2[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 2[39m
+
+[36m [2m❯[22m tests/unit/analysis/scanner.test.ts:[2m122:21[22m[39m
+    [90m120| [39m
+    [90m121| [39m      [35mconst[39m line1 [33m=[39m results[33m.[39m[35mget[39m([34m0[39m)[33m![39m
+    [90m122| [39m      [34mexpect[39m(line1)[33m.[39m[34mtoHaveLength[39m([34m1[39m)
+    [90m   | [39m                    [31m^[39m
+    [90m123| [39m      [34mexpect[39m(line1[[34m0[39m][33m.[39mname)[33m.[39m[34mtoBe[39m([32m'upcase'[39m)
+    [90m124| [39m      [34mexpect[39m(line1[[34m0[39m][33m.[39mcol)[33m.[39m[34mtoBe[39m([34m16[39m) [90m// "Hello, #{name.u... (1-indexed)[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/reference/index_searcher.test.ts[2m > [22mIndexSearcher[2m > [22mload[2m > [22mエラー時に空のインデックスで初期化されること
+[31m[1mError[22m: Server returned 404 for rurima_index.json[39m
+[36m [2m❯[22m src/reference/index_searcher.ts:[2m34:15[22m[39m
+    [90m 32| [39m
+    [90m 33| [39m      [35mif[39m ([33m![39mindexRes[33m.[39mok) {
+    [90m 34| [39m        throw new Error(`Server returned ${indexRes.status} for rurima…
+    [90m   | [39m              [31m^[39m
+    [90m 35| [39m      }
+    [90m 36| [39m      [35mif[39m ([33m![39minheritanceRes[33m.[39mok) {
+[90m [2m❯[22m IndexSearcher.load src/reference/index_searcher.ts:[2m49:5[22m[39m
+[90m [2m❯[22m tests/unit/reference/index_searcher.test.ts:[2m32:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m25 passed[39m[22m[90m (28)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m141 passed[39m[22m[90m (146)[39m
+[2m   Start at [22m 12:18:53
+[2m   Duration [22m 4.35s[2m (transform 1.88s, setup 0ms, import 2.80s, tests 984ms, environment 31.07s)[22m
+

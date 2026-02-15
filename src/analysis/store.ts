@@ -19,15 +19,15 @@ export class AnalysisStore {
   public firstScanDone: boolean
 
   constructor() {
-    this.methods = new Map<string, MethodItem>() // { メソッド名: { name, line, col, status, ... } }
+    this.methods = new Map<string, MethodItem>() // { "name:line:col": { name, line, col, status, ... } }
     this.firstScanDone = false
   }
 
   /**
    * メソッドの状態を更新または追加する
    */
-  set(name: string, state: MethodItem): void {
-    this.methods.set(name, state)
+  set(id: string, state: MethodItem): void {
+    this.methods.set(id, state)
   }
 
   /**
@@ -38,20 +38,20 @@ export class AnalysisStore {
   }
 
   /**
-   * 単一のメソッドデータを取得する
+   * 一致するIDのデータを取得する
    */
-  get(name: string): MethodItem | undefined {
-    return this.methods.get(name)
+  get(id: string): MethodItem | undefined {
+    return this.methods.get(id)
   }
 
   /**
    * 指定されたリストに含まれないメソッドを削除する
    */
-  keepOnly(currentNames: Set<string>): boolean {
+  keepOnly(currentIds: Set<string>): boolean {
     let changed = false
-    for (const name of this.methods.keys()) {
-      if (!currentNames.has(name)) {
-        this.methods.delete(name)
+    for (const id of this.methods.keys()) {
+      if (!currentIds.has(id)) {
+        this.methods.delete(id)
         changed = true
       }
     }

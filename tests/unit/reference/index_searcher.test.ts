@@ -21,18 +21,14 @@ describe('IndexSearcher', () => {
       expect(searcher.findMethod('each')).toEqual(["Array#each", "Enumerable#each"])
     })
 
-    it('エラー時に空のインデックスで初期化されること', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    it('エラー時に例外を適切にスローすること', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
         status: 404,
         statusText: 'Not Found'
       } as Response)
 
-      await searcher.load()
-      expect(searcher.findMethod('each')).toBeNull()
-      expect(consoleSpy).toHaveBeenCalled()
-      consoleSpy.mockRestore()
+      await expect(searcher.load()).rejects.toThrow('Server returned 404 for rurima_index.json')
     })
   })
 

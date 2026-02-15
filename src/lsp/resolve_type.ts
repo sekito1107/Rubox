@@ -16,27 +16,24 @@ export class ResolveType {
    * 指定位置の型情報を取得する
    */
   async at(lineNumber: number, column: number): Promise<string | null> {
-    try {
-      if (!this.client) return null;
+    if (!this.client) return null;
 
-      const response = await this.client.sendRequest("textDocument/hover", {
-        textDocument: { uri: "inmemory:///workspace/main.rb" },
-        position: { line: lineNumber - 1, character: column - 1 }
-      });
+    const response = await this.client.sendRequest("textDocument/hover", {
+      textDocument: { uri: "inmemory:///workspace/main.rb" },
+      position: { line: lineNumber - 1, character: column - 1 }
+    });
 
-      if (!response || !response.contents) return null;
+    if (!response || !response.contents) return null;
 
-      let markdownContent: string = "";
-      if (typeof response.contents === "string") {
-        markdownContent = response.contents;
-      } else if (typeof response.contents === "object" && response.contents.value) {
-        markdownContent = response.contents.value;
-      }
-
-      return LSPResponseParser.parseClassNameFromHover(markdownContent);
-    } catch {
-      return null;
+    let markdownContent: string = "";
+    if (typeof response.contents === "string") {
+      markdownContent = response.contents;
+    } else if (typeof response.contents === "object" && response.contents.value) {
+      markdownContent = response.contents.value;
     }
+
+    const parsed = LSPResponseParser.parseClassNameFromHover(markdownContent);
+    return parsed;
   }
 
   /**

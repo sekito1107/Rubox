@@ -12,46 +12,41 @@ export class Resolution {
    * 指定された位置の型を特定し、クラス名を返す
    */
   async resolveAtPosition(line: number, col: number): Promise<string | null> {
-    try {
-      // 0. コメント内チェック
-      const model = this.lsp.model
-      if (model) {
-        const lineContent = model.getLineContent(line)
-        const commentIdx = lineContent.indexOf('#')
-        // '#' が見つかり、かつその直後が '{' (式展開) でない場合のみコメントとみなす
-        if (commentIdx !== -1 && lineContent[commentIdx + 1] !== '{' && commentIdx < col - 1) {
-          return null
-        }
+    // 0. コメント内チェック
+    const model = this.lsp.model
+    if (model) {
+      const lineContent = model.getLineContent(line)
+      const commentIdx = lineContent.indexOf('#')
+      // '#' が見つかり、かつその直後が '{' (式展開) でない場合のみコメントとみなす
+      if (commentIdx !== -1 && lineContent[commentIdx + 1] !== '{' && commentIdx < col - 1) {
+        return null
       }
-
-      // 1. 現在位置を試行
-      let type: string | null = await this.lsp.getTypeAtPosition(line, col)
-      
-      // 2. フォールバック: 1文字戻って試行 (単語の末尾にカーソルがある場合への対応: names|)
-      if (!type && col > 1) {
-        type = await this.lsp.getTypeAtPosition(line, col - 1)
-      }
-      
-      // 3. フォールバック: さらに1文字戻って試行 (ドットの直後にカーソルがある場合への対応: names.| )
-      if (!type && col > 2) {
-        type = await this.lsp.getTypeAtPosition(line, col - 2)
-      }
-
-      // 4. フォールバック: 1文字進めて試行 (ドットの直後などの微調整)
-      if (!type) {
-        type = await this.lsp.getTypeAtPosition(line, col + 1)
-      }
-
-      // 5. 最終手段: ドット直後の解決失敗時、ドットを除去したコードでプローブ試行
-      if (!type && model) {
-        type = await this._probeReceiverType(model, line, col)
-      }
-      
-      return type
-    } catch (e) {
-      console.warn("[Resolution] Type resolution failed:", e)
     }
-    return null
+
+    // 1. 現在位置を試行
+    let type: string | null = await this.lsp.getTypeAtPosition(line, col)
+    
+    // 2. フォールバック: 1文字戻って試行 (単語の末尾にカーソルがある場合への対応: names|)
+    if (!type && col > 1) {
+      type = await this.lsp.getTypeAtPosition(line, col - 1)
+    }
+    
+    // 3. フォールバック: さらに1文字戻って試行 (ドットの直後にカーソルがある場合への対応: names.| )
+    if (!type && col > 2) {
+      type = await this.lsp.getTypeAtPosition(line, col - 2)
+    }
+
+    // 4. フォールバック: 1文字進めて試行 (ドットの直後などの微調整)
+    if (!type) {
+      type = await this.lsp.getTypeAtPosition(line, col + 1)
+    }
+
+    // 5. 最終手段: ドット直後の解決失敗時、ドットを除去したコードでプローブ試行
+    if (!type && model) {
+      type = await this._probeReceiverType(model, line, col)
+    }
+    
+    return type
   }
 
   /**
@@ -59,7 +54,7 @@ export class Resolution {
    * Scanner から渡される col は既に識別子の開始位置であるため、そのまま使用する
    */
   async resolveMethodAt(line: number, col: number): Promise<string | null> {
-    return this.resolveAtPosition(line, col)
+    return await this.lsp.getTypeAtPosition(line, col)
   }
 
   /**
@@ -95,11 +90,6 @@ export class Resolution {
    * 一時的なコンテンツで型解決を試みる
    */
   async probe(content: string, line: number, col: number): Promise<string | null> {
-    try {
-      return await this.lsp.probeTypeWithTemporaryContent(content, line, col)
-    } catch (e) {
-      console.warn("[Resolution] Probe failed:", e)
-    }
-    return null
+    return await this.lsp.probeTypeWithTemporaryContent(content, line, col)
   }
 }

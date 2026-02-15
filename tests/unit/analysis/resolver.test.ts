@@ -64,16 +64,11 @@ describe('Resolver', () => {
       expect(result.status).toBe('unknown')
     })
 
-    it('エラーが発生した場合、unknown を返しエラーログを出力すること', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    it('エラーが発生した場合、例外をそのままスローすること', async () => {
       const resolution = resolver.resolution
       vi.mocked(resolution.resolveMethodAt).mockRejectedValue(new Error('LSP Error'))
 
-      const result = await resolver.resolve('error_method', 1, 1)
-
-      expect(result.status).toBe('unknown')
-      expect(consoleSpy).toHaveBeenCalled()
-      consoleSpy.mockRestore()
+      await expect(resolver.resolve('error_method', 1, 1)).rejects.toThrow('LSP Error')
     })
 
     it('暗黙的メソッド (puts) の場合、LSP解決に失敗してもKernel等でフォールバック解決すること', async () => {

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const mapPath = path.join(__dirname, '../inheritance_map_v2.json');
+const mapPath = path.join(__dirname, '../public/data/inheritance_map.json');
 const resolvePath = path.join(__dirname, '../src/reference/resolve_signature.ts');
 
 if (!fs.existsSync(mapPath)) {

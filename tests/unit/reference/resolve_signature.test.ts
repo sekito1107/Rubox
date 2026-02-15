@@ -8,7 +8,8 @@ describe('ResolveSignature', () => {
   beforeEach(() => {
     mockSearcher = {
       findMethod: vi.fn(),
-      findMethodsByClass: vi.fn()
+      findMethodsByClass: vi.fn(),
+      getInheritanceChain: vi.fn().mockReturnValue(null)
     }
     resolver = new ResolveSignature(mockSearcher)
   })
@@ -52,6 +53,7 @@ describe('ResolveSignature', () => {
       // File は IO を継承し、IO は Enumerable をインクルードしている
       // Enumerable#entries を探す場合
       mockSearcher.findMethod.mockReturnValue(['Enumerable#entries'])
+      mockSearcher.getInheritanceChain.mockReturnValue(['File', 'IO', 'Enumerable', 'Object', 'Kernel', 'BasicObject'])
       const result = resolver.resolve('File', 'entries')
 
       expect(result).not.toBeNull()
@@ -61,6 +63,7 @@ describe('ResolveSignature', () => {
     it('TimeクラスがComparableを継承していることを考慮して解決できること', () => {
       // Time は Comparable をインクルードしている
       mockSearcher.findMethod.mockReturnValue(['Comparable#<=>'])
+      mockSearcher.getInheritanceChain.mockReturnValue(['Time', 'Comparable', 'Object', 'Kernel', 'BasicObject'])
       const result = resolver.resolve('Time', '<=>')
 
       expect(result).not.toBeNull()
@@ -80,6 +83,7 @@ describe('ResolveSignature', () => {
     it('ネストした例外クラス(Errno::ENOENT)が親クラス(Exception)のメソッドを解決できること', () => {
       // Errno::ENOENT は Exception を継承している (Exception <- StandardError <- SystemCallError <- Errno::ENOENT)
       mockSearcher.findMethod.mockReturnValue(['Exception#message'])
+      mockSearcher.getInheritanceChain.mockReturnValue(['Errno::ENOENT', 'SystemCallError', 'StandardError', 'Exception', 'Object', 'Kernel', 'BasicObject'])
       const result = resolver.resolve('Errno::ENOENT', 'message')
 
       expect(result).not.toBeNull()
@@ -88,6 +92,7 @@ describe('ResolveSignature', () => {
     it('RangeクラスがEnumerableを継承していることを考慮してsumを解決できること', () => {
       // Range は Enumerable をインクルードしている
       mockSearcher.findMethod.mockReturnValue(['Enumerable#sum'])
+      mockSearcher.getInheritanceChain.mockReturnValue(['Range', 'Enumerable', 'Object', 'Kernel', 'BasicObject'])
       const result = resolver.resolve('Range', 'sum')
 
       expect(result).not.toBeNull()

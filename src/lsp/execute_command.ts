@@ -19,26 +19,20 @@ export class ExecuteCommand {
    */
   start(): void {
     monaco.editor.registerCommand("typeprof.measureValue", async (_accessor, ...args) => {
-      try {
-        const params = args[0] as { line: number; expression: string; character: number } | undefined;
-        if (!params) return;
+      const params = args[0] as { line: number; expression: string; character: number } | undefined;
+      if (!params) return;
 
-        const result = await this.client.sendRequest("workspace/executeCommand", { 
-          command: "typeprof.measureValue", 
-          arguments: [params] 
-        });
+      const result = await this.client.sendRequest("workspace/executeCommand", { 
+        command: "typeprof.measureValue", 
+        arguments: [params] 
+      });
 
-        if (result !== undefined) {
-          const line = params.line + 1; // Convert 0-based to 1-based for Monaco
-          if (this.inlayHints) {
-            // インレイヒントを更新して表示
-            this.inlayHints.update(line, result as string);
-          } else {
-            console.log(`Measured Value: ${result}`);
-          }
+      if (result !== undefined) {
+        const line = params.line + 1; // Convert 0-based to 1-based for Monaco
+        if (this.inlayHints) {
+          // インレイヒントを更新して表示
+          this.inlayHints.update(line, result as string);
         }
-      } catch (e) {
-        console.error("[ExecuteCommand] Command 'typeprof.measureValue' failed:", e);
       }
     });
   }
