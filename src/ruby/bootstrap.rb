@@ -17,11 +17,7 @@ require_relative "server"
 rbs_path = "/rbs/ruby-stdlib.rbs"
 rbs_list = File.exist?(rbs_path) ? [rbs_path] : []
 
-begin
-  core = TypeProf::Core::Service.new(rbs_files: rbs_list)
-rescue
-  core = TypeProf::Core::Service.new(rbs_files: []) # Fallback
-end
+core = TypeProf::Core::Service.new(rbs_files: rbs_list)
 
 # ウォームアップ
 begin

@@ -64,6 +64,7 @@ async function initializeVM(wasmUrl: string) {
           const bytes = new Uint8Array(rbsBuffer);
           
           vm.eval(`Dir.mkdir('/rbs') unless Dir.exist?('/rbs')`);
+          vm.eval(`Dir.mkdir('/workspace') unless Dir.exist?('/workspace')`);
 
           // Base64で書き込む (チャンクに分けてメモリ消費を抑える)
           const CHUNK_SIZE = 512 * 1024; // 512KB
