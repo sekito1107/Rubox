@@ -13,19 +13,6 @@ require_relative "workspace"
 require_relative "measure_value"
 require_relative "server"
 
-# DEBUG: RBS解析の進捗をログ出力するためのモンキーパッチ
-module RBS
-  class Parser
-    alias_method :original_parse_signature, :parse_signature
-    def parse_signature(source, **)
-      if source =~ /^\s*(class|module)\s+([A-Z][a-zA-Z0-9_:]*)/
-        puts "DEBUG: [RBS] Parsing #{$1} #{$2}"
-      end
-      original_parse_signature(source, **)
-    end
-  end
-end
-
 # TypeProfコアの初期化
 rbs_path = "/workspace/stdlib.rbs"
 rbs_list = File.exist?(rbs_path) ? [rbs_path] : []
