@@ -13,10 +13,17 @@ require_relative "workspace"
 require_relative "measure_value"
 require_relative "server"
 
-# TypeProfコアの初期化
-rbs_list = File.exist?("/workspace/stdlib.rbs") ? ["/workspace/stdlib.rbs"] : []
+# TypeProfコアの初期化 (バグ回避のための手動ロード)
+rbs_path = "/rbs/ruby-stdlib.rbs"
+rbs_content = File.exist?(rbs_path) ? File.read(rbs_path) : nil
 
-core = TypeProf::Core::Service.new(rbs_files: rbs_list)
+# 1. まず空で初期化 (コンストラクタでの nil ガードを確実に通す)
+core = TypeProf::Core::Service.new(rbs_files: [])
+
+# 2. 初期化完了後 (instanceができた後) にロードする
+if rbs_content
+  core.update_rbs_file(rbs_path, rbs_content)
+end
 
 # ウォームアップ
 begin
