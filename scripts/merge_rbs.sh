@@ -18,9 +18,8 @@ mkdir -p "$(dirname "$PROJECT_ROOT/public/rbs/")"
 
 cd "$RBS_PATH" || exit 1
 
-# core と stdlib の RBS ファイルをマージ
-# TypeProf (WASM) で未サポートの prepend メンバーを除外する
-find core stdlib -name '*.rbs' | while read -r f; do
+# core のみの RBS ファイルをマージ（調査用）
+find core -name '*.rbs' | while read -r f; do
     grep -v '^ *prepend ' "$f" >> "$TARGET"
     echo "" >> "$TARGET"
 done
