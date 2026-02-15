@@ -19,9 +19,5 @@ JSON
 File.write("/workspace/test.rb", "")
 File.write("/workspace/main.rb", "") # TypeProfの初期スキャンで検出させるために作成
 
-# stdlib.rbs を /rbs からコピー（またはリンク）する
-# TypeProf Core は Service 初期化時に渡されたファイルだけでなく、
-# rbs_dir 内の *.rbs も探索対象にするため
-if File.exist?("/rbs/ruby-stdlib.rbs")
-  File.write("/workspace/stdlib.rbs", File.read("/rbs/ruby-stdlib.rbs"))
-end
+# stdlib.rbs がなければ空ファイルでフォールバック
+File.write("/workspace/stdlib.rbs", "") unless File.exist?("/workspace/stdlib.rbs")
