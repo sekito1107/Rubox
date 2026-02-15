@@ -33,12 +33,9 @@ export class ExecuteCommand {
           if (this.inlayHints) {
             // インレイヒントを更新して表示
             this.inlayHints.update(line, result as string);
-          } else {
-            console.log(`Measured Value: ${result}`);
           }
         }
       } catch (e) {
-        console.error("[ExecuteCommand] Command 'typeprof.measureValue' failed:", e);
       }
     });
   }

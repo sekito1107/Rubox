@@ -34,20 +34,19 @@ function parseRbs(filePath) {
       continue;
     }
 
-    // モジュール定義: module Name
+    // モジュール定義: module Name (: Parent)
     const moduleMatch = line.match(/^module\s+([\w:]+)(?:\[[^\]]+\])?(?:\s*:\s*([\w:]+)(?:\[[^\]]+\])?)?/);
     if (moduleMatch) {
       contextStack.push(moduleMatch[1]);
-      const currentContext = contextStack.join('::').replace(/^::/, '');
-      let moduleName = moduleMatch[1];
-      if (contextStack.length > 1 && !moduleName.startsWith('::')) {
-          moduleName = currentContext;
-      }
-      moduleName = moduleName.replace(/^::/, '');
+      const moduleName = contextStack.join('::').replace(/^::/, '');
 
       if (moduleMatch[2]) {
+          const parentName = moduleMatch[2];
+          relationships[moduleName] = parentName;
           if (!includes[moduleName]) includes[moduleName] = [];
-          includes[moduleName].push(moduleMatch[2]);
+          if (!includes[moduleName].includes(parentName)) {
+            includes[moduleName].push(parentName);
+          }
       }
       continue;
     }
@@ -64,7 +63,9 @@ function parseRbs(filePath) {
     if (includeMatch && contextStack.length > 0) {
       const currentContext = contextStack.join('::').replace(/^::/, '');
       if (!includes[currentContext]) includes[currentContext] = [];
-      includes[currentContext].push(includeMatch[1]);
+      if (!includes[currentContext].includes(includeMatch[1])) {
+        includes[currentContext].push(includeMatch[1]);
+      }
       continue;
     }
 
@@ -157,7 +158,7 @@ for (const className of allClasses) {
 }
 
 // 両方出力できるように分割するが、取り急ぎJSONとして出力
-fs.writeFileSync('inheritance_map_v2.json', JSON.stringify(inheritanceMap, null, 2));
-fs.writeFileSync('rurima_index_v2.json', JSON.stringify(methods, null, 2));
+fs.writeFileSync(indexPath.replace('rurima_index.json', 'inheritance_map.json'), JSON.stringify(inheritanceMap, null, 2));
+fs.writeFileSync(indexPath, JSON.stringify(methods, null, 2));
 
 console.log('Extraction complete. Files generated: inheritance_map_v2.json, rurima_index_v2.json');

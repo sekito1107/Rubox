@@ -49,7 +49,6 @@ export class Resolution {
       
       return type
     } catch (e) {
-      console.warn("[Resolution] Type resolution failed:", e)
     }
     return null
   }
@@ -59,7 +58,11 @@ export class Resolution {
    * Scanner から渡される col は既に識別子の開始位置であるため、そのまま使用する
    */
   async resolveMethodAt(line: number, col: number): Promise<string | null> {
-    return this.resolveAtPosition(line, col)
+    try {
+      return await this.lsp.getTypeAtPosition(line, col)
+    } catch (e) {
+      return null;
+    }
   }
 
   /**
@@ -98,8 +101,7 @@ export class Resolution {
     try {
       return await this.lsp.probeTypeWithTemporaryContent(content, line, col)
     } catch (e) {
-      console.warn("[Resolution] Probe failed:", e)
+      return null
     }
-    return null
   }
 }

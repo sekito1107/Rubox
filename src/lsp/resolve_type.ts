@@ -33,8 +33,10 @@ export class ResolveType {
         markdownContent = response.contents.value;
       }
 
-      return LSPResponseParser.parseClassNameFromHover(markdownContent);
-    } catch {
+      const parsed = LSPResponseParser.parseClassNameFromHover(markdownContent);
+      return parsed;
+    } catch (e) {
+      console.warn("[ResolveType] at failed:", e);
       return null;
     }
   }

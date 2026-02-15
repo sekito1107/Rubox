@@ -8,15 +8,16 @@ type RurimaIndex = Record<string, string[]>
  */
 export class IndexSearcher {
   private index: RurimaIndex | null = null
+  private inheritanceMap: Record<string, string[]> | null = null
   private loadingPromise: Promise<void> | null = null
 
   constructor() {}
 
   /**
-   * インデックス(rurima_index.json)を非同期で読み込む
+   * インデックス(rurima_index.json)および継承マップ(inheritance_map.json)を非同期で読み込む
    */
   async load(): Promise<void> {
-    if (this.index) return
+    if (this.index && this.inheritanceMap) return
 
     if (this.loadingPromise) {
       await this.loadingPromise
@@ -25,19 +26,42 @@ export class IndexSearcher {
 
     this.loadingPromise = (async () => {
       try {
-        const url = "/data/rurima_index.json"
-        const response = await fetch(url)
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status} ${response.statusText} for ${url}`)
+        const [indexRes, inheritanceRes] = await Promise.all([
+          fetch("/data/rurima_index.json"),
+          fetch("/data/inheritance_map.json")
+        ])
+
+        if (!indexRes.ok) {
+          throw new Error(`Server returned ${indexRes.status} for rurima_index.json`)
         }
-        this.index = await response.json()
+        if (!inheritanceRes.ok) {
+          throw new Error(`Server returned ${inheritanceRes.status} for inheritance_map.json`)
+        }
+
+        const [index, inheritanceMap] = await Promise.all([
+          indexRes.json(),
+          inheritanceRes.json()
+        ])
+
+        this.index = index
+        this.inheritanceMap = inheritanceMap
+        this.index = index
+        this.inheritanceMap = inheritanceMap
       } catch (error) {
-        console.error("[IndexSearcher] Failed to load index:", error)
-        this.index = {}
+        this.index = this.index || {}
+        this.inheritanceMap = this.inheritanceMap || {}
       }
     })()
 
     await this.loadingPromise
+  }
+
+  /**
+   * 特定のクラスの継承チェーンを取得する
+   */
+  getInheritanceChain(className: string): string[] | null {
+    if (!this.inheritanceMap) return null
+    return this.inheritanceMap[className] || null
   }
 
   /**

@@ -30,12 +30,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // RubyVM を早期に初期化 (イベントリスナー登録のため)
   const rubyVM = new RubyVM()
-  console.log("[Main] Created RubyVM:", rubyVM)
 
   const persistence = new Persistence()
 
   const editorComponent = new EditorComponent(document.getElementById("editor-container")!, persistence)
-  console.log("[Main] Created EditorComponent:", editorComponent)
   
   // テスト用にエディタインスタンスを公開 (EditorComponent内部でもやっているが念のため)
   // EditorComponent の public getter を使うか、any キャストで内部 editor にアクセス

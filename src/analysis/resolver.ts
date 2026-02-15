@@ -62,7 +62,6 @@ export class Resolver {
       }
       return { status: 'unknown' }
     } catch (e) {
-      console.error(`[Resolver] ${methodName} の解決に失敗しました:`, e)
       return { status: 'unknown' }
     }
   }
