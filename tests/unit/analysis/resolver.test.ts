@@ -22,7 +22,7 @@ describe('Resolver', () => {
     it('LSP でメソッドが直接解決された場合、Rurima 情報を返すこと', async () => {
       const resolution = resolver.resolution
       vi.mocked(resolution.resolveMethodAt).mockResolvedValue('Array')
-      mockRurima.resolve.mockReturnValue({
+      mockRurima.resolve.mockResolvedValue({
         className: 'Array',
         url: 'https://docs.ruby-lang.org/ja/latest/class/Array.html#I_PUSH',
         separator: '#'
@@ -41,7 +41,7 @@ describe('Resolver', () => {
       vi.mocked(resolution.resolveMethodAt).mockResolvedValue(null)
       vi.mocked(resolution.resolveAtPosition).mockResolvedValue('String') // レシーバが String
 
-      mockRurima.resolve.mockReturnValue({
+      mockRurima.resolve.mockResolvedValue({
         className: 'String',
         url: 'url...',
         separator: '#'
@@ -57,7 +57,7 @@ describe('Resolver', () => {
     it('LSP でクラス名は特定できたが、Rurima に該当がない場合は unknown を返すこと', async () => {
       const resolution = resolver.resolution
       vi.mocked(resolution.resolveMethodAt).mockResolvedValue('UnknownClass')
-      mockRurima.resolve.mockReturnValue(null)
+      mockRurima.resolve.mockResolvedValue(null)
 
       const result = await resolver.resolve('missing_method', 1, 1)
 
@@ -71,14 +71,14 @@ describe('Resolver', () => {
       await expect(resolver.resolve('error_method', 1, 1)).rejects.toThrow('LSP Error')
     })
 
-    it('暗黙的メソッド (puts) の場合、LSP解決に失敗してもKernel等でフォールバック解決すること', async () => {
+    it('暗黙的メソッド (puts) の場合、LSP解決に失敗しても className="" でフォールバック解決すること', async () => {
       const resolution = resolver.resolution
       vi.mocked(resolution.resolveMethodAt).mockResolvedValue(null)
       vi.mocked(resolution.resolveAtPosition).mockResolvedValue(null)
 
-      // Kernel で解決されることを期待
-      mockRurima.resolve.mockImplementation((className: string, methodName: string) => {
-        if (className === 'Kernel' && methodName === 'puts') {
+      // className="" で解決されることを期待
+      mockRurima.resolve.mockImplementation(async (className: string, methodName: string) => {
+        if (className === '' && methodName === 'puts') {
           return {
             className: 'Kernel',
             url: 'https://docs.ruby-lang.org/ja/latest/method/Kernel/m/puts.html',
@@ -93,6 +93,7 @@ describe('Resolver', () => {
       expect(result.status).toBe('resolved')
       expect(result.className).toBe('Kernel')
       expect(result.url).toContain('puts.html')
+      expect(mockRurima.resolve).toHaveBeenCalledWith("", "puts")
     })
   })
 })

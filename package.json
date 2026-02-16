@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "setup": "npm install && bash scripts/merge_rbs.sh && node scripts/generate_inheritance_map.cjs && node scripts/update_resolve_signature.cjs",
+    "setup": "npm install && bash wasm-build/build.sh",
     "test": "vitest run && npx playwright test tests/system",
     "test:unit": "vitest run",
     "lint": "eslint src",
