@@ -121,6 +121,15 @@ class Server
       target_line = params[:arguments][0][:line] + 1
       result = MeasureValue.run(expression, target_line, @user_binding)
       write(id: json[:id], result: result)
+    when "rubbit.resolveSignature"
+      class_name = params[:arguments][0]
+      method_name = params[:arguments][1]
+      result = resolve_signature(class_name, method_name)
+      write(id: json[:id], result: result)
+    when "rubbit.fetchMethods"
+      class_name = params[:arguments][0]
+      result = fetch_methods(class_name)
+      write(id: json[:id], result: result)
     else
       write(id: json[:id], error: { code: -32601, message: "Method not found" })
     end
@@ -182,5 +191,105 @@ class Server
       end
     end
     File.write("/workspace/main.rb", lines.join("\n"))
+  end
+
+  def resolve_signature(class_name, method_name)
+    begin
+      genv = @core.genv
+      return nil unless genv
+
+      # cpath は Symbol の配列として構築 (例: "Net::HTTP" -> [:Net, :HTTP])
+      if class_name.nil? || class_name == "" || class_name == "Object"
+        cpath = [:Object]
+      else
+        cpath = class_name.split('::').reject(&:empty?).map(&:to_sym)
+      end
+
+      method_sym = method_name.to_sym
+      
+      # 継承チェーンに沿ってメソッドを探す
+      base_mod = genv.resolve_cpath(cpath)
+      [false, true].each do |singleton|
+        genv.each_superclass(base_mod, singleton) do |mod, _singleton|
+          begin
+            me = mod.methods[singleton][method_sym]
+            next unless me && me.exist?
+            
+            # 定義情報を取得 (defs, decls の順)
+            mdef = (me.defs.to_a.first || me.decls.to_a.first) rescue nil
+            next unless mdef
+            
+            # 実際の定義場所 (Kernel, Enumerable 等) を特定
+            defined_in = mod.show_cpath
+            
+            sep = singleton ? "." : "#"
+            
+            # シグネチャの文字列表記
+            # decls の場合は show ではなく method_types などを見る必要がある場合があるが、
+            # もし show が定義されていればそれを使う
+            sig_text = mdef.respond_to?(:show) ? mdef.show : method_name.to_s
+            signature = "#{defined_in}#{sep}#{sig_text}"
+
+            return {
+              signature: signature,
+              className: defined_in,
+              methodName: method_name,
+              separator: sep
+            }
+          rescue
+          end
+        end
+      end
+    rescue => e
+    end
+    nil
+  end
+
+  def fetch_methods(class_name)
+    begin
+      genv = @core.genv
+      return [] unless genv
+
+      if class_name.nil? || class_name == "" || class_name == "Object"
+        cpath = [:Object]
+      else
+        cpath = class_name.split('::').reject(&:empty?).map(&:to_sym)
+      end
+
+      mod = genv.resolve_cpath(cpath)
+      return [] unless mod
+
+      results = []
+      
+      # 継承チェーンを辿ってメソッドを収集
+      [false, true].each do |singleton|
+        genv.each_superclass(mod, singleton) do |m, _s|
+          begin
+            sep = singleton ? "." : "#"
+            m_hash = m.methods[singleton]
+            next unless m_hash
+
+            m_hash.each do |mid, me|
+              # すでに同名のメソッドが見つかっている場合はスキップ（オーバーライド考慮）
+              next if results.any? { |r| r[:methodName] == mid.to_s }
+              
+              mdef = (me.defs.to_a.first || me.decls.to_a.first) rescue nil
+              owner = m.show_cpath
+              
+              results << {
+                methodName: mid.to_s,
+                candidates: ["#{owner}#{sep}#{mid}"]
+              }
+            end
+          rescue
+          end
+        end
+      end
+      
+      # メソッド名でユニークにしてソート
+      return results.uniq { |r| r[:methodName] }.sort_by { |r| r[:methodName] }
+    rescue => e
+    end
+    []
   end
 end
