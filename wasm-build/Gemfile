@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "ruby_wasm", group: :build, github: "ruby/ruby.wasm"
+gem "ruby_wasm", "~> 2.8.1", group: :build
 gem "typeprof"
 gem "rbs"
 gem "js"

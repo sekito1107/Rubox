@@ -1,10 +1,3 @@
-GIT
-  remote: https://github.com/ruby/ruby.wasm.git
-  revision: 24fbf24f0942a17fac4aa8d7d9966411af7d4b13
-  specs:
-    ruby_wasm (2.8.1.dev)
-      logger
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -15,6 +8,10 @@ GEM
       forwardable
       singleton
     rbs (3.8.0)
+      logger
+    ruby_wasm (2.8.1)
+      logger
+    ruby_wasm (2.8.1-x86_64-linux)
       logger
     singleton (0.3.0)
     typeprof (0.30.1)
@@ -28,7 +25,7 @@ DEPENDENCIES
   js
   prime
   rbs
-  ruby_wasm!
+  ruby_wasm (~> 2.8.1)
   typeprof
 
 BUNDLED WITH
