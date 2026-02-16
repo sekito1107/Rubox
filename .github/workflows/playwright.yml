@@ -22,6 +22,7 @@ jobs:
       run: |
         cd wasm-build
         bundle install
+        bundle update ruby_wasm
     - name: Install Node dependencies
       run: npm install
     - name: Generate RBS
