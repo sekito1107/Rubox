@@ -20,16 +20,23 @@ export class ProvideInlayHints {
       onDidChangeInlayHints: this.emitter.event,
       provideInlayHints: (model: monaco.editor.ITextModel, range: monaco.Range) => {
         const hints: monaco.languages.InlayHint[] = [];
-        for (const [line, value] of this.measuredValues.entries()) {
-          const lineNum = Number(line);
-          if (lineNum < range.startLineNumber || lineNum > range.endLineNumber) continue;
-          const maxCol = model.getLineMaxColumn(lineNum);
-          hints.push({
-            kind: monaco.languages.InlayHintKind.Type,
-            position: { lineNumber: lineNum, column: maxCol },
-            label: ` # => ${value}`,
-            paddingLeft: true
-          });
+        try {
+          for (const [line, value] of this.measuredValues.entries()) {
+            const lineNum = Number(line);
+            if (isNaN(lineNum) || lineNum <= 0 || lineNum > model.getLineCount()) continue;
+            if (lineNum < range.startLineNumber || lineNum > range.endLineNumber) continue;
+            
+            const maxCol = model.getLineMaxColumn(lineNum);
+            hints.push({
+              kind: monaco.languages.InlayHintKind.Type,
+              position: { lineNumber: lineNum, column: maxCol },
+              label: ` # => ${value}`,
+              paddingLeft: true
+            });
+          }
+        } catch (e: any) {
+          console.error("[InlayHints] Failed to provide hints:", e.message);
+          if (e.stack) console.error(e.stack);
         }
         return { hints: hints, dispose: () => {} };
       }

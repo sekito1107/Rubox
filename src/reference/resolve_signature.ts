@@ -1,64 +1,53 @@
 import { URLGenerator } from "./url_generator"
-import type { IndexSearcher } from "./index_searcher"
+import type { LSPClient } from "../lsp/client"
 
 /**
- * 継承関係を考慮して、特定のメソッド名に対応する最適なるりまシグネチャを解決する
+ * Ruby VM (RBS) を使用して、特定のメソッド名に対応する最適なるりまシグネチャを解決する
  */
 export class ResolveSignature {
-  private searcher: IndexSearcher
+  private client: LSPClient
 
-  constructor(indexSearcher: IndexSearcher) {
-    this.searcher = indexSearcher
+  constructor(lspClient: LSPClient) {
+    this.client = lspClient
   }
 
   /**
    * クラス名とメソッド名からるりま情報を解決する
    */
-  resolve(className: string, methodName: string): {
+  async resolve(className: string, methodName: string): Promise<{
     signature: string
     url: string
     className: string
     methodName: string
     separator: string
     displayName: string
-  } | null {
-    const candidates = this.searcher.findMethod(methodName)
-    if (!candidates) {
+  } | null> {
+    try {
+      // Ruby VM (server.rb) の rubbit.resolveSignature コマンドを呼び出す
+      const result = await this.client.sendRequest("workspace/executeCommand", {
+        command: "rubbit.resolveSignature",
+        arguments: [className, methodName]
+      })
+
+      if (!result || !result.signature) {
+        return null
+      }
+
+      const info = URLGenerator.generateUrlInfo(result.signature)
+      
+      // 特例: Kernelモジュールのメソッドとして検出された場合、
+      // 実態がモジュール関数（かつ暗黙的メソッド）の場合はモジュール関数のURL (/m/) に誘導する
+      if (result.className === "Kernel" && (info.url.includes("/s/") || info.url.includes("/i/"))) {
+          info.url = info.url.replace(/\/[si]\//, "/m/")
+      }
+
+      return {
+        signature: result.signature,
+        ...info
+      }
+    } catch (e) {
+      console.error("Failed to resolve signature via Ruby VM:", e)
       return null
     }
-
-    // 1. 継承チェーンを取得 (継承マップにない場合は Object 系をデフォルトとする)
-    const chain = this.searcher.getInheritanceChain(className) || [className, "Object", "Kernel", "BasicObject"]
-
-    // 2. 順にマッチするものを探す（自クラス -> 継承先 -> Object...）
-    for (const ancestor of chain) {
-      // 優先順位: インスタンスメソッド (#) -> 特異メソッド (.)
-      const matchI = candidates.find(c => c.startsWith(`${ancestor}#`))
-      if (matchI) {
-        return {
-          signature: matchI,
-          ...URLGenerator.generateUrlInfo(matchI)
-        }
-      }
-
-      const matchS = candidates.find(c => c.startsWith(`${ancestor}.`))
-      if (matchS) {
-        const info = URLGenerator.generateUrlInfo(matchS)
-        
-        // 特例: Kernelモジュールのメソッドとして検出された場合、
-        // 実態がモジュール関数（かつ暗黙的メソッド）の場合はモジュール関数のURL (/m/) に誘導する
-        if (ancestor === "Kernel" && (info.url.includes("/s/") || info.url.includes("/i/"))) {
-           // Kernelメソッドは /i/ や /s/ ではなく /m/ で記録されていることが多いためリライト
-           info.url = info.url.replace(/\/[si]\//, "/m/")
-        }
-        
-        return {
-          signature: matchS,
-          ...info
-        }
-      }
-    }
-
-    return null
   }
 }

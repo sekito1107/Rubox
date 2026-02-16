@@ -25,6 +25,14 @@ import { RubyVM } from "./ruby-vm"
 import { Persistence } from "./persistence"
 
 document.addEventListener("DOMContentLoaded", () => {
+  // グローバルエラーハンドラー (スタックトレース取得用)
+  window.addEventListener("error", (event) => {
+    console.error("Global Error Captured:", event.message);
+    if (event.error && event.error.stack) {
+      console.error("Stack Trace:", event.error.stack);
+    }
+  });
+
   // 機能の初期化
   new ThemeComponent()
 

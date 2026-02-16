@@ -110,7 +110,7 @@ export class CursorDocComponent {
       return
     }
 
-    const methods = analysis.reference.fetchMethods(type)
+    const methods = await analysis.reference.fetchMethods(type)
 
     if (methods.length === 0) {
       this.listElement.innerHTML = `

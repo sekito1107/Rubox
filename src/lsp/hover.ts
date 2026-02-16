@@ -57,7 +57,9 @@ export class ProvideHover {
               ...additionalContents
             ]
           };
-        } catch {
+        } catch (e: any) {
+          console.error("[Hover] Failed to provide hover:", e.message);
+          if (e.stack) console.error(e.stack);
           return null;
         }
       }
@@ -89,6 +91,7 @@ export class ProvideHover {
     )) : "";
     const isSymbol = charBefore === ':';
 
+    if (position.lineNumber <= 0 || position.lineNumber > model.getLineCount()) return false;
     const lineContent = model.getLineContent(position.lineNumber);
     const textBefore = lineContent.substring(0, position.column - 1);
     const quoteCount = (textBefore.match(/['"]/g) || []).length;

@@ -64,8 +64,21 @@ export class AnalysisCoordinator {
     window.addEventListener("rubbit:lsp-analysis-finished", () => {
       if (this.needsReanalysis) {
         this.scheduleAnalysis()
+      } else {
+        // LSP 解析が終わったので、これまで unknown だったものも再試行する
+        this.retryUnknownMethods()
       }
     })
+  }
+
+  private retryUnknownMethods(): void {
+    const unknownItems = this.store.getAll().filter(item => item.status === 'unknown')
+    if (unknownItems.length > 0) {
+      unknownItems.forEach(item => {
+        const id = `${item.name}:${item.line}:${item.col}`
+        this.resolveSingleMethod(id, true) // force retry
+      })
+    }
   }
 
   stop(): void {
@@ -102,17 +115,22 @@ export class AnalysisCoordinator {
     }
 
     try {
+      const lineCount = model.getLineCount()
       const dirtyLines = this.tracker.getDirtyLines()
-      const shouldFullScan = this.lineMethods.length === 0 || this.lineMethods.length !== model.getLineCount()
+      const shouldFullScan = this.lineMethods.length === 0 || this.lineMethods.length !== lineCount
       
       // 1. 必要に応じて再スキャン
       if (shouldFullScan || dirtyLines.size > 0) {
-        if (shouldFullScan) this.tracker.markAllDirty(model.getLineCount())
+        if (shouldFullScan) {
+          this.tracker.markAllDirty(lineCount)
+          // サイズが変わっている場合、既存のキャッシュを今の行数に合わせる
+          this.lineMethods = new Array(lineCount).fill(null)
+        }
         
-        const scanResults = this.scanner.scanLines(model, Array.from(this.tracker.getDirtyLines()))
-        scanResults.forEach((methods, lineIdx) => {
-          this.lineMethods[lineIdx] = methods
-        })
+      const scanResults = this.scanner.scanLines(model, Array.from(this.tracker.getDirtyLines()))
+      scanResults.forEach((methods, lineIdx) => {
+        this.lineMethods[lineIdx] = methods
+      })
         this.tracker.clearDirtyLines()
       }
 
@@ -155,10 +173,13 @@ export class AnalysisCoordinator {
 
   /**
    * 単一メソッドの型解決依頼
+   * @param id メソッドID
+   * @param force すでに 'unknown' や 'resolved' の場合でも強制的に再試行するか
    */
-  private async resolveSingleMethod(id: string): Promise<void> {
+  private async resolveSingleMethod(id: string, force: boolean = false): Promise<void> {
     const item = this.store.get(id)
-    if (!item || item.isResolving || item.status === 'resolved') return
+    if (!item || item.isResolving) return
+    if (!force && item.status === 'resolved') return
 
     item.isResolving = true
     this.store.set(id, item)

@@ -32,7 +32,7 @@ export class Resolver {
 
     if (className) {
       // 3. Rurima インデックスから情報を取得
-      const info = this.rurima.resolve(className, methodName)
+      const info = await this.rurima.resolve(className, methodName)
       if (info) {
         return {
           status: 'resolved',
@@ -45,16 +45,15 @@ export class Resolver {
       // 4. クラス名が不明だが、暗黙的メソッド（ホワイトリスト）に含まれる場合
       // Kernel, Module, Object の順で解決を試みる
       if (ImplicitMethods.has(methodName)) {
-         const candidates = ["Kernel", "Module", "Object"]
-         for (const candidate of candidates) {
-           const info = this.rurima.resolve(candidate, methodName)
-           if (info) {
-             return {
-               status: 'resolved',
-               className: info.className,
-               url: info.url,
-               separator: info.separator
-             }
+         // Ruby側 (server.rb) の resolve_signature は className="" の時に 
+         // Object/Kernel をフォールバックするように実装したので、className="" でリクエストする
+         const info = await this.rurima.resolve("", methodName)
+         if (info) {
+           return {
+             status: 'resolved',
+             className: info.className,
+             url: info.url,
+             separator: info.separator
            }
          }
       }

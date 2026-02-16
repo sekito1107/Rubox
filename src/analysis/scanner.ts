@@ -28,7 +28,17 @@ export class Scanner {
     const methodPattern = /&:(?:([a-zA-Z_]\w*[!?]?))|(?:\.)([a-zA-Z_]\w*[!?]?)|(\b[a-zA-Z_]\w*[!?]?)\s*(?=[({]|\s+do\b)|(\b[a-zA-Z_]\w*[!?]?)/g
 
     lineIndices.forEach(idx => {
-      const lineContent = model.getLineContent(idx + 1).replace(/#(?!\{).*$/g, m => " ".repeat(m.length))
+      const lineNum = idx + 1
+      if (lineNum <= 0 || lineNum > (model as any).getLineCount()) return;
+      
+      let lineContent = "";
+      try {
+        lineContent = model.getLineContent(lineNum).replace(/#(?!\{).*$/g, m => " ".repeat(m.length))
+      } catch (e: any) {
+        console.error(`[Scanner] Error getting content for line ${lineNum}:`, e.message);
+        if (e.stack) console.error(e.stack);
+        return;
+      }
       const matches: ScannedMethod[] = []
       let match: RegExpExecArray | null
 

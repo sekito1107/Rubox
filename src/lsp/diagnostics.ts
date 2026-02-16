@@ -61,17 +61,28 @@ export class HandleDiagnostics {
         })
         .map(diag => ({
           severity: this.mapSeverity(diag.severity),
-          startLineNumber: diag.range.start.line + 1,
-          startColumn: diag.range.start.character + 1,
-          endLineNumber: diag.range.end.line + 1,
-          endColumn: diag.range.end.character + 1,
+          startLineNumber: Math.max(1, diag.range.start.line + 1),
+          startColumn: Math.max(1, diag.range.start.character + 1),
+          endLineNumber: Math.max(1, diag.range.end.line + 1),
+          endColumn: Math.max(1, diag.range.end.character + 1),
           message: diag.message,
           source: "TypeProf"
         }));
       
       const currentModel = this.editor.getModel();
       if (currentModel) {
-        monaco.editor.setModelMarkers(currentModel, "lsp", markers);
+        try {
+          const lineCount = typeof currentModel.getLineCount === 'function' ? currentModel.getLineCount() : 1000000;
+          const adjustedMarkers = markers.map(m => ({
+            ...m,
+            startLineNumber: Math.min(lineCount, m.startLineNumber),
+            endLineNumber: Math.min(lineCount, m.endLineNumber)
+          }));
+          monaco.editor.setModelMarkers(currentModel, "lsp", adjustedMarkers);
+        } catch (e: any) {
+          console.error("[Diagnostics/publishDiagnostics] Error setting markers:", e.message);
+          if (e.stack) console.error(e.stack);
+        }
         
         // 解析完了を通知 (負荷軽減のためデバウンス)
         if (this.debounceTimer) clearTimeout(this.debounceTimer);
@@ -91,14 +102,25 @@ export class HandleDiagnostics {
       } else {
         const markers: monaco.editor.IMarkerData[] = params.diagnostics.map(diag => ({
           severity: monaco.MarkerSeverity.Error,
-          startLineNumber: diag.range.start.line + 1,
-          startColumn: diag.range.start.character + 1,
-          endLineNumber: diag.range.end.line + 1,
-          endColumn: diag.range.end.character + 1,
+          startLineNumber: Math.max(1, diag.range.start.line + 1),
+          startColumn: Math.max(1, diag.range.start.character + 1),
+          endLineNumber: Math.max(1, diag.range.end.line + 1),
+          endColumn: Math.max(1, diag.range.end.character + 1),
           message: diag.message,
           source: "RubySyntax"
         }));
-        monaco.editor.setModelMarkers(model, "ruby-syntax", markers);
+        try {
+          const lineCount = typeof model.getLineCount === 'function' ? model.getLineCount() : 1000000;
+          const adjustedMarkers = markers.map(m => ({
+            ...m,
+            startLineNumber: Math.min(lineCount, m.startLineNumber),
+            endLineNumber: Math.min(lineCount, m.endLineNumber)
+          }));
+          monaco.editor.setModelMarkers(model, "ruby-syntax", adjustedMarkers);
+        } catch (e: any) {
+          console.error("[Diagnostics/syntaxCheck] Error setting markers:", e.message);
+          if (e.stack) console.error(e.stack);
+        }
       }
     });
   }

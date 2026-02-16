@@ -15,7 +15,15 @@ export class Resolution {
     // 0. コメント内チェック
     const model = this.lsp.model
     if (model) {
-      const lineContent = model.getLineContent(line)
+      if (line <= 0 || line > model.getLineCount()) return null
+      let lineContent = "";
+      try {
+        lineContent = model.getLineContent(line)
+      } catch (e: any) {
+        console.error(`[Resolution/resolveAtPosition] Error getting content for line ${line}:`, e.message);
+        if (e.stack) console.error(e.stack);
+        return null;
+      }
       const commentIdx = lineContent.indexOf('#')
       // '#' が見つかり、かつその直後が '{' (式展開) でない場合のみコメントとみなす
       if (commentIdx !== -1 && lineContent[commentIdx + 1] !== '{' && commentIdx < col - 1) {
@@ -60,8 +68,16 @@ export class Resolution {
   /**
    * ドット (".") の直後にカーソルがある場合に備え、ドットを除去した状態でプローブを行う
    */
-  private async _probeReceiverType(model: { getLineContent(l: number): string, getLinesContent(): string[] }, line: number, col: number): Promise<string | null> {
-    const lineContent = model.getLineContent(line)
+  private async _probeReceiverType(model: { getLineContent(l: number): string, getLinesContent(): string[], getLineCount(): number }, line: number, col: number): Promise<string | null> {
+    if (line <= 0 || line > model.getLineCount()) return null
+    let lineContent = "";
+    try {
+      lineContent = model.getLineContent(line)
+    } catch (e: any) {
+      console.error(`[Resolution/_probeReceiverType] Error getting content for line ${line}:`, e.message);
+      if (e.stack) console.error(e.stack);
+      return null;
+    }
     
     // カーソル位置(col)の直前または現在位置が "." かを確認
     // 1-indexedなので col-1 が現在文字の 0-indexed 位置

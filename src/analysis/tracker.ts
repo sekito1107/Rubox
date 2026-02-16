@@ -24,10 +24,10 @@ export class Tracker {
       if (newLineCount !== oldLineCount) {
         const diff = newLineCount - oldLineCount
         if (diff > 0) {
-          // 行追加: 後ろをずらす
+          // 行追加: 指定位置から開始して空要素を挿入
           lineMethods.splice(startLine + 1, 0, ...new Array(diff).fill(null))
         } else {
-          // 行削除: 削除
+          // 行削除: 指定位置から削除
           lineMethods.splice(startLine + 1, Math.abs(diff))
         }
       }
