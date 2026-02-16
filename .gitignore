@@ -41,11 +41,11 @@
 *.wasm
 
 # WASM build artifacts
-/wasm-build/
-build/
-build.log
-rubies/
-vendor/wasm_gems/
+/wasm-build/.bundle
+/wasm-build/build/
+/wasm-build/rubies/
+/wasm-build/vendor/
+/wasm-build/build.log
 /vendor/bundle
 bin/restart_server
 
