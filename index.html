@@ -648,6 +648,36 @@
                 </template>
               </div>
             </div>
+
+            <!-- Stdin::InputComponent -->
+            <div id="stdin-container"
+              class="mt-auto border-t border-slate-200 dark:border-white/5 flex flex-col bg-slate-100/30 dark:bg-white/5">
+              <button id="stdin-toggle"
+                class="flex items-center justify-between px-4 py-2 hover:bg-slate-200/50 dark:hover:bg-white/5 transition-colors group">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3 h-3 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-.75m-6-6 3 3m0 0 3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" />
+                  </svg>
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Input
+                    (stdin)</span>
+                </div>
+                <svg id="stdin-arrow" class="w-3 h-3 text-slate-400 transition-transform duration-200"
+                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div id="stdin-content"
+                class="h-0 overflow-hidden transition-[height] duration-200 ease-in-out bg-white dark:bg-[#0D1117]">
+                <textarea id="stdin-input"
+                  class="w-full h-32 p-3 text-sm font-mono bg-transparent border-0 focus:ring-0 resize-none text-slate-600 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  placeholder="Standard input here..." spellcheck="false" autocorrect="off"
+                  autocapitalize="off"></textarea>
+              </div>
+            </div>
           </aside>
         </div>
       </div>

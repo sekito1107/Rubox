@@ -10,6 +10,8 @@ export class ConsoleComponent {
   private rubyVM: RubyVM;
   private editor: EditorComponent;
   private loadingAnimationId: number | null = null;
+  private stdinInput: HTMLTextAreaElement | null = null;
+  private isStdinExpanded: boolean = false;
 
   // outputElement: 出力表示エリア
   // runButton: 実行ボタン
@@ -70,6 +72,36 @@ export class ConsoleComponent {
       const detail = (event as CustomEvent).detail;
       this.onFullyReady(detail?.version || "");
     });
+
+    // Stdin UI の初期化
+    this.initStdinUI();
+  }
+
+  // Stdin UI の初期化とイベント設定
+  private initStdinUI(): void {
+    const toggleBtn = document.getElementById("stdin-toggle");
+    const container = document.getElementById("stdin-content");
+    const arrow = document.getElementById("stdin-arrow");
+    this.stdinInput = document.getElementById("stdin-input") as HTMLTextAreaElement;
+
+    if (toggleBtn && container && arrow) {
+      toggleBtn.addEventListener("click", () => {
+        this.isStdinExpanded = !this.isStdinExpanded;
+        if (this.isStdinExpanded) {
+          container.style.height = "128px";
+          arrow.style.transform = "rotate(180deg)";
+        } else {
+          container.style.height = "0";
+          arrow.style.transform = "rotate(0deg)";
+        }
+      });
+    }
+
+    if (this.stdinInput) {
+      this.stdinInput.addEventListener("input", () => {
+        this.rubyVM.updateStdin(this.stdinInput!.value);
+      });
+    }
   }
 
   // ローディングUIを表示する
@@ -208,8 +240,9 @@ export class ConsoleComponent {
 
     try {
       const code = this.editor.getValue();
+      const stdin = this.stdinInput?.value || "";
       const { Executor } = await import("./runtime/executor");
-      new Executor(this.rubyVM).execute(code);
+      new Executor(this.rubyVM).execute(code, stdin);
     } catch (e: any) {
       this.appendOutput(`// エラー: ${e.message}`);
     }

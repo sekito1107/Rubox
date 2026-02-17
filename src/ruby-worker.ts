@@ -6,6 +6,7 @@ import measureValueCode from "./ruby/measure_value.rb?raw";
 import serverCode from "./ruby/server.rb?raw";
 
 let vm: any = null;
+(self as any)._rubbitStdin = "";
 
 // Worker メッセージハンドラ
 self.onmessage = async (event: MessageEvent) => {
@@ -17,7 +18,10 @@ self.onmessage = async (event: MessageEvent) => {
       break;
     case "run":
       if (!vm) return;
-      runCode(payload.code);
+      runCode(payload.code, payload.stdin);
+      break;
+    case "updateStdin":
+      (self as any)._rubbitStdin = payload.stdin;
       break;
     case "lsp":
       if (!vm) return;
@@ -137,12 +141,14 @@ async function initializeVM(wasmUrl: string) {
 }
 
 // コードを実行する
-function runCode(code: string) {
+function runCode(code: string, stdin?: string) {
   try {
     (self as any)._tmpCode = code;
+    (self as any)._rubbitStdin = stdin || "";
     const wrappedCode = `
       require 'stringio'
       $stdout = StringIO.new
+      $stdin = StringIO.new(JS.global[:_rubbitStdin].to_s)
       begin
         $server.run_code(JS.global[:_tmpCode].to_s)
       rescue => e

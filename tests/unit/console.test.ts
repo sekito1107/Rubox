@@ -15,6 +15,10 @@ describe('ConsoleComponent', () => {
       <div id="output"></div>
       <button id="run"></button>
       <button id="clear"></button>
+      <button id="stdin-toggle"></button>
+      <div id="stdin-content"></div>
+      <svg id="stdin-arrow"></svg>
+      <textarea id="stdin-input"></textarea>
     `;
     outputElement = document.getElementById('output') as HTMLElement;
     runButton = document.getElementById('run') as HTMLElement;
@@ -50,7 +54,20 @@ describe('ConsoleComponent', () => {
     
     expect(mockEditor.getValue).toHaveBeenCalled();
     await vi.waitFor(() => {
-      expect(mockRubyVM.run).toHaveBeenCalledWith('puts "Hello"');
+      expect(mockRubyVM.run).toHaveBeenCalledWith('puts "Hello"', '');
+    });
+  });
+
+  it('標準入力が指定された場合に RubyVM.run に渡すこと', async () => {
+    runButton.removeAttribute('disabled');
+    mockEditor.getValue.mockReturnValue('puts gets');
+    const stdinInput = document.getElementById('stdin-input') as HTMLTextAreaElement;
+    stdinInput.value = 'hello from stdin';
+    
+    runButton.click();
+    
+    await vi.waitFor(() => {
+      expect(mockRubyVM.run).toHaveBeenCalledWith('puts gets', 'hello from stdin');
     });
   });
 

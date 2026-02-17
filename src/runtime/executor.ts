@@ -1,6 +1,6 @@
 // Ruby VM (Worker) へのコード送信と実行結果の購読を担当する
 export interface RubyVMController {
-  run(code: string): void;
+  run(code: string, stdin?: string): void;
 }
 
 export class Executor {
@@ -10,13 +10,12 @@ export class Executor {
     this.controller = controller;
   }
 
-  // コードを実行する
-  // コードを実行する
   // code: 実行するRubyコード
-  public execute(code: string): void {
+  // stdin: 標準入力として渡す文字列
+  public execute(code: string, stdin?: string): void {
     if (!code) return;
     try {
-      this.controller.run(code);
+      this.controller.run(code, stdin);
     } catch (e: any) {
       console.error("Execution failed:", e);
       throw e;

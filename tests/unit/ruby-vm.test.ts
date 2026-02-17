@@ -121,7 +121,17 @@ describe('RubyVM', () => {
 
     expect(mockWorker.postMessage).toHaveBeenCalledWith({
       type: 'run',
-      payload: { code: 'puts "Hello"' },
+      payload: { code: 'puts "Hello"', stdin: undefined },
+    });
+  });
+
+  it('runメソッドでコードと標準入力をWorkerに送信すること', () => {
+    vm = new RubyVM();
+    vm.run('puts gets', 'hello');
+    
+    expect(mockWorker.postMessage).toHaveBeenCalledWith({
+      type: 'run',
+      payload: { code: 'puts gets', stdin: 'hello' },
     });
   });
 

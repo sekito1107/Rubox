@@ -119,7 +119,8 @@ class Server
     when "typeprof.measureValue"
       expression = params[:arguments][0][:expression]
       target_line = params[:arguments][0][:line] + 1
-      result = MeasureValue.run(expression, target_line, @user_binding)
+      stdin = JS.global[:_rubbitStdin].to_s
+      result = MeasureValue.run(expression, target_line, @user_binding, stdin)
       write(id: json[:id], result: result)
     when "rubbit.resolveSignature"
       class_name = params[:arguments][0]

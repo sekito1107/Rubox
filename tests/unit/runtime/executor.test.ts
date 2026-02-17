@@ -16,7 +16,7 @@ describe('Executor', () => {
     it('指定されたコードで controller.run を呼び出すこと', () => {
       const code = 'puts "hello"';
       executor.execute(code);
-      expect(mockController.run).toHaveBeenCalledWith(code);
+      expect(mockController.run).toHaveBeenCalledWith(code, undefined);
     });
 
     it('コードが空の場合は何もしないこと', () => {
@@ -28,6 +28,13 @@ describe('Executor', () => {
       executor.execute(null as any);
       executor.execute(undefined as any);
       expect(mockController.run).not.toHaveBeenCalled();
+    });
+
+    it('stdin が指定された場合に controller.run に渡すこと', () => {
+      const code = 'puts gets';
+      const stdin = 'hello';
+      executor.execute(code, stdin);
+      expect(mockController.run).toHaveBeenCalledWith(code, stdin);
     });
   });
 });

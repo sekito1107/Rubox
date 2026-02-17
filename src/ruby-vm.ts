@@ -82,12 +82,18 @@ export class RubyVM {
   }
 
   // コードを実行する
-  public run(code: string): void {
+  public run(code: string, stdin?: string): void {
     if (!this.worker) {
       this.dispatchOutput("// Ruby VM Worker が初期化されていません。");
       return;
     }
-    this.worker.postMessage({ type: "run", payload: { code } });
+    this.worker.postMessage({ type: "run", payload: { code, stdin } });
+  }
+
+  // 標準入力を更新する (LSPなどからの参照用)
+  public updateStdin(stdin: string): void {
+    if (!this.worker) return;
+    this.worker.postMessage({ type: "updateStdin", payload: { stdin } });
   }
 
   // 出力イベントを発火する
