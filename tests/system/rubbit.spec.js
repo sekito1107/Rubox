@@ -1,266 +1,302 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Rubbit E2E Tests', () => {
-  test.beforeEach(async ({ page }) => {
-    // ブラウザのコンソールログをターミナルに表示させる
-    page.on('console', msg => {
-      console.log(`[Browser Console] ${msg.type().toUpperCase()}: ${msg.text()}`);
+test.describe('Rubbit System Integration Tests', () => {
+    test('完整なシステムフロー検証', async ({ page, context }) => {
+        test.setTimeout(180000); // 3 minutes timeout for the whole flow
+
+        // --- 共通セットアップ ---
+        
+        // 1. ブラウザログのプロキシ設定
+        page.on('console', msg => {
+            // "Waiting for rubbitLSPReady" はノイズになるので除外しても良いが、デバッグ用に残す
+            if (!msg.text().includes('Waiting for rubbitLSPReady')) {
+                console.log(`[Browser Console] ${msg.type().toUpperCase()}: ${msg.text()}`);
+            }
+        });
+        page.on('pageerror', err => {
+            console.log(`[Browser PageError] ${err.message}`);
+        });
+
+        // 2. クリップボード権限の付与 (Share機能用)
+        await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+        // 3. 初期ページロード (これ以降、明示的なリロード以外ではページ遷移しない)
+        await test.step('初期化: ページロードとWASM待機', async () => {
+            await page.goto('/');
+            
+            // ターミナルに "Ruby WASM ready!" が表示されるのを待つ (最長90秒)
+            await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
+            
+            // LSP/Monaco/WASM の完全な準備完了を待つカスタムウェイト
+            await page.waitForSelector('.monaco-editor');
+            await page.evaluate(async () => {
+                for (let i = 0; i < 120; i++) { // Max 60sec
+                    if (window.rubbitLSPReady) return true;
+                    await new Promise(r => setTimeout(r, 500));
+                }
+                const debug = {
+                    lspReady: window.rubbitLSPReady,
+                    monaco: !!window.monaco,
+                    editor: !!window.monacoEditor,
+                    initializing: window.__rubyVMInitializing,
+                    ready: window.__rubyVMReady
+                };
+                throw new Error(`LSP initialization HANG detected. State: ${JSON.stringify(debug)}`);
+            });
+        });
+
+        // --- 基本機能テスト ---
+
+        await test.step('基本機能: コード実行と出力', async () => {
+            await page.evaluate(() => window.monacoEditor.setValue('puts "Hello from WASM!"'));
+            await page.getByRole('button', { name: 'Run' }).click();
+            await expect(page.locator('#terminal-output')).toContainText('Hello from WASM!', { timeout: 10000 });
+        });
+
+        await test.step('基本機能: エラーハンドリング', async () => {
+            await page.evaluate(() => window.monacoEditor.setValue('undefined_variable'));
+            await page.getByRole('button', { name: 'Run' }).click();
+            await expect(page.locator('#terminal-output')).toContainText('Error:', { timeout: 10000 });
+        });
+
+        await test.step('基本機能: 出力クリア', async () => {
+            await page.getByRole('button', { name: 'Clear' }).click();
+            await expect(page.locator('#terminal-output')).not.toContainText('Error:');
+            await expect(page.locator('#terminal-output')).not.toContainText('Hello from WASM!');
+        });
+
+        // --- Ghost Text (TypeProf) 検証 ---
+        // 以前の ghost_text.spec.js の内容
+
+        await test.step('Ghost Text: 長い配列の表示', async () => {
+            const code = 'x = (1..20).to_a';
+            await setCodeAndSync(page, code);
+            
+            const result = await measureValue(page, 0, 0, 'x'); // line 0, col 0
+            expect(result.length).toBeGreaterThan(50);
+            expect(result).toContain('20');
+            expect(result).not.toContain('...');
+        });
+
+        await test.step('Ghost Text: ループ変数のキャプチャ', async () => {
+            const code = [
+                'items = [" ruby ", " web-assembly ", " rubbit "]',
+                'items.each do |item|',
+                '  item',
+                'end'
+            ].join('\n');
+            await setCodeAndSync(page, code);
+
+            const result = await measureValue(page, 2, 2, 'item'); // line 2 (3行目)
+            expect(result).toContain('" ruby "');
+            expect(result).toContain('" web-assembly "');
+            expect(result).toContain('" rubbit "');
+        });
+
+        await test.step('Ghost Text: ミュータブルオブジェクトの追跡', async () => {
+            const code = [
+                'a = "Ruby"',
+                '3.times do',
+                '  a << "!"',
+                'end'
+            ].join('\n');
+            await setCodeAndSync(page, code);
+
+            const result = await measureValue(page, 2, 2, 'a');
+            expect(result).toContain('"Ruby!"');
+            expect(result).toContain('"Ruby!!"');
+            expect(result).toContain('"Ruby!!!"');
+        });
+
+        await test.step('Ghost Text: デッドコード/未来の値チェック', async () => {
+            const code = [
+                'class DataProcessor',
+                '  def self.format(text)',
+                '    text.strip.capitalize',
+                '  end',
+                'end',
+                '',
+                'DataProcessor.format("ruby")'
+            ].join('\n');
+            await setCodeAndSync(page, code);
+
+            // メソッド定義行のパラメータ
+            const resultParams = await measureValue(page, 1, 18, 'text');
+            expect(resultParams).not.toContain('"ruby"');
+            
+            // メソッド内部の変数
+            const resultInner = await measureValuePromise(page, 2, 4, 'text');
+            expect(resultInner).not.toContain('"ruby"');
+        });
+
+        // --- UI & 機能テスト ---
+
+        await test.step('UI: サンプルコードロード', async () => {
+            await page.locator('#examples-button').click();
+            await page.locator('#examples-menu button[data-key="fizzbuzz"]').click();
+            
+            await expect.poll(async () => {
+                return await page.evaluate(() => window.monacoEditor.getValue());
+            }, { timeout: 10000 }).toContain('1.upto(100) do |i|');
+        });
+
+        await test.step('UI: メソッドリスト解決', async () => {
+            // Kernel#puts
+            await setCode(page, 'puts "test"');
+            const putsCard = page.locator('#method-list >> [data-role="methodName"]:text-is("puts")').locator('..').locator('..').first();
+            await expect(putsCard).toBeVisible({ timeout: 30000 });
+            await expect(putsCard.locator('[data-role="className"]')).toHaveText('Kernel');
+
+            // Enumerable#sum
+            await setCode(page, '(1..100).sum');
+            const sumCard = page.locator('#method-list >> [data-role="methodName"]:text-is("sum")').locator('..').locator('..').first();
+            await expect(sumCard).toBeVisible({ timeout: 30000 });
+
+            // Chain resolution: Prime.each.to_a.join
+            // Prime は定数なので require 'prime' が必要。LSP同期を待つため少し長めに。
+            await setCode(page, "require 'prime'\nPrime.each(10).to_a.join");
+            
+            // 少し待機（LSPの非同期解析完了待ちコンポーネントがないため）
+            await page.waitForTimeout(3000); 
+
+            // each -> Prime
+            const eachCard = page.locator('#method-list >> [data-role="methodName"]:text-is("each")').locator('..').locator('..').first();
+            await expect(eachCard).toBeVisible({ timeout: 30000 });
+            await expect(eachCard.locator('[data-role="className"]')).toHaveText('Prime');
+        });
+
+        // --- ファイル操作 & Share ---
+
+        await test.step('機能: ファイルダウンロード', async () => {
+             await page.evaluate(() => {
+                // @ts-ignore
+                window.showSaveFilePicker = undefined;
+            });
+            const downloadPromise = page.waitForEvent('download');
+            await page.getByTitle('コードを保存').click();
+            const download = await downloadPromise;
+            expect(download.suggestedFilename()).toBe('rubbit.rb');
+        });
+
+        await test.step('機能: Shareと復元', async () => {
+            const targetCode = 'puts "Share Flow Test"';
+            await setCode(page, targetCode);
+
+            await page.getByRole('button', { name: 'Share' }).click();
+            await expect(page.locator('#share-modal')).toBeVisible();
+            await page.locator('#share-copy-btn').click();
+            await expect(page.locator('[data-toast="message"]')).toContainText('Copied to clipboard!');
+
+            // 新しいページを開いて復元確認
+            const urlWithHash = await page.evaluate(() => window.location.href);
+            const newPage = await context.newPage();
+            
+            // クリップボードかURLから復元
+            if (urlWithHash.includes('#')) {
+                await newPage.goto(urlWithHash);
+            } else {
+                const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+                await newPage.goto(clipboardText);
+            }
+            // 新しいページでもWASM準備完了を待つ
+            await expect(newPage.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
+            
+            const restoredCode = await newPage.evaluate(() => window.monacoEditor.getValue());
+            expect(restoredCode).toBe(targetCode);
+            await newPage.close();
+        });
+
+        // --- 永続化テスト (リロードを伴うため最後にまとめて実行) ---
+
+        await test.step('永続化: エディタ設定', async () => {
+            await page.getByTitle('Editor Settings').click();
+            await page.locator('[data-setting="fontSize"]').selectOption('20');
+            await page.waitForTimeout(500); // 保存待ち
+            await page.getByRole('button', { name: 'Close' }).click();
+
+            await page.reload();
+            await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
+
+            await page.getByTitle('Editor Settings').click();
+            const fontSize = await page.locator('[data-setting="fontSize"]').inputValue();
+            expect(fontSize).toBe('20');
+            await page.getByRole('button', { name: 'Close' }).click();
+        });
+
+        await test.step('永続化: テーマ', async () => {
+            // 現在の状態を取得
+            const isDarkInitial = await page.locator('html').getAttribute('class').then(c => c?.includes('dark'));
+            // 切り替え
+            await page.getByTitle('テーマ切り替え').click();
+            // リロード
+            await page.reload();
+            await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
+            
+            const isDarkAfter = await page.locator('html').getAttribute('class').then(c => c?.includes('dark'));
+            expect(isDarkAfter).toBe(!isDarkInitial);
+        });
+
+        await test.step('永続化: コード内容', async () => {
+             const editedCode = 'puts "Persistence Test"';
+             await setCode(page, editedCode);
+             await page.waitForTimeout(2000); // Debounce待ち
+             
+             await page.reload();
+             await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
+             
+             const reloadedCode = await page.evaluate(() => window.monacoEditor.getValue());
+             expect(reloadedCode).toBe(editedCode);
+        });
     });
-    page.on('pageerror', err => {
-      console.log(`[Browser PageError] ${err.message}`);
-      console.log(`[Browser PageError Stack] ${err.stack}`);
-    });
-    page.on('requestfailed', req => console.log(`[Browser RequestFailed] ${req.url()} - ${req.failure()?.errorText}`));
-    await page.goto('/');
-  });
-
-  test('Rubyコードを実行して結果を表示する', async ({ page }) => {
-    // Ruby WASM の初期化を待機（ターミナルの出力を確認）
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    // エディタにコードをセット
-    await page.evaluate(() => {
-      const editor = window.monacoEditor;
-      if (editor) {
-        editor.setValue('puts "Hello from WASM!"');
-      }
-    });
-
-    // Runボタンをクリック
-    await page.getByRole('button', { name: 'Run' }).click();
-
-    // 出力がターミナルに表示されることを検証
-    await expect(page.locator('#terminal-output')).toContainText('Hello from WASM!', { timeout: 10000 });
-  });
-
-  test('Rubyのエラーを適切にハンドリングする', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    await page.evaluate(() => {
-      const editor = window.monacoEditor;
-      if (editor) {
-        editor.setValue('undefined_variable');
-      }
-    });
-
-    await page.getByRole('button', { name: 'Run' }).click();
-
-    await expect(page.locator('#terminal-output')).toContainText('Error:', { timeout: 10000 });
-  });
-
-  test('ターミナルの出力をクリアする', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    await page.getByRole('button', { name: 'Clear' }).click();
-
-    await expect(page.locator('body')).not.toContainText('Ruby WASM ready!');
-  });
-
-  test('ShareボタンでコードをURLに保存・復元できる', async ({ page, context }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    const targetCode = 'puts "Share Flow Test"';
-    await page.evaluate((code) => {
-      const editor = window.monacoEditor;
-      if (editor) {
-        editor.setValue(code);
-      }
-    }, targetCode);
-
-    // Shareボタンをクリック (モーダルが開く)
-    await page.getByRole('button', { name: 'Share' }).click();
-
-    // モーダルが表示されるのを待つ
-    await expect(page.locator('#share-modal')).toBeVisible();
-
-    // Copyボタンをクリック
-    await page.locator('#share-copy-btn').click();
-
-    // 通知を確認
-    await expect(page.locator('[data-toast="message"]')).toContainText('Copied to clipboard!', { timeout: 10000 });
-
-    // URLハッシュから共有URLを取得 (history.replaceState で更新されていることを期待)
-    const urlWithHash = await page.evaluate(() => window.location.href);
-
-    // 新しいページで共有URLを開く
-    const newPage = await context.newPage();
-    
-    if (urlWithHash.includes('#')) {
-         await newPage.goto(urlWithHash);
-    } else {
-         // URLが更新されていない場合はクリップボードから取得（フォールバック）
-         const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
-         await newPage.goto(clipboardText);
-    }
-    
-    await expect(newPage.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    // コードが復元されているか確認
-    const restoredCode = await newPage.evaluate(() => {
-      const editor = window.monacoEditor;
-      return editor ? editor.getValue() : "";
-    });
-    expect(restoredCode).toBe(targetCode);
-  });
-
-  test('ファイルをダウンロードできる', async ({ page }) => {
-    await page.evaluate(() => {
-        // @ts-ignore
-        window.showSaveFilePicker = undefined;
-    });
-
-    const downloadPromise = page.waitForEvent('download');
-    await page.getByTitle('コードを保存').click();
-    const download = await downloadPromise;
-
-    expect(download.suggestedFilename()).toBe('rubbit.rb');
-    await download.path();
-  });
-
-  test('編集内容がlocalStorageに保存され永続化される', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    const editedCode = 'puts "Persistence Test"';
-    await page.evaluate((code) => {
-      const editor = window.monacoEditor;
-      if (editor) {
-        editor.setValue(code);
-      }
-    }, editedCode);
-
-    // Debounceを待つために少し待機
-    await page.waitForTimeout(2000);
-
-    // リロード
-    await page.reload();
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    const reloadedCode = await page.evaluate(() => {
-      const editor = window.monacoEditor;
-      return editor ? editor.getValue() : "";
-    });
-    expect(reloadedCode).toBe(editedCode);
-  });
-
-  test('エディタ設定を変更して永続化される', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    // 設定モーダルを開く
-    await page.getByTitle('Editor Settings').click();
-
-    // フォントサイズを変更 (14px -> 20px)
-    await page.locator('[data-setting="fontSize"]').selectOption('20');
-    
-    // 設定が反映されるのを待つ (イベント発火待ち)
-    await page.waitForTimeout(500);
-
-    // モーダルを閉じる
-    await page.getByRole('button', { name: 'Close' }).click();
-
-    // リロード
-    await page.reload();
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    // 設定モーダルを再度開く
-    await page.getByTitle('Editor Settings').click();
-
-    // フォントサイズが維持されているか確認
-    const fontSize = await page.locator('[data-setting="fontSize"]').inputValue();
-    expect(fontSize).toBe('20');
-  });
-
-  test('テーマを切り替えて永続化される', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
-
-    await page.getByTitle('テーマ切り替え').click();
-
-    const isDark = await page.locator('html').getAttribute('class').then(c => c?.includes('dark'));
-    
-    // リロード
-    await page.reload();
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
-
-    const isDarkAfter = await page.locator('html').getAttribute('class').then(c => c?.includes('dark'));
-    expect(isDarkAfter).toBe(isDark);
-  });
-
-  test('サンプルコードをロードできる', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 30000 });
-
-    await page.locator('#examples-button').click(); // Examplesボタン
-    await page.locator('#examples-menu button[data-key="fizzbuzz"]').click();
-    
-    await expect.poll(async () => {
-      return await page.evaluate(() => {
-        const editor = window.monacoEditor;
-        return editor ? editor.getValue() : "";
-      });
-    }, { timeout: 10000 }).toContain('1.upto(100) do |i|');
-  });
-  
-  test('右側パネルでメソッドが正しく解決され表示される', async ({ page }) => {
-    await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
-
-    // 1. 標準的なクラスのメソッド (puts)
-    await page.evaluate(() => {
-      const editor = window.monacoEditor;
-      if (editor) editor.setValue('puts "test"');
-    });
-
-    // 右側パネルに Kernel#puts が表示されるのを待つ
-    // data-role="methodName" が "puts" である最初のカードを探す
-    const putsCard = page.locator('#method-list >> [data-role="methodName"]:text-is("puts")').locator('..').locator('..').first();
-    await expect(putsCard).toBeVisible({ timeout: 30000 });
-    await expect(putsCard.locator('[data-role="className"]')).toHaveText('Kernel', { timeout: 30000 });
-    await expect(putsCard.locator('[data-role="separatorMethod"]')).toHaveText('#puts', { timeout: 30000 });
-
-    // 3. 継承されたメソッド ((1..100).sum -> Enumerable#sum)
-    await page.evaluate(() => {
-      const editor = window.monacoEditor;
-      if (editor) editor.setValue('(1..100).sum');
-    });
-
-    // 右側パネルに Enumerable#sum が表示されるのを待つ
-    const sumCard = page.locator('#method-list >> [data-role="methodName"]:text-is("sum")').locator('..').locator('..').first();
-    await expect(sumCard).toBeVisible({ timeout: 30000 });
-    await expect(sumCard.locator('[data-role="className"]')).toHaveText('Enumerable', { timeout: 30000 });
-    await expect(sumCard.locator('[data-role="separatorMethod"]')).toHaveText('#sum', { timeout: 30000 });
-
-    // 4. Prime 関連のメソッド解決 (Prime.each(10).to_a.join)
-    // まず require 'prime' だけ入力して Prime カードを確認
-    await page.evaluate(() => {
-      const editor = window.monacoEditor;
-      if (editor) editor.setValue("require 'prime'\nPrime");
-    });
-
-    // Prime は定数なのでスキャナで検出されないことを確認
-    const primeCard = page.locator('#method-list >> [data-role="methodName"]:text-is("Prime")');
-    await expect(primeCard).not.toBeVisible({ timeout: 5000 });
-
-    // 次にチェーン全体を入力
-    await page.evaluate(() => {
-      const editor = window.monacoEditor;
-      if (editor) editor.setValue("require 'prime'\nPrime.each(10).to_a.join");
-    });
-
-    // LSP 同期と解析待ち
-    await page.waitForTimeout(7000);
-
-    // each -> Prime.each (または Prime#each)
-    const eachCard = page.locator('#method-list >> [data-role="methodName"]:text-is("each")').locator('..').locator('..').first();
-    await expect(eachCard).toBeVisible({ timeout: 30000 });
-    await expect(eachCard.locator('[data-role="className"]')).toHaveText('Prime', { timeout: 30000 });
-
-    // to_a -> Enumerable#to_a (Prime::PseudoPrimeGenerator が Enumerable を include しているため)
-    const toACard = page.locator('#method-list >> [data-role="methodName"]:text-is("to_a")').locator('..').locator('..').first();
-    await expect(toACard).toBeVisible({ timeout: 30000 });
-    await expect(toACard.locator('[data-role="className"]')).toHaveText('Enumerable', { timeout: 30000 });
-
-    // join -> Array#join (to_a が Array を返すため)
-    const joinCard = page.locator('#method-list >> [data-role="methodName"]:text-is("join")').locator('..').locator('..').first();
-    await expect(joinCard).toBeVisible({ timeout: 30000 });
-    await expect(joinCard.locator('[data-role="className"]')).toHaveText('Array', { timeout: 30000 });
-  });
-
 });
+
+// --- Helper Functions ---
+
+async function setCode(page, code) {
+    await page.evaluate((c) => {
+        window.monacoEditor.setValue(c);
+    }, code);
+}
+
+async function setCodeAndSync(page, code) {
+    await page.evaluate((c) => {
+        window.monacoEditor.setValue(c);
+        window.rubbitLSPManager.flushDocumentSync();
+    }, code);
+    await page.waitForTimeout(1000); // Analysis wait
+}
+
+async function measureValue(page, line, character, expression) {
+    return await page.evaluate(async ({ line, character, expression }) => {
+        try {
+            if (!window.rubbitLSPManager) return "ERROR: No LSP Manager";
+            const params = {
+                command: "typeprof.measureValue",
+                arguments: [{
+                    uri: window.monacoEditor.getModel().uri.toString(),
+                    line, character, expression
+                }]
+            };
+            return await window.rubbitLSPManager.client.sendRequest("workspace/executeCommand", params);
+        } catch (e) {
+            return "ERROR: " + e.toString();
+        }
+    }, { line, character, expression });
+}
+
+async function measureValuePromise(page, line, character, expression) {
+     return await page.evaluate(async ({ line, character, expression }) => {
+        const params = {
+                command: "typeprof.measureValue",
+                arguments: [{
+                    uri: window.monacoEditor.getModel().uri.toString(),
+                    line, character, expression
+                }]
+            };
+        // タイムアウト付きレース
+        return Promise.race([
+            window.rubbitLSPManager.client.sendRequest("workspace/executeCommand", params),
+            new Promise(r => setTimeout(() => r("NO_CAPTURE_LOGGED"), 2000))
+        ]);
+    }, { line, character, expression });
+}
