@@ -33,8 +33,9 @@
       rel="stylesheet">
 
     <script>
-      if (localStorage.getItem('theme') === 'dark' ||
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      // デフォルトをダークモードに変更
+      // ユーザー設定が 'light' でない限り、または設定がない場合はダークモード
+      if (localStorage.getItem('theme') === 'dark' || !localStorage.getItem('theme')) {
         document.documentElement.classList.add('dark');
       }
     </script>

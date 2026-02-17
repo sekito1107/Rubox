@@ -60,6 +60,16 @@ export class EditorComponent {
     const savedSettings = this.settings.getAll()
     const savedCode = this.codePersistence.load()
 
+    const DEFAULT_SETTINGS = {
+      fontSize: 14,
+      tabSize: 2,
+      wordWrap: 'off' as 'off' | 'on' | 'wordWrapColumn' | 'bounded',
+      autoClosingBrackets: 'always' as 'always' | 'languageDefined' | 'beforeWhitespace' | 'never',
+      minimap: { enabled: false },
+      mouseWheelZoom: false,
+      renderWhitespace: 'none' as 'none' | 'boundary' | 'selection' | 'trailing' | 'all',
+    }
+
     this.editor = monaco.editor.create(this.container, {
       model: monaco.editor.createModel(
         savedCode || DefaultCode,
@@ -68,13 +78,13 @@ export class EditorComponent {
       ),
       theme: this.currentTheme,
       automaticLayout: true,
-      minimap: savedSettings.minimap || { enabled: false },
-      fontSize: parseInt(savedSettings.fontSize || "14"),
-      tabSize: parseInt(savedSettings.tabSize || "2"),
-      wordWrap: savedSettings.wordWrap || 'off',
-      autoClosingBrackets: savedSettings.autoClosingBrackets || 'always',
-      mouseWheelZoom: savedSettings.mouseWheelZoom || false,
-      renderWhitespace: savedSettings.renderWhitespace || 'none',
+      minimap: savedSettings.minimap || DEFAULT_SETTINGS.minimap,
+      fontSize: parseInt(savedSettings.fontSize || String(DEFAULT_SETTINGS.fontSize)),
+      tabSize: parseInt(savedSettings.tabSize || String(DEFAULT_SETTINGS.tabSize)),
+      wordWrap: savedSettings.wordWrap || DEFAULT_SETTINGS.wordWrap,
+      autoClosingBrackets: savedSettings.autoClosingBrackets || DEFAULT_SETTINGS.autoClosingBrackets,
+      mouseWheelZoom: savedSettings.mouseWheelZoom || DEFAULT_SETTINGS.mouseWheelZoom,
+      renderWhitespace: savedSettings.renderWhitespace || DEFAULT_SETTINGS.renderWhitespace,
       scrollBeyondLastLine: false,
       renderLineHighlight: "all",
       fontFamily: "'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace",
