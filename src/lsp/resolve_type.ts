@@ -1,6 +1,6 @@
-import { LSPResponseParser } from "./parser";
-import type { LSPClient } from "./client";
-import type { SyncDocument } from "./sync";
+import { LSPResponseParser } from './parser';
+import type { LSPClient } from './client';
+import type { SyncDocument } from './sync';
 
 /**
  * LSP に対して型情報の解決を要求する

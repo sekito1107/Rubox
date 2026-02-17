@@ -108,8 +108,8 @@ describe('AnalysisCoordinator', () => {
 
       const data = { name: 'test', line: 1, col: 1, status: 'pending' as const }
       coordinator.store.set('test', data)
-
-      await coordinator.resolveSingleMethod('test')
+      const id = `${data.name}:${data.line}:${data.col}`
+      await (coordinator as any).resolveSingleMethod(id, true) // 強制再試行
 
       const result = coordinator.store.get('test')!
       expect(result.status).toBe('resolved')

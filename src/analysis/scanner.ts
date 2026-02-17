@@ -45,7 +45,7 @@ export class Scanner {
                 let i = 1;
                 while (i < m.length - 1) {
                     if (m.substring(i, i + 2) === "#{") {
-                        // 式展開開始。対応する } を探す（ネストは非考慮の簡易版）
+                        // 式展開開始。対応する } を探す
                         const start = i;
                         let nest = 0;
                         for (; i < m.length - 1; i++) {
