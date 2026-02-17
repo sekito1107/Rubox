@@ -24,7 +24,7 @@ export class Scanner {
     // 4. 括弧・ブロック形式: method( or method { or method do
     // 5. 中置演算子: space op space (例: n * 2)
     // 6. 単独形式: method
-    const methodPattern = /(?:def\s+(?:self\.)?([a-zA-Z_]\w*[!?]?|[-+*\/%&|^<>~`\^\[\]=]+))|&:(?:([a-zA-Z_]\w*[!?]?|[-+*\/%&|^<>~`\^\[\]=]+))|(?:\.)([a-zA-Z_]\w*[!?]?|[-+*\/%&|^<>~`\^\[\]=]+)|(\b[a-zA-Z_]\w*[!?]?)\s*(?=[({]|\s+do\b)|(?:\s+([-+*\/%&|^<>~`\^\[\]=]+)\s+)|(\b[a-zA-Z_]\w*[!?]?)/g
+    const methodPattern = /(?:def\s+(?:self\.)?([a-zA-Z_]\w*[!?]?|[-+*/%&|^<>~`^[\]=]+))|&:(?:([a-zA-Z_]\w*[!?]?|[-+*/%&|^<>~`^[\]=]+))|(?:\.)([a-zA-Z_]\w*[!?]?|[-+*/%&|^<>~`^[\]=]+)|(\b[a-zA-Z_]\w*[!?]?)\s*(?=[({]|\s+do\b)|(?:\s+([-+*/%&|^<>~`^[\]=]+)\s+)|(\b[a-zA-Z_]\w*[!?]?)/g
 
     lineIndices.forEach(idx => {
       const lineNum = idx + 1
