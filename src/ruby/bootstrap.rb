@@ -3,7 +3,7 @@ JS.global.call(:updateProgress, 82, "RubyGems をロード中...")
 require "rubygems"
 require "pathname"
 
-# WASM環境用のモック設定 (env.rb はユーザーの .so 形式を維持)
+# WASM環境用のモック設定
 require_relative "env"
 
 # 外部ライブラリ
