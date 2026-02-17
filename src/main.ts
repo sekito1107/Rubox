@@ -83,8 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // BootLoader による初期化シーケンス開始
   import("./boot").then(({ BootLoader }) => {
-    // EditorComponent から内部の monaco editor インスタンスを取得
-    // (EditorComponent は同期的にインスタンスを生成している前提)
     const monacoEditor = (editorComponent as any).editor;
     const bootLoader = new BootLoader(rubyVM, monacoEditor);
     bootLoader.boot();

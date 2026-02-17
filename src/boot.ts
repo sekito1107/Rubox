@@ -47,13 +47,9 @@ export class BootLoader {
     window.rubbitLSPReady = true;
     window.dispatchEvent(new CustomEvent("rubbit:lsp-analysis-finished"));
 
-    // 2. リファレンスの読み込み
-    this.dispatchProgress(95, "リファレンス索引をロード中...");
+    // 2. リファレンスの初期化
     this.reference = new Reference(this.rubyVM.lspClient);
     
-    this.dispatchProgress(96, "リファレンス: 索引構築...");
-    await this.reference.loadIndex();
-
     // 3. 解析機能の起動
     this.dispatchProgress(98, "解析エンジンを起動中...");
     this.analysis = new AnalysisCoordinator(this.editor, this.lspManager, this.reference);

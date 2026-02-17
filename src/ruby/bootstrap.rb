@@ -24,6 +24,7 @@ begin
   rbs_path = "/workspace/rbs/ruby-stdlib.rbs"
   rbs_path = "/workspace/stdlib.rbs" unless File.exist?(rbs_path)
   
+  JS.global.call(:updateProgress, 86, "RBS 環境を構築中...")
   if File.exist?(rbs_path)
     loader = RBS::EnvironmentLoader.new(core_root: nil)
     loader.add(path: Pathname.new(rbs_path))
@@ -32,7 +33,7 @@ begin
     $raw_rbs_env = RBS::Environment.new
   end
   
-  JS.global.call(:updateProgress, 86, "TypeProf サービスを初期化中...")
+  JS.global.call(:updateProgress, 87, "TypeProf サービスを初期化中...")
   
   # TypeProf Service の作成 (RBS環境を明示的に渡す)
   # rbs_collection: nil を渡すことで自動ロードを抑制
@@ -40,7 +41,7 @@ begin
   
   # インデックス構築の強制（LSP開始前に同期的に完了させる）
   code = ""
-  JS.global.call(:updateProgress, 88, "インデックスを事前ロード中...")
+  JS.global.call(:updateProgress, 89, "インデックスを事前ロード中...")
   core.update_file("/workspace/main.rb", code)
   
   # LSP Error: undefined method 'define' for nil を防ぐためのモンキーパッチ

@@ -18,14 +18,6 @@ export class Reference {
   }
 
   /**
-   * インデックスファイルを読み込む (現在は不要だが互換性のために残す)
-   */
-  async loadIndex(): Promise<void> {
-    // 以前はJSONをロードしていたが、現在はRuby側で解決するため何もしない
-    return
-  }
-
-  /**
    * クラス名とメソッド名から、継承関係を考慮したシグネチャ解決を行う
    */
   async resolve(className: string, methodName: string) {

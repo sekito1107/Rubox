@@ -93,8 +93,6 @@ async function initializeVM(wasmUrl: string) {
     }
 
     // 3. スクリプトファイルの書き込み
-    // ここも最適化可能だが、サイズが小さいので既存のままでも許容範囲。
-    // 必要なら同様に JS Bridge 化する。
     const writeRubyFile = (path: string, code: string) => {
       try {
         (self as any)._tmpCode = code;
