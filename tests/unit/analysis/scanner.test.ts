@@ -21,12 +21,14 @@ describe('Scanner', () => {
       const results = scanner.scanLines(model, [0, 1])
       
       const line1 = results.get(0)!
-      expect(line1).toHaveLength(1)
-      expect(line1[0]).toMatchObject({ name: 'name', line: 1, col: 6 })
+      expect(line1).toHaveLength(2) // user, name
+      expect(line1[0]).toMatchObject({ name: 'user', line: 1 })
+      expect(line1[1]).toMatchObject({ name: 'name', line: 1, col: 6 })
 
       const line2 = results.get(1)!
-      expect(line2).toHaveLength(1)
-      expect(line2[0]).toMatchObject({ name: 'price!', line: 2, col: 6 })
+      expect(line2).toHaveLength(2) // item, price!
+      expect(line2[0]).toMatchObject({ name: 'item', line: 2 })
+      expect(line2[1]).toMatchObject({ name: 'price!', line: 2, col: 6 })
     })
 
     it('括弧付きのメソッド呼び出しを抽出できること', () => {
@@ -43,7 +45,11 @@ describe('Scanner', () => {
       const model = createMockModel(code)
       const results = scanner.scanLines(model, [0])
       
-      expect(results.get(0)![0].name).toBe('each')
+      const matches = results.get(0)!
+      expect(matches).toHaveLength(3) // items, each, item
+      expect(matches[0].name).toBe('items')
+      expect(matches[1].name).toBe('each')
+      expect(matches[2].name).toBe('item')
     })
 
     it('コメントアウトされた行のメソッドを無視し、インデックスを維持すること', () => {
@@ -67,8 +73,14 @@ describe('Scanner', () => {
       const model = createMockModel(code)
       const results = scanner.scanLines(model, [0, 1, 2, 3])
       
-      expect(results.get(0)).toHaveLength(0) // if
-      expect(results.get(1)).toHaveLength(0) // def
+      // if は除外されるが、condition は変数として抽出される
+      expect(results.get(0)).toHaveLength(1) 
+      expect(results.get(0)![0].name).toBe('condition')
+
+      // def は除外、my_method は抽出
+      expect(results.get(1)).toHaveLength(1)
+      expect(results.get(1)![0].name).toBe('my_method')
+
       expect(results.get(2)).toHaveLength(0) // class MyClass -> MyClass (定数は除外)
       expect(results.get(3)).toHaveLength(0) // end
     })
@@ -79,9 +91,9 @@ describe('Scanner', () => {
       const results = scanner.scanLines(model, [0])
       
       const matches = results.get(0)!
-      expect(matches).toHaveLength(2)
-      expect(matches[0].name).toBe('method1')
-      expect(matches[1].name).toBe('method2')
+      // obj, method1, method2, arg (引数も変数なら抽出される)
+      expect(matches).toHaveLength(4)
+      expect(matches.map(m => m.name)).toEqual(['obj', 'method1', 'method2', 'arg'])
     })
 
     it('Symbol#to_proc (&:method) 構文のメソッドを抽出できること', () => {
@@ -90,6 +102,8 @@ describe('Scanner', () => {
       const results = scanner.scanLines(model, [0, 1])
 
       const line1 = results.get(0)!
+      // names, map, upcase
+      expect(line1.some(m => m.name === 'names')).toBe(true)
       expect(line1.some(m => m.name === 'map')).toBe(true)
       expect(line1.some(m => m.name === 'upcase')).toBe(true)
 
@@ -105,7 +119,6 @@ describe('Scanner', () => {
       const results = scanner.scanLines(model, [0, 1])
 
       const line1 = results.get(0)!
-      // 実際には puts が抽出される（ホワイトリスト+単独形式）
       expect(line1.some(m => m.name === 'puts')).toBe(true)
 
       const line2 = results.get(1)!
@@ -119,9 +132,55 @@ describe('Scanner', () => {
 
       const line1 = results.get(0)!
       // name (定数/変数) と upcase (ドット形式) の両方が抽出される可能性がある
+      expect(line1.some(m => m.name === 'name')).toBe(true)
       expect(line1.some(m => m.name === 'upcase')).toBe(true)
       const upcaseMatch = line1.find(m => m.name === 'upcase')!
       expect(upcaseMatch.col).toBe(16)
+    })
+
+    it('メソッド定義 (def name) を正しく検出できること', () => {
+      const code = 'def fib(n)\ndef self.foo\nend'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0, 1])
+      
+      const line1 = results.get(0)!
+      expect(line1.length).toBeGreaterThanOrEqual(1)
+      expect(line1[0].name).toBe('fib')
+      expect(line1[0].scanType).toBe('definition')
+
+      const line2 = results.get(1)!
+      expect(line2).toHaveLength(1)
+      expect(line2[0].name).toBe('foo')
+      expect(line2[0].scanType).toBe('definition')
+    })
+    
+    it('scanType が正しく判定されること', () => {
+      const code = 'name\nobj.method\nfunc()\n&:sym'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0, 1, 2, 3])
+
+      expect(results.get(0)![0].scanType).toBe('bare')
+      expect(results.get(1)![0].scanType).toBe('bare') // obj
+      expect(results.get(1)![1].scanType).toBe('dot')  // method
+      expect(results.get(2)![0].scanType).toBe('call') // func
+      expect(results.get(3)![0].scanType).toBe('symbol') // sym
+    })
+
+    it('変数代入とメソッド呼び出しが混在する場合 (sum = (1..100).sum) のscanTypeを正しく判定すること', () => {
+      const code = 'sum = (1..100).sum'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0])
+      
+      const matches = results.get(0)!
+      expect(matches).toHaveLength(2)
+      
+      // 1. sum (変数: bare)
+      expect(matches[0].name).toBe('sum')
+      expect(matches[0].scanType).toBe('bare')
+
+      // 2. .sum (メソッド: dot)
+      expect(matches[1].name).toBe('sum')
+      expect(matches[1].scanType).toBe('dot')
     })
 
     describe('カラム位置の正確性テスト', () => {
@@ -158,9 +217,11 @@ describe('Scanner', () => {
         const results = scanner.scanLines(model, [0])
         const matches = results.get(0)!
 
-        expect(matches).toHaveLength(2)
-        expect(matches[0]).toMatchObject({ name: 'first', col: 6 })
-        expect(matches[1]).toMatchObject({ name: 'last', col: 18 })
+        expect(matches).toHaveLength(4) 
+        expect(matches[0]).toMatchObject({ name: 'a', col: 4 }) // a position
+        expect(matches[1]).toMatchObject({ name: 'first', col: 6 })
+        expect(matches[2]).toMatchObject({ name: 'b', col: 16 })
+        expect(matches[3]).toMatchObject({ name: 'last', col: 18 })
       })
 
       it('単語の途中 (Sum(等) から意図しないマッチ (um) が発生しないこと', () => {

@@ -60,10 +60,10 @@ describe('AnalysisCoordinator', () => {
       
       await coordinator.performAnalysis()
       
-      // line2 の 'method' が見つかっているはず
+      // Scanner が greedy になったため、line1, line2, method, line3 全てが検出される
       const methods = coordinator.getAnalysis().methods
-      expect(methods).toHaveLength(1)
-      expect(methods[0].name).toBe('method')
+      expect(methods).toHaveLength(4)
+      expect(methods.map(m => m.name)).toEqual(['line1', 'line2', 'method', 'line3'])
       expect(storeSpy).toHaveBeenCalled()
     })
 
@@ -106,7 +106,7 @@ describe('AnalysisCoordinator', () => {
         url: 'http://test' 
       })
 
-      const data = { name: 'test', line: 1, col: 1, status: 'pending' as const }
+      const data = { name: 'test', line: 1, col: 1, status: 'pending' as const, scanType: 'bare' as const }
       const id = `${data.name}:${data.line}:${data.col}`
       coordinator.store.set(id, data)
       await (coordinator as any).resolveSingleMethod(id, true) // 強制再試行

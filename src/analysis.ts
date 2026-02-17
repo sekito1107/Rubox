@@ -136,13 +136,24 @@ export class AnalysisCoordinator {
 
       // 2. 現在の全出現箇所をフラット化
       const allOccurrences = this.lineMethods.flat().filter((m): m is ScannedMethod => m !== null)
-      const currentIds = new Set(allOccurrences.map(m => this._getMethodId(m)))
+
+      // ローカル定義されたメソッド（def name）を特定
+      const definedMethods = new Set(
+        allOccurrences.filter(m => m.scanType === 'definition').map(m => m.name)
+      )
+      
+      // 定義そのものと、ローカル定義が存在するメソッドの呼び出しを除外
+      const filteredOccurrences = allOccurrences.filter(m => 
+        m.scanType !== 'definition' && !definedMethods.has(m.name)
+      )
+
+      const currentIds = new Set(filteredOccurrences.map(m => this._getMethodId(m)))
 
       // 3. 不要になったメソッドの除去
       let changed = this.store.keepOnly(currentIds)
 
       // 4. 新規メソッドの登録と位置更新
-      for (const item of allOccurrences) {
+      for (const item of filteredOccurrences) {
         const id = this._getMethodId(item)
         let state = this.store.get(id)
         

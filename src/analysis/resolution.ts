@@ -47,9 +47,7 @@ export class Resolution {
         if (type) return type
       }
 
-      // 3. 最終手段: ドット直後の解決失敗時、ドットを除去したコードでプローブ試行
-      type = await this._probeReceiverType(model, line, col)
-      if (type) return type
+
     }
     
     return null
@@ -63,45 +61,5 @@ export class Resolution {
     return await this.lsp.getTypeAtPosition(line, col)
   }
 
-  /**
-   * ドット (".") の直後にカーソルがある場合に備え、ドットを除去した状態でプローブを行う
-   */
-  private async _probeReceiverType(model: { getLineContent(l: number): string, getLinesContent(): string[], getLineCount(): number }, line: number, col: number): Promise<string | null> {
-    if (line <= 0 || line > model.getLineCount()) return null
-    let lineContent = "";
-    try {
-      lineContent = model.getLineContent(line)
-    } catch {
-      return null;
-    }
-    
-    // カーソル位置(col)の直前が "." かを確認
-    // Range (..) の場合もあるため、ドットが連続している場合はそれらも考慮する
-    let dotEnd = col - 1
-    while (dotEnd > 0 && lineContent[dotEnd - 1] === ' ') dotEnd-- // 空白を飛ばす
 
-    if (lineContent[dotEnd - 1] !== '.') return null
-
-    // ドットの開始位置を見つける (.. や ... に対応)
-    let dotStart = dotEnd - 1
-    while (dotStart > 0 && lineContent[dotStart - 1] === '.') dotStart--
-
-    // ドット部分を除去した一時的な全行コンテンツを作成
-    const lines = model.getLinesContent()
-    const targetIdx = line - 1
-    
-    const newLine = lineContent.substring(0, dotStart) + " ".repeat(dotEnd - dotStart) + lineContent.substring(dotEnd)
-    lines[targetIdx] = newLine
-    const tempContent = lines.join("\n")
-
-    // ドットを除去した直前の位置でプローブ
-    return this.probe(tempContent, line, Math.max(1, dotStart))
-  }
-
-  /**
-   * 一時的なコンテンツで型解決を試みる
-   */
-  async probe(content: string, line: number, col: number): Promise<string | null> {
-    return await this.lsp.probeTypeWithTemporaryContent(content, line, col)
-  }
 }

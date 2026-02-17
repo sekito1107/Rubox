@@ -1,5 +1,5 @@
 import { Resolution } from "./resolution"
-import { ImplicitMethods } from "./builtins"
+
 
 /**
  * 特定のメソッドシンボルに対して、LSP での型解決と Rurima 情報を紐づける
@@ -41,23 +41,8 @@ export class Resolver {
           separator: info.separator
         }
       }
-    } else {
-      // 4. クラス名が不明だが、暗黙的メソッド（ホワイトリスト）に含まれる場合
-      // Kernel, Module, Object の順で解決を試みる
-      if (ImplicitMethods.has(methodName)) {
-         // Ruby側 (server.rb) の resolve_signature は className="" の時に 
-         // Object/Kernel をフォールバックするように実装したので、className="" でリクエストする
-         const info = await this.rurima.resolve("", methodName)
-         if (info) {
-           return {
-             status: 'resolved',
-             className: info.className,
-             url: info.url,
-             separator: info.separator
-           }
-         }
-      }
     }
+    
     return { status: 'unknown' }
   }
 }

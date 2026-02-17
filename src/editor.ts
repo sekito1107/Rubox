@@ -6,6 +6,7 @@ import * as monaco from 'monaco-editor'
 import { Persistence } from './persistence'
 import { CodePersistence } from './persistence/code'
 import { Settings } from './persistence/settings'
+import { DefaultCode } from './examples'
 
 // Vite用にMonaco workerを直接インポート
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
@@ -65,37 +66,7 @@ export class EditorComponent {
 
     this.editor = monaco.editor.create(this.container, {
       model: monaco.editor.createModel(
-        savedCode || [
-          "# Rubbitへようこそ！",
-          "# Rubbitはサーバー通信なしで、即座に Ruby コードの評価と解析を行います。",
-          "",
-          "# 【機能の活用方法】",
-          "# 1. 動的リファレンス",
-          "#    レシーバにカーソルを合わせると、そのレシーバが呼び出すことにできるメソッド一覧がContextパネルに表示されます",
-          "#    コード内で利用されているメソッドはGlobalパネルに表示されます。",
-          "#    両パネルとも、表示されているメソッドをクリックすることで、公式リファレンスを直接参照可能です。",
-          "# 2. 変数の確認",
-          "#    変数名にマウスを合わせ、「値を確認」をクリックしてください。",
-          "#    実行時の具体的な値が行末に表示されます。",
-          "",
-          "class DataProcessor",
-          "  def self.format(text)",
-          "    text.strip.capitalize",
-          "  end",
-          "end",
-          "",
-          "items = [\" ruby \", \" web-assembly \", \" rubbit \"]",
-          "",
-          "# ループ内の `output` 変数の上で「値を確認」を試してください",
-          "items.each do |item|",
-          "  output = DataProcessor.format(item)",
-          "  puts \"Processed: #{output}\"",
-          "end",
-          "",
-          "# 3. 組み込みメソッドの解析",
-          "sum = (1..100).sum",
-          "puts \"Sum (1..100): #{sum}\""
-        ].join("\n"),
+        savedCode || DefaultCode,
         "ruby",
         monaco.Uri.parse("inmemory:///workspace/main.rb")
       ),

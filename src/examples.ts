@@ -8,37 +8,39 @@ interface EditorLike extends RuntimeEditorLike {
   setValue(value: string): void;
 }
 
-const EXAMPLES: Record<string, string> = {
-  default: `# Rubbitへようこそ！
+export const DefaultCode = `# Rubbitへようこそ！
 # Rubbitはサーバー通信なしで、即座に Ruby コードの評価と解析を行います。
 
 # 【機能の活用方法】
 # 1. 動的リファレンス
-#    レシーバにカーソルを合わせると、そのレシーバが呼び出すことにできるメソッド一覧がContextパネルに表示されます
-#    コード内で利用されているメソッドはGlobalパネルに表示されます。
-#    両パネルとも、表示されているメソッドをクリックすることで、公式リファレンスを直接参照可能です。
+#    コード内で使用されているメソッドは、右側のGlobalパネルに自動的に表示されます。
+#    また、オブジェクトにカーソルを合わせると、利用可能なメソッド一覧がContextパネルに表示されます。
+#    表示されたメソッドをクリックすると、公式リファレンスを直接参照可能です。
+
+# 例: Mathモジュールのメソッド
+puts "Square root of 2: #{Math.sqrt(2)}"
+puts "Current Time: #{Time.now}"
+
 # 2. 変数の確認
 #    変数名にマウスを合わせ、「値を確認」をクリックしてください。
 #    実行時の具体的な値が行末に表示されます。
 
-class DataProcessor
-  def self.format(text)
-    text.strip.capitalize
-  end
+times = [10, 20, 30]
+
+times.each do |n|
+  # この \`result\` の上で「値を確認」を試してください
+  result = n * 2
+  puts "Result: #{result}"
 end
 
-items = [" ruby ", " web-assembly ", " rubbit "]
-
-# ループ内の \`output\` 変数の上で「値を確認」を試してください
-items.each do |item|
-  output = DataProcessor.format(item)
-  puts "Processed: #{output}"
-end
-
-# 3. 組み込みメソッド host の解析
+# 3. 組み込みメソッドの解析
+#    RangeがincludeしているEnumerableモジュールのメソッドなども解析されます。
 sum = (1..100).sum
 puts "Sum (1..100): #{sum}"
-`,
+`
+
+const EXAMPLES: Record<string, string> = {
+  default: DefaultCode,
   hello: `# Hello World
 puts "Hello, Rubbit!"
 puts "Ruby Version: #{RUBY_VERSION}"

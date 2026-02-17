@@ -7,6 +7,7 @@ export class MethodListComponent {
   private cardTemplate: HTMLTemplateElement
   private linkTemplate: HTMLTemplateElement
   private searchTemplate: HTMLTemplateElement
+
   private cardMap: Map<string, HTMLElement>
   private boundHandleAnalysisUpdated: (e: any) => void
   private boundInitData: () => void
@@ -70,8 +71,25 @@ export class MethodListComponent {
       return
     }
 
-    const currentNames = new Set(methods.map(m => m.name))
+    const bestItems = new Map<string, any>()
+    
+    // 同名のメソッドが複数ある場合、最も有益な状態（Resolved > Explicit > Bare）を優先する
+    methods.forEach(item => {
+      const existing = bestItems.get(item.name)
+      if (!existing) {
+        bestItems.set(item.name, item)
+        return
+      }
+      
+      if (this.isBetterItem(item, existing)) {
+        bestItems.set(item.name, item)
+      }
+    })
 
+    const finalMethods = Array.from(bestItems.values())
+
+    // 不要なカードの削除
+    const currentNames = new Set(finalMethods.map(m => m.name))
     for (const [name, card] of this.cardMap.entries()) {
       if (!currentNames.has(name)) {
         card.remove()
@@ -79,7 +97,7 @@ export class MethodListComponent {
       }
     }
 
-    methods.forEach(item => {
+    finalMethods.forEach(item => {
       let card = this.cardMap.get(item.name)
 
       if (!card) {
@@ -93,6 +111,28 @@ export class MethodListComponent {
       this.listElement!.appendChild(card)
       this.updateCardStatus(card, item)
     })
+  }
+
+  /**
+   * どちらのアイテムを表示優先すべきかを判定する
+   */
+  private isBetterItem(newItem: any, oldItem: any): boolean {
+    // 1. Resolved は最強
+    if (newItem.status === 'resolved' && oldItem.status !== 'resolved') return true
+    if (oldItem.status === 'resolved') return false
+
+    // 2. 進行中 (pending, resolving) は Unknown より強い
+    const isNewActive = newItem.status === 'pending' || newItem.status === 'resolving'
+    const isOldActive = oldItem.status === 'pending' || oldItem.status === 'resolving'
+    if (isNewActive && !isOldActive) return true
+    if (isOldActive) return false
+
+    // 3. ScanType が明示的 (dot, call, symbol) なほうを優先 (bare は最弱)
+    const isNewExplicit = newItem.scanType && newItem.scanType !== 'bare'
+    const isOldExplicit = oldItem.scanType && oldItem.scanType !== 'bare'
+    if (isNewExplicit && !isOldExplicit) return true
+    
+    return false
   }
 
   private updateCardStatus(card: HTMLElement, item: any): void {
@@ -133,6 +173,14 @@ export class MethodListComponent {
     }
 
     if (item.status === 'unknown') {
+      // 解決できなかったものでも、明示的にメソッド呼び出しに見えるものは表示する
+      // (変数と思われる bare なものだけ除外)
+      if (item.scanType === 'bare') {
+        card.remove()
+        this.cardMap.delete(item.name)
+        return
+      }
+
       if (card.getAttribute('data-status') === 'unknown') return
       card.setAttribute('data-status', 'unknown')
 
