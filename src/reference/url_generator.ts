@@ -18,20 +18,15 @@ export class URLGenerator {
       .replace(/`/g, "=60")
   }
 
-  // シグネチャから公式リファレンスのURL情報を生成する
-  // signature: "Class#method" or "Class.method"
-  static generateUrlInfo(signature: string): {
+  // クラス名、メソッド名、区切り文字から直接URL情報を生成する
+  static generateUrlInfoFromComponents(className: string, methodName: string, separator: string): {
     url: string
     className: string
     methodName: string
     separator: string
     displayName: string
   } {
-    const isInstanceMethod = signature.includes("#")
-    const separator = isInstanceMethod ? "#" : "."
-    const [className, methodName] = signature.split(separator)
-
-    const methodType = isInstanceMethod ? "i" : "s"
+    const methodType = separator === "#" ? "i" : "s"
     const encodedMethod = this.encodeMethodName(methodName)
     const url = `${this.BASE_URL}/${className}/${methodType}/${encodedMethod}.html`
 
@@ -42,6 +37,43 @@ export class URLGenerator {
       separator,
       displayName: separator + methodName
     }
+  }
+
+  // シグネチャから公式リファレンスのURL情報を生成する
+  // signature: "Class#method" or "Class.method" 
+  // (引数情報などが含まれている場合、それらは無視する)
+  static generateUrlInfo(signature: string): {
+    url: string
+    className: string
+    methodName: string
+    separator: string
+    displayName: string
+  } {
+    // 引数情報などを削除 (例: "String#gsub(pattern, replacement)" -> "String#gsub")
+    const cleanSignature = signature.split("(")[0].trim()
+
+    const isInstanceMethod = cleanSignature.includes("#")
+    const separator = isInstanceMethod ? "#" : "."
+    const parts = cleanSignature.split(separator)
+    
+    // スプリット結果が想定外（要素数が2未満など）の場合は安全策をとる
+    if (parts.length < 2) {
+      // 最低限のエラー回避。本来は呼び出し側でチェックすべきだが、
+      // ここでは既存の動作を壊さないように空文字などで対応するか、
+      // あるいはそのまま処理して致命的なエラーにならないようにする。
+      // ここでは、分割できない場合はそのまま返す（ただしURL生成は失敗する可能性が高い）
+      // 既存ロジックを踏襲しつつ、最低限のガードを入れるなら:
+      console.warn(`Invalid signature format: ${signature}`)
+    }
+
+    const className = parts[0]
+    // メソッド名に余計なものがついていないか確認（.splitの挙動次第だが、
+    // separatorが複数あるケースは稀。もしあれば最後をメソッド名とするか、
+    // 最初の方をクラス名とするか。ここは既存通り[1]をメソッド名とするが、
+    // partsが2つ以上あることを前提とする）
+    const methodName = parts.slice(1).join(separator)
+
+    return this.generateUrlInfoFromComponents(className, methodName, separator)
   }
 
   // 検索用URLを生成する
