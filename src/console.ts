@@ -152,51 +152,6 @@ export class ConsoleComponent {
   }
 
   /**
-   * 草 (w) を生やす
-   */
-  private plantGrass(rabbit: HTMLElement, percent: number): void {
-    const track = rabbit.parentElement;
-    if (!track) return;
-
-    const grass = document.createElement("span");
-    // 草のバリエーションを増やす
-    const variants = ["w", "w", "w", "W", "ww", "vv", "🌱", "🌿", "🌾", "🍀"];
-    grass.textContent = variants[Math.floor(Math.random() * variants.length)];
-    
-    grass.className = "absolute text-green-500 dark:text-green-400 font-bold opacity-0 transition-opacity duration-500 select-none pointer-events-none";
-    
-    // サイズをランダムに
-    const size = 10 + Math.random() * 14;
-    grass.style.fontSize = `${size}px`;
-
-    // うさぎの後ろ〜現在位置付近にランダム配置
-    // バラつきを持たせて「生え揃う」感じにする
-    const spread = 20; // バラつき範囲 (px)
-    const position = `calc(${percent}% - ${10 + Math.random() * spread}px)`;
-    grass.style.left = position;
-    
-    // 上下位置も少しずらす
-    grass.style.bottom = `${Math.random() * 5 - 2}px`;
-    grass.style.zIndex = "0";
-    
-    // 色の濃淡 (透明度で表現)
-    grass.style.opacity = "0";
-
-    track.appendChild(grass);
-
-    // フェードイン
-    requestAnimationFrame(() => {
-      grass.style.opacity = (0.6 + Math.random() * 0.4).toString();
-    });
-
-    // 多すぎたら古いのを消す (数を増やしてリッチに)
-    const grasses = track.querySelectorAll(".text-green-500");
-    if (grasses.length > 40) { // 15 -> 40 に増量
-      grasses[0].remove();
-    }
-  }
-
-  /**
    * 全初期化完了時の処理
    */
   private onFullyReady(version: string): void {

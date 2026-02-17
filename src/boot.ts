@@ -9,7 +9,7 @@ import { AnalysisCoordinator } from "./analysis";
  */
 export class BootLoader {
   private rubyVM: RubyVM;
-  private editor: any; // monaco.editor.IStandaloneCodeEditor (エディタインスタンス)
+  private editor: any;
   private lspManager: LSP | null = null;
   private reference: Reference | null = null;
   private analysis: AnalysisCoordinator | null = null;
@@ -23,8 +23,12 @@ export class BootLoader {
    * システム初期化を開始
    */
   public async boot(): Promise<void> {
+    // 0. 依存関係の準備待ち
+    // RubyVM (WASM) の初期化完了を待つ
+    await this.rubyVM.readyPromise;
+
     if (!this.rubyVM.lspClient) {
-      console.warn("LSP Client is not ready in RubyVM");
+      console.error("LSP Client is not ready in RubyVM");
       return;
     }
 
@@ -57,7 +61,10 @@ export class BootLoader {
     this.analysis.start();
 
     this.dispatchProgress(100, "準備完了！");
-    // 初期化完了 (バージョン情報はVM側から通知されるため、ここでは解析完了のみ)
+
+    window.dispatchEvent(new CustomEvent("rubbit:lsp-ready", {
+        detail: { version: (this.rubyVM as any).rubyVersion }
+    }));
   }
 
   private dispatchProgress(percent: number, message: string): void {

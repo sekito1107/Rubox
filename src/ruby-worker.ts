@@ -78,8 +78,7 @@ async function initializeVM(wasmUrl: string) {
                 const chunk = rbsText.substring(i, i + chunkSize);
                 const b64 = btoa(unescape(encodeURIComponent(chunk)));
             vm.eval(`File.open("/workspace/stdlib.rbs", "ab") { |f| f.write("${b64}".unpack1("m")) }`);
-                
-                // 進捗更新: 30% -> 80% (RBSロード: 最も重い処理)
+
                 const rbsProgressBase = 30;
                 const rbsProgressMax = 80;
                 const progressRange = rbsProgressMax - rbsProgressBase;
