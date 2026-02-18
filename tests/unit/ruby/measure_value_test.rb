@@ -21,7 +21,7 @@ class TestMeasureValue < Test::Unit::TestCase
             code_str ||= File.read("/workspace/main.rb") rescue "nil"
             code_str += "\nnil"
 
-            tp = TracePoint.new(:line, :return, :end) do |tp|
+            tp = TracePoint.new(:line, :return, :end, :b_call, :b_return) do |tp|
               next unless tp.path == "(eval)"
               
               if tp.lineno == target_line && tp.event == :line
@@ -35,8 +35,10 @@ class TestMeasureValue < Test::Unit::TestCase
 
                 unless is_future
                   begin
-                    val = tp.binding.eval(expression)
-                    if val != nil
+                    # すでにトリガーされている場合（ループ等で同じ行を再度踏んだ場合）、
+                    # 前回の実行結果をここでキャプチャします。
+                    if MeasureValue::CapturedValue.target_triggered
+                      val = tp.binding.eval(expression)
                       MeasureValue::CapturedValue.add(val.inspect.to_s)
                     end
                     MeasureValue::CapturedValue.target_triggered = true
@@ -44,7 +46,7 @@ class TestMeasureValue < Test::Unit::TestCase
                   end
                 end
 
-              elsif MeasureValue::CapturedValue.target_triggered && (tp.lineno != target_line || tp.event == :return)
+              elsif MeasureValue::CapturedValue.target_triggered && (tp.lineno != target_line || tp.event == :b_return)
                 begin
                   val = tp.binding.eval(expression)
                   inspect_val = val.inspect.to_s
@@ -77,7 +79,7 @@ class TestMeasureValue < Test::Unit::TestCase
             rescue RubbitStopExecution
             rescue
             ensure
-              if !MeasureValue::CapturedValue.target_triggered
+              if MeasureValue::CapturedValue.get_all.empty?
                 begin
                   val = measure_binding.eval(expression)
                   MeasureValue::CapturedValue.add(val.inspect.to_s)
@@ -129,5 +131,46 @@ class TestMeasureValue < Test::Unit::TestCase
     # In the original code, target_line is 1-indexed.
     result = MeasureValue.run("a", 3, binding, "", code)
     assert_equal '1, 2, 3', result, "Loop values on the target line should still be captured"
+  end
+
+  def test_reassignment_shows_only_new_value
+    code = <<~RUBY
+      string = "Ruby"
+
+      5.times do 
+        string << "!"
+      end
+
+      puts string
+
+      string = "reset"
+
+      puts string
+    RUBY
+    
+    # Inspect "string" at line 11 (string = "reset")
+    # In the snippet above:
+    # 1: string...
+    # 2: (blank)
+    # 3: 5.times...
+    # 4:   string...
+    # 5: end
+    # 6: (blank)
+    # 7: puts string
+    # 8: (blank)
+    # 9: string = "reset"
+    # Actually let's count exactly.
+    # 1: string = "Ruby"
+    # 2: 
+    # 3: 5.times do 
+    # 4:   string << "!"
+    # 5: end
+    # 6: 
+    # 7: puts string
+    # 8: 
+    # 9: string = "reset"
+    
+    result = MeasureValue.run("string", 9, binding, "", code)
+    assert_equal '"reset"', result, "Reassignment should only show the final value of that line"
   end
 end
