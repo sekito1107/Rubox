@@ -46,7 +46,7 @@ module MeasureValue
           end
 
         # 2. ターゲット行を抜けた直後のイベント (gets等の最終値キャプチャ用)
-        elsif CapturedValue.target_triggered && tp.lineno != target_line
+        elsif CapturedValue.target_triggered && (tp.lineno != target_line || tp.event == :return)
           begin
             val = tp.binding.eval(expression)
             inspect_val = val.inspect.to_s
@@ -56,8 +56,9 @@ module MeasureValue
             end
           rescue
           ensure
-            # Loop の場合、ここで止めてしまうと1回しか取れないためコメントアウト
-            # raise RubbitStopExecution
+            # ターゲット行を抜けたか、メソッドが戻った（gets完了等）場合はトリガーを解除
+            # これにより未来の行（ループ後の代入等）での再キャプチャを防ぐ
+            CapturedValue.target_triggered = false
           end
 
         # 3. ターゲット行を一度も踏まずに通り過ぎた場合 (最適化等)

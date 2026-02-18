@@ -129,7 +129,22 @@ test.describe('Rubox System Integration Tests', () => {
             expect(resultInner).not.toContain('"ruby"');
         });
 
-        // --- UI & 機能テスト ---
+        await test.step('Ghost Text: 未来の値が表示されないこと', async () => {
+            const code = [
+                'string = "Ruby"',
+                '5.times do ',
+                '  string << "!"',
+                'end',
+                'string = "reset"'
+            ].join('\n');
+            await setCodeAndSync(page, code);
+
+            // 1行目の "string" をインスペクト
+            const result = await measureValue(page, 0, 0, 'string');
+            expect(result).toBe('"Ruby"');
+            expect(result).not.toContain('"reset"');
+            expect(result).not.toContain('"Ruby!"');
+        });
 
         await test.step('UI: サンプルコードロード', async () => {
             await page.locator('#examples-button').click();
