@@ -19,7 +19,7 @@ module MeasureValue
       # アクティブな行を追加してTracePointを確実に踏ませる（特に最終行対策）
       code_str += "\nnil"
 
-      tp = TracePoint.new(:line, :return, :end) do |tp|
+      tp = TracePoint.new(:line, :return, :end, :b_call, :b_return) do |tp|
         next unless tp.path == "(eval)"
         
         # 1. ターゲット行に到達した場合
@@ -35,9 +35,10 @@ module MeasureValue
 
           unless is_future
             begin
-              val = tp.binding.eval(expression)
-              # 初期化前(nil)の場合は無視する (その後代入されるはずなので)
-              if val != nil
+              # すでにトリガーされている場合（ループ等で同じ行を再度踏んだ場合）、
+              # 前回の実行結果をここでキャプチャします。
+              if CapturedValue.target_triggered
+                val = tp.binding.eval(expression)
                 CapturedValue.add(val.inspect.to_s)
               end
               CapturedValue.target_triggered = true
@@ -45,8 +46,8 @@ module MeasureValue
             end
           end
 
-        # 2. ターゲット行を抜けた直後のイベント (gets等の最終値キャプチャ用)
-        elsif CapturedValue.target_triggered && tp.lineno != target_line
+        # 2. ターゲット行を抜けた直後、またはブロックの終了時 (gets等の最終値キャプチャ用)
+        elsif CapturedValue.target_triggered && (tp.lineno != target_line || tp.event == :b_return)
           begin
             val = tp.binding.eval(expression)
             inspect_val = val.inspect.to_s
@@ -56,8 +57,8 @@ module MeasureValue
             end
           rescue
           ensure
-            # Loop の場合、ここで止めてしまうと1回しか取れないためコメントアウト
-            # raise RubbitStopExecution
+            # ターゲット行を抜けたか、ブロックが終了した場合はトリガーを解除
+            CapturedValue.target_triggered = false
           end
 
         # 3. ターゲット行を一度も踏まずに通り過ぎた場合 (最適化等)
@@ -67,7 +68,7 @@ module MeasureValue
             CapturedValue.add(val.inspect.to_s)
           rescue
           ensure
-            raise RubbitStopExecution
+            raise RuboxStopExecution
           end
         end
       end
@@ -80,11 +81,11 @@ module MeasureValue
         tp.enable do
           measure_binding.eval(code_str, "(eval)")
         end
-      rescue RubbitStopExecution
+      rescue RuboxStopExecution
       rescue
       ensure
-        # 最後まで実行しても取れなかった場合のフォールバック
-        if !CapturedValue.target_triggered
+        # 最後まで実行しても、あるいは途中で例外が発生しても何も取れなかった場合のフォールバック
+        if CapturedValue.get_all.empty?
           begin
             val = measure_binding.eval(expression)
             CapturedValue.add(val.inspect.to_s)

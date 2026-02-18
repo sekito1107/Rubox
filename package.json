@@ -8,8 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "setup": "npm install",
-    "test": "vitest run && npx playwright test tests/system",
-    "test:unit": "vitest run",
+    "test": "npm run test:unit && npx playwright test tests/system",
+    "test:unit": "vitest run && npm run test:ruby",
+    "test:ruby": "ruby tests/unit/ruby/measure_value_test.rb",
     "lint": "eslint src",
     "format": "prettier --write 'src/**/*.ts'"
   },
