@@ -62,7 +62,7 @@ module MeasureValue
           end
 
         # 3. ターゲット行を一度も踏まずに通り過ぎた場合 (最適化等)
-        elsif !CapturedValue.target_triggered && tp.lineno > target_line
+        elsif !CapturedValue.target_triggered && !CapturedValue.found? && tp.lineno > target_line
           begin
             val = tp.binding.eval(expression)
             CapturedValue.add(val.inspect.to_s)

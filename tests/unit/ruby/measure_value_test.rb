@@ -62,8 +62,8 @@ class TestMeasureValue < Minitest::Test
                   MeasureValue::CapturedValue.target_triggered = false
                 end
 
-              # 3. ターゲット行を通り過ぎた場合 (最適化対策)
-              elsif !MeasureValue::CapturedValue.target_triggered && tp.lineno > target_line
+                # 3. ターゲット行を通り過ぎた場合 (最適化対策)
+                elsif !MeasureValue::CapturedValue.target_triggered && !MeasureValue::CapturedValue.found? && tp.lineno > target_line
                 begin
                   val = tp.binding.eval(expression)
                   MeasureValue::CapturedValue.add(val.inspect.to_s)
@@ -156,5 +156,25 @@ class TestMeasureValue < Minitest::Test
     # 9行目の "string = 'reset'" を検査
     result = MeasureValue.run("string", 9, binding, "", code)
     assert_equal '"reset"', result, "再代入行では古い値を含まず、新しい値のみが表示されるべきです"
+  end
+
+  def test_putsの箇所で未来の代入値が混入しないこと
+    code = <<~RUBY
+      string = "Ruby"
+
+      5.times do 
+        string << "!"
+      end
+
+      puts string
+
+      string = "reset"
+
+      puts string
+    RUBY
+    
+    # 7行目の "puts string" を検査
+    result = MeasureValue.run("string", 7, binding, "", code)
+    assert_equal '"Ruby!!!!!"', result, "puts行ではその時点の値のみが表示されるべきであり、後の'reset'は含まれないべきです"
   end
 end
