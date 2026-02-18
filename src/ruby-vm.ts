@@ -3,7 +3,7 @@ import RubyWorker from "./ruby-worker?worker";
 
 // グローバル定義は src/types.d.ts に移動
 
-const RUBY_WASM_URL = "/ruby/rubbit.wasm";
+const RUBY_WASM_URL = "/ruby/rubox.wasm";
 
 // Ruby VM & 実行時マネージャ
 export class RubyVM {

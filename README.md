@@ -1,6 +1,6 @@
-# Rubbit
+# Rubox
 
-Rubbit は、Ruby WASM、TypeScript、および Vite を使用したクライアントサイドで動作する Ruby プレイグラウンドです。
+Rubox は、Ruby WASM、TypeScript、および Vite を使用したクライアントサイドで動作する Ruby プレイグラウンドです。
 
 ## 特徴
 

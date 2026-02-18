@@ -1,26 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rubox Icon: Letter 'R' with a Ruby-like accent -->
+  
+  <!-- Background: Rounded Square with Gradient -->
   <defs>
-    <linearGradient id="grad-body-4" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#374151;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="grad-ruby-4" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#B91C1C;stop-opacity:1" />
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D32F2F" />
+      <stop offset="100%" stop-color="#8E0000" />
     </linearGradient>
   </defs>
-  
-  <!-- Ears: Longer and more distinct -->
-  <path d="M24 24 L20 4 Q18 0 24 2 Q28 4 28 24 Z" fill="url(#grad-body-4)" transform="rotate(-15 24 24)" />
-  <path d="M40 24 L44 4 Q46 0 40 2 Q36 4 36 24 Z" fill="url(#grad-body-4)" transform="rotate(15 40 24)" />
-  
-  <!-- Head: Slightly wider geometric shape -->
-  <path d="M16 32 C16 22, 48 22, 48 32 C48 42, 42 46, 32 46 C22 46, 16 42, 16 32 Z" fill="url(#grad-body-4)" />
+  <rect width="512" height="512" rx="100" fill="url(#iconBg)" />
 
-  <!-- Ruby: Placed centering the chest/bow-tie area -->
-  <path d="M26 48 L38 48 L42 54 L32 62 L22 54 Z" fill="url(#grad-ruby-4)" stroke="#7F1D1D" stroke-width="0.5" />
+  <!-- Letter 'R' -->
+  <text x="256" y="360" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="bold" font-size="300" fill="#ffffff" text-anchor="middle">R</text>
   
-  <!-- Simple eyes -->
-  <circle cx="26" cy="32" r="2" fill="#e5e7eb" />
-  <circle cx="38" cy="32" r="2" fill="#e5e7eb" />
+  <!-- Small gem accent on the R leg (optional, keep it simple for now) -->
+  <!-- <circle cx="350" cy="350" r="20" fill="#ff8a80" /> -->
+
 </svg>

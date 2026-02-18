@@ -3,12 +3,12 @@
 
   <head>
     <meta charset="UTF-8">
-    <title>Rubbit</title>
+    <title>Rubox</title>
     <meta http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com ws: wss:; img-src 'self' data: https://rubbit.vercel.app; worker-src 'self' blob:;">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Rubbit">
+    <meta name="application-name" content="Rubox">
     <meta name="mobile-web-app-capable" content="yes">
 
     <link rel="icon" href="/icon.png" type="image/png">
@@ -16,16 +16,16 @@
     <link rel="apple-touch-icon" href="/icon.png">
 
     <!-- OGP / SEO -->
-    <meta property="og:title" content="Rubbit - ブラウザで動くRubyプレイグラウンド">
+    <meta property="og:title" content="Rubox - ブラウザで動くRubyプレイグラウンド">
     <meta property="og:description"
       content="WebAssemblyを使用してブラウザ内でRubyコードを即座に実行できます。サーバー設定なしでコードスニペットを作成、共有、埋め込みが可能です。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://rubbit.vercel.app/">
-    <meta property="og:image" content="https://rubbit.vercel.app/ogp.png">
+    <meta property="og:url" content="https://rubox.vercel.app/">
+    <meta property="og:image" content="https://rubox.vercel.app/ogp.svg">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://rubbit.vercel.app/ogp.png">
+    <meta name="twitter:image" content="https://rubox.vercel.app/ogp.svg">
     <meta name="description"
-      content="Rubbitは、ブラウザ上ですべて完結するサーバーレスなRubyプレイグラウンドです。WebAssemblyを使用しており、Rubyスニペットを簡単に記述、実行、共有できます。">
+      content="Ruboxは、ブラウザ上ですべて完結するサーバーレスなRubyプレイグラウンドです。WebAssemblyを使用しており、Rubyスニペットを簡単に記述、実行、共有できます。">
     <link rel="manifest" href="/manifest.json">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,29 +56,9 @@
           <div class="flex items-center gap-3">
             <div class="flex items-center gap-2">
               <!-- icons/rubbit.svg -->
-              <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                <defs>
-                  <linearGradient id="grad-body-4" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#374151;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
-                  </linearGradient>
-                  <linearGradient id="grad-ruby-4" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#B91C1C;stop-opacity:1" />
-                  </linearGradient>
-                </defs>
-                <path d="M24 24 L20 4 Q18 0 24 2 Q28 4 28 24 Z" fill="url(#grad-body-4)"
-                  transform="rotate(-15 24 24)" />
-                <path d="M40 24 L44 4 Q46 0 40 2 Q36 4 36 24 Z" fill="url(#grad-body-4)" transform="rotate(15 40 24)" />
-                <path d="M16 32 C16 22, 48 22, 48 32 C48 42, 42 46, 32 46 C22 46, 16 42, 16 32 Z"
-                  fill="url(#grad-body-4)" />
-                <path d="M26 48 L38 48 L42 54 L32 62 L22 54 Z" fill="url(#grad-ruby-4)" stroke="#7F1D1D"
-                  stroke-width="0.5" />
-                <circle cx="26" cy="32" r="2" fill="#e5e7eb" />
-                <circle cx="38" cy="32" r="2" fill="#e5e7eb" />
-              </svg>
+              <img src="/icon.svg" class="w-8 h-8" alt="Rubox Logo" />
               <span class="text-lg font-logo font-bold text-slate-800 dark:text-gray-100 tracking-tight">
-                Rubbit
+                Rubox
               </span>
               <span id="ruby-version" class="ml-1 text-[10px] font-medium text-slate-500">
                 Running...
@@ -131,7 +111,7 @@
 
             <button
               class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/10"
-              title="About Rubbit" onclick="document.getElementById('about-modal').showModal()">
+              title="About Rubox" onclick="document.getElementById('about-modal').showModal()">
               <!-- icons/info.svg -->
               <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor">
@@ -342,7 +322,7 @@
         <dialog id="about-modal"
           class="m-auto backdrop:bg-gray-900/50 dark:backdrop:bg-black/70 rounded-lg shadow-xl p-0 w-full max-w-lg bg-white dark:bg-[#161b22] dark:text-zinc-100">
           <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/10">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">About Rubbit</h3>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">About Rubox</h3>
             <form method="dialog">
               <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -357,29 +337,8 @@
             <div class="space-y-4 text-sm text-slate-600 dark:text-slate-300">
               <div class="flex flex-col items-center justify-center p-4">
                 <!-- icons/rubbit.svg -->
-                <svg class="w-16 h-16 mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                  <defs>
-                    <linearGradient id="grad-body-4-about" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style="stop-color:#374151;stop-opacity:1" />
-                      <stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
-                    </linearGradient>
-                    <linearGradient id="grad-ruby-4-about" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
-                      <stop offset="100%" style="stop-color:#B91C1C;stop-opacity:1" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M24 24 L20 4 Q18 0 24 2 Q28 4 28 24 Z" fill="url(#grad-body-4-about)"
-                    transform="rotate(-15 24 24)" />
-                  <path d="M40 24 L44 4 Q46 0 40 2 Q36 4 36 24 Z" fill="url(#grad-body-4-about)"
-                    transform="rotate(15 40 24)" />
-                  <path d="M16 32 C16 22, 48 22, 48 32 C48 42, 42 46, 32 46 C22 46, 16 42, 16 32 Z"
-                    fill="url(#grad-body-4-about)" />
-                  <path d="M26 48 L38 48 L42 54 L32 62 L22 54 Z" fill="url(#grad-ruby-4-about)" stroke="#7F1D1D"
-                    stroke-width="0.5" />
-                  <circle cx="26" cy="32" r="2" fill="#e5e7eb" />
-                  <circle cx="38" cy="32" r="2" fill="#e5e7eb" />
-                </svg>
-                <h4 class="text-xl font-bold text-slate-900 dark:text-white font-logo">Rubbit</h4>
+                <img src="/icon.svg" class="w-16 h-16 mb-2" alt="Rubox Logo" />
+                <h4 class="text-xl font-bold text-slate-900 dark:text-white font-logo">Rubox</h4>
                 <p class="text-slate-500">v0.1.0</p>
               </div>
 
@@ -405,7 +364,7 @@
               </div>
 
               <div class="pt-4 text-center border-t border-slate-200 dark:border-white/10">
-                <a href="https://github.com/sekito1107/Rubbit" target="_blank"
+                <a href="https://github.com/sekito1107/Rubox" target="_blank"
                   class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors">
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill-rule="evenodd"

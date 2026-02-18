@@ -58,7 +58,7 @@ describe('RubyVM', () => {
     expect(window.Worker).toHaveBeenCalledWith(expect.stringContaining('ruby-worker.ts'), expect.anything());
     expect(mockWorker.postMessage).toHaveBeenCalledWith({
       type: 'initialize',
-      payload: { wasmUrl: '/ruby/rubbit.wasm' },
+      payload: { wasmUrl: '/ruby/rubox.wasm' },
     });
   });
 
@@ -113,7 +113,7 @@ describe('RubyVM', () => {
     // Worker 初期化を確認
     expect(mockWorker.postMessage).toHaveBeenCalledWith({
        type: 'initialize',
-       payload: { wasmUrl: '/ruby/rubbit.wasm' },
+       payload: { wasmUrl: '/ruby/rubox.wasm' },
     });
 
     // run 呼び出し
