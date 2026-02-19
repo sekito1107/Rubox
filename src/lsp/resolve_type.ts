@@ -11,7 +11,7 @@ export class ResolveType {
   }
 
   // 指定位置の型情報を取得する
-  async at(lineNumber: number, column: number): Promise<string | null> {
+  async at(lineNumber: number, column: number, expression?: string): Promise<string | null> {
     if (!this.client) return null;
 
     const response = await this.client.sendRequest("textDocument/hover", {
@@ -28,7 +28,7 @@ export class ResolveType {
       markdownContent = response.contents.value;
     }
 
-    const parsed = LSPResponseParser.parseClassNameFromHover(markdownContent);
+    const parsed = LSPResponseParser.parseClassNameFromHover(markdownContent, expression);
     return parsed;
   }
 

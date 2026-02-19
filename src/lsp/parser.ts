@@ -2,8 +2,9 @@
 export class LSPResponseParser {
   // Hover レスポンスから Ruby のクラス名を抽出する
   // markdownContent: string | null | undefined
+  // expression: 調査対象の単語 (省略可能)
   // returns: string | null
-  static parseClassNameFromHover(markdownContent: string | null | undefined): string | null {
+  static parseClassNameFromHover(markdownContent: string | null | undefined, expression?: string): string | null {
     if (!markdownContent) return null;
     const content = markdownContent.trim();
 
@@ -17,10 +18,10 @@ export class LSPResponseParser {
       }
     }
 
-    return this._doParse(content);
+    return this._doParse(content, expression);
   }
 
-  private static _doParse(content: string): string | null {
+  private static _doParse(content: string, expression?: string): string | null {
     // 1. "Class#method" or "Class.method" 形式を文中から最優先で探す
     // `Prime.each` のようなケースに対応するため、[#.] の直前の識別子を柔軟に捕まえる
     const sigMatch = content.match(/([A-Z][a-zA-Z0-9_:]*)(?:\[.*\])?[#.]/);
@@ -64,7 +65,11 @@ export class LSPResponseParser {
     }
 
     // 5. シンボルリテラル
+    // TypeProf のラベル表現（:変数名）と調査対象の単語が一致する場合は、型名ではなくラベルとみなして null を返す
     if (content.match(/^:[a-zA-Z0-9_!?]+$/)) {
+      if (expression && content === `:${expression}`) {
+        return null;
+      }
       return "Symbol";
     }
 

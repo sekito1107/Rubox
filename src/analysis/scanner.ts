@@ -175,7 +175,63 @@ export class Scanner {
         });
       }
 
-      results.set(idx, matches);
+      // メソッド引数を変数定義として抽出 (例: def my_count(string, target))
+      const defParamPattern = /def\s+(?:self\.)?[a-zA-Z_]\w*[!?]?\s*\(([^)]*)\)/g;
+      let dMatch;
+      while ((dMatch = defParamPattern.exec(lineContent)) !== null) {
+        const paramsStr = dMatch[1];
+        const params = paramsStr.split(",");
+        params.forEach((p) => {
+          // デフォルト値 (param = val) やスプラット (*args, **opts) を考慮して変数名のみ抽出
+          const nameMatch = p.trim().match(/^[*&]*([a-zA-Z_]\w*)/);
+          const name = nameMatch ? nameMatch[1] : null;
+          if (name && !Scanner.BLACKLIST.has(name)) {
+            matches.push({
+              name,
+              line: idx + 1,
+              col: dMatch!.index + dMatch![0].indexOf(name) + 1,
+              scanType: "variable_definition",
+            });
+          }
+        });
+      }
+
+      // 単純な代入を変数定義として抽出 (例: string = "banana")
+      const assignmentPattern = /(?:^|\s)([a-zA-Z_]\w*)\s*=[^=>]/g;
+      let aMatch;
+      while ((aMatch = assignmentPattern.exec(lineContent)) !== null) {
+        const name = aMatch[1];
+        if (name && !Scanner.BLACKLIST.has(name)) {
+          matches.push({
+            name,
+            line: idx + 1,
+            col: aMatch.index + aMatch[0].indexOf(name) + 1,
+            scanType: "variable_definition",
+          });
+        }
+      }
+
+      // 重複を除去（同じ位置に定義と呼び出しがある場合は、定義を優先）
+      const uniqueMatches = Array.from(
+        matches
+          .reduce((acc, current) => {
+            const key = `${current.name}:${current.line}:${current.col}`;
+            const existing = acc.get(key);
+            // 既存がない、または既存が 'bare' で新しいのがより詳細な型（定義など）の場合は上書き
+            if (
+              !existing ||
+              (existing.scanType === "bare" && current.scanType !== "bare") ||
+              (existing.scanType === "call" &&
+                (current.scanType === "definition" || current.scanType === "variable_definition"))
+            ) {
+              acc.set(key, current);
+            }
+            return acc;
+          }, new Map<string, ScannedMethod>())
+          .values()
+      ).sort((a, b) => a.col - b.col);
+
+      results.set(idx, uniqueMatches);
     });
     return results;
   }

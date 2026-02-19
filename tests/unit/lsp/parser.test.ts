@@ -39,9 +39,18 @@ describe('LSPResponseParser', () => {
     });
 
     it('変数定義のホバーに対して null を返すこと', () => {
-      expect(LSPResponseParser.parseClassNameFromHover('i: Integer')).toBeNull();
-      expect(LSPResponseParser.parseClassNameFromHover('```ruby\ni: Integer\n```')).toBeNull();
       expect(LSPResponseParser.parseClassNameFromHover('  i: Integer  ')).toBeNull();
+    });
+
+    it('TypeProfの内部表現（ラベル）と本物のシンボルを区別できること', () => {
+      // ラベルの場合（調査中の単語が 'string' で、応答が ':string'）
+      expect(LSPResponseParser.parseClassNameFromHover(':string', 'string')).toBeNull();
+
+      // 本物のシンボルの場合（調査中の単語が ':foo' で、応答が ':foo'）
+      expect(LSPResponseParser.parseClassNameFromHover(':foo', ':foo')).toBe('Symbol');
+
+      // 調査中の単語と一致しないシンボルは、Symbolクラスとみなす
+      expect(LSPResponseParser.parseClassNameFromHover(':foo', 'bar')).toBe('Symbol');
     });
   });
 

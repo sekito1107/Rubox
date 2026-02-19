@@ -49,11 +49,12 @@ describe('Scanner', () => {
       const results = scanner.scanLines(model, [0])
       
       const matches = results.get(0)!
-      // items(bare), each(dot), item(bare), item(variable_definition)
-      expect(matches).toHaveLength(4) 
+      // items(bare), each(dot), item(variable_definition) 
+      // 重複除去により item(bare) は消える
+      expect(matches).toHaveLength(3) 
       expect(matches.map(m => m.name)).toContain('items')
       expect(matches.map(m => m.name)).toContain('each')
-      expect(matches.filter(m => m.name === 'item')).toHaveLength(2)
+      expect(matches.filter(m => m.name === 'item')).toHaveLength(1)
       expect(matches.some(m => m.name === 'item' && m.scanType === 'variable_definition')).toBe(true)
     })
 
@@ -170,6 +171,49 @@ describe('Scanner', () => {
       expect(line2[0].name).toBe('foo')
       expect(line2[0].scanType).toBe('definition')
     })
+
+    it('メソッド引数を変数定義として抽出できること', () => {
+      const code = 'def my_count(string, target)\n  string.\nend'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0])
+      const matches = results.get(0)!
+
+      const stringDef = matches.find((m: any) => m.name === 'string' && m.scanType === 'variable_definition')
+      const targetDef = matches.find((m: any) => m.name === 'target' && m.scanType === 'variable_definition')
+      expect(stringDef).toBeDefined()
+      expect(targetDef).toBeDefined()
+    })
+
+    it('デフォルト値付きのメソッド引数を変数定義として抽出できること', () => {
+      const code = 'def greet(name, greeting = "Hello")'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0])
+      const matches = results.get(0)!
+
+      expect(matches.find((m: any) => m.name === 'name' && m.scanType === 'variable_definition')).toBeDefined()
+      expect(matches.find((m: any) => m.name === 'greeting' && m.scanType === 'variable_definition')).toBeDefined()
+    })
+
+    it('スプラット引数やブロック引数を変数定義として抽出できること', () => {
+      const code = 'def wrap(*args, **kwargs, &block)'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0])
+      const matches = results.get(0)!
+
+      expect(matches.find((m: any) => m.name === 'args' && m.scanType === 'variable_definition')).toBeDefined()
+      expect(matches.find((m: any) => m.name === 'kwargs' && m.scanType === 'variable_definition')).toBeDefined()
+      expect(matches.find((m: any) => m.name === 'block' && m.scanType === 'variable_definition')).toBeDefined()
+    })
+
+    it('単純な代入を変数定義として抽出できること', () => {
+      const code = 'msg = "hello"'
+      const model = createMockModel(code)
+      const results = scanner.scanLines(model, [0])
+      const matches = results.get(0)!
+
+      const msgDef = matches.find((m: any) => m.name === 'msg' && m.scanType === 'variable_definition')
+      expect(msgDef).toBeDefined()
+    })
     
     it('scanType が正しく判定されること', () => {
       const code = 'name\nobj.method\nfunc()\n&:sym'
@@ -191,9 +235,9 @@ describe('Scanner', () => {
       const matches = results.get(0)!
       expect(matches).toHaveLength(2)
       
-      // 1. sum (変数: bare)
+      // 1. sum (変数定義: variable_definition)
       expect(matches[0].name).toBe('sum')
-      expect(matches[0].scanType).toBe('bare')
+      expect(matches[0].scanType).toBe('variable_definition')
 
       // 2. .sum (メソッド: dot)
       expect(matches[1].name).toBe('sum')

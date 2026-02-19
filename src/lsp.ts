@@ -58,7 +58,18 @@ export class LSP {
   // 外部向けの型解決 Facade API
   async getTypeAtPosition(line: number, col: number): Promise<string | null> {
     this.flushDocumentSync();
-    return this.resolver.at(line, col);
+
+    // カーソル位置の単語を取得して、パーサーにコンテキストとして渡す
+    let expression: string | undefined;
+    const model = this.model;
+    if (model) {
+      const wordInfo = model.getWordAtPosition({ lineNumber: line, column: col });
+      if (wordInfo) {
+        expression = wordInfo.word;
+      }
+    }
+
+    return this.resolver.at(line, col, expression);
   }
 
   // 一時的なコンテンツで型解決を試みる Facade API
