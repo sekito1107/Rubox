@@ -187,4 +187,15 @@ class TestMeasureValue < Minitest::Test
     result = MeasureValue.run("max_length", 3, binding, stdin, code)
     assert_equal '11', result, "ブロックを伴う代入文で、代入前のnilがキャプチャされるべきではありません"
   end
+
+  def test_メソッドチェーンの結果が正しく取得できること
+    code = <<~RUBY
+      target = "banana"
+      target.each_char
+    RUBY
+    
+    # 2行目の "target.each_char" を検査
+    result = MeasureValue.run("target.each_char", 2, binding, "", code)
+    assert_match /#<Enumerator: "banana":each_char>/, result, "メソッドチェーンの戻り値（Enumerator）がキャプチャされるべきです"
+  end
 end

@@ -34,7 +34,9 @@ export class ProvideHover {
           }
 
           const wordInfo = model.getWordAtPosition(position);
-          const expression = wordInfo ? wordInfo.word : "";
+          const lineContent = model.getLineContent(position.lineNumber);
+          const withoutComment = lineContent.replace(/#(?!\{).*$/g, "").trim();
+          const expression = withoutComment || (wordInfo ? wordInfo.word : "");
 
           const additionalContents: { value: string; isTrusted: boolean }[] = [];
 
