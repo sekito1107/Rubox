@@ -30,7 +30,7 @@ self.onmessage = async (event: MessageEvent) => {
         vm.eval(`$server.add_msg(JS.global[:_tmpLspMsg].to_s)`);
         (self as any)._tmpLspMsg = null;
       } catch (e: any) {
-        postMessage({ type: "output", payload: { text: `// LSP Error: ${e.message}` } });
+        // LSP 内部エラーは出力欄に出さない
       }
       break;
   }
