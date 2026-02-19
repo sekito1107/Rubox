@@ -19,7 +19,7 @@ export class ResolveSignature {
     displayName: string
   } | null> {
     try {
-      // Ruby VM (server.rb) の rubbit.resolveSignature コマンドを呼び出す
+      // Ruby VM (server.rb) の rubox.resolveSignature コマンドを呼び出す
       const result = await this.client.sendRequest("workspace/executeCommand", {
         command: "rubox.resolveSignature",
         arguments: [className, methodName]

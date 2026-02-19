@@ -82,7 +82,7 @@ export class HandleDiagnostics {
         // 解析完了を通知 (負荷軽減のためデバウンス)
         if (this.debounceTimer) clearTimeout(this.debounceTimer);
         this.debounceTimer = setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("rubbit:lsp-analysis-finished"));
+          window.dispatchEvent(new CustomEvent("rubox:lsp-analysis-finished"));
         }, 100);
       }
     });

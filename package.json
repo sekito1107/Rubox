@@ -16,15 +16,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sekito1107/Rubbit.git"
+    "url": "git+https://github.com/sekito1107/Rubox.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sekito1107/Rubbit/issues"
+    "url": "https://github.com/sekito1107/Rubox/issues"
   },
-  "homepage": "https://github.com/sekito1107/Rubbit#readme",
+  "homepage": "https://github.com/sekito1107/Rubox#readme",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.2",

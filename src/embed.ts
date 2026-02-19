@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     padding: { top: 8, bottom: 8 }
   })
   
-  // 「Rubbitで開く」リンクの設定
+  // 「Ruboxで開く」リンクの設定
   const openLink = document.getElementById("open-link") as HTMLAnchorElement
   if (openLink) {
     const url = new URL(window.location.href)

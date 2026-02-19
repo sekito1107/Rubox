@@ -22,7 +22,7 @@ describe('DownloadComponent', () => {
     vi.clearAllMocks();
   });
 
-  it('クリック時にrubbit.rbをエクスポートすること', () => {
+  it('クリック時にrubox.rbをエクスポートすること', () => {
     new DownloadComponent(button, mockEditor);
     
     // コンストラクタでExporterがインスタンス化される

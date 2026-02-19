@@ -7,4 +7,4 @@ $LOADED_FEATURES << "io/console.so" << "socket.so" << "io/console" << "socket" <
 # File.readable? は bjorn3/browser_wasi_shim では動作しないため代用
 def File.readable?(...) = File.file?(...)
 
-class RubbitStopExecution < StandardError; end
+class RuboxStopExecution < StandardError; end
