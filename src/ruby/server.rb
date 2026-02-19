@@ -1,4 +1,6 @@
 require "json"
+require_relative 'method_filter'
+
 
 # モンキーパッチ: apply_changes でのフルテキスト同期（rangeなし）のサポート
 module TypeProf::LSP
@@ -48,6 +50,7 @@ class Server
     
     # ユーザーコード実行用のBindingを作成 (ローカル変数を保持するため)
     @user_binding = TOPLEVEL_BINDING.eval("binding")
+    @method_filter = MethodFilter.new
   end
 
   def start
@@ -202,7 +205,12 @@ class Server
       genv = @core.genv
       return nil unless genv
 
+      # ランタイム検証
+      return nil unless @method_filter.valid?(class_name, method_name, singleton: true) || 
+                        @method_filter.valid?(class_name, method_name, singleton: false)
+
       # cpath は Symbol の配列として構築 (例: "Net::HTTP" -> [:Net, :HTTP])
+
       if class_name.nil? || class_name == "" || class_name == "Object"
         cpath = [:Object]
       else
@@ -306,7 +314,11 @@ class Server
               # すでに同名のメソッドが見つかっている場合はスキップ（オーバーライド考慮）
               next if results.any? { |r| r[:methodName] == mid.to_s }
               
+              # ランタイム検証
+              next unless @method_filter.valid?(class_name, mid, singleton: singleton)
+
               mdef = (me.defs.to_a.first || me.decls.to_a.first) rescue nil
+
               owner = m.show_cpath
               
               results << {

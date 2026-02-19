@@ -3,7 +3,9 @@ import bootstrapCode from "./ruby/bootstrap.rb?raw";
 import envCode from "./ruby/env.rb?raw";
 import workspaceCode from "./ruby/workspace.rb?raw";
 import measureValueCode from "./ruby/measure_value.rb?raw";
+import methodFilterCode from "./ruby/method_filter.rb?raw";
 import serverCode from "./ruby/server.rb?raw";
+
 
 let vm: any = null;
 (self as any)._ruboxStdin = "";
@@ -120,7 +122,9 @@ async function initializeVM(wasmUrl: string) {
     writeRubyFile("/src/env.rb", envCode);
     writeRubyFile("/src/workspace.rb", workspaceCode);
     writeRubyFile("/src/measure_value.rb", measureValueCode);
+    writeRubyFile("/src/method_filter.rb", methodFilterCode);
     writeRubyFile("/src/server.rb", serverCode);
+
 
     // 4. ブートストラップスクリプトを評価する
     postMessage({ type: "progress", payload: { percent: 70, message: "LSP サーバーを起動中..." } });
