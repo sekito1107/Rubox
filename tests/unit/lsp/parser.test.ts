@@ -88,9 +88,9 @@ describe('LSPResponseParser', () => {
     });
   });
 
-  describe('parseClassNameFromHover (-> 除外)', () => {
-    it('メソッドシグネチャから戻り値型ではなくパラメータの型を返すこと', () => {
-      expect(LSPResponseParser.parseClassNameFromHover('(String) -> Enumerator[String, String]')).toBe('String');
+  describe('parseClassNameFromHover (TypeProf レスポンス)', () => {
+    it('ジェネリクス付き型名からクラスを抽出すること', () => {
+      expect(LSPResponseParser.parseClassNameFromHover('Enumerator[String, String]')).toBe('Enumerator');
     });
 
     it('-> がない場合は通常通りパースすること', () => {

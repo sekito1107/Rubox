@@ -96,10 +96,14 @@ export class CursorDocComponent {
     const lsp = g.ruboxLSPManager;
     let type: string | null = null;
 
-    if (lsp && this.isMethodCallPosition(position)) {
-      const expression = this.getMethodCallExpression(position);
-      if (expression) {
-        type = await lsp.probeReturnType(expression);
+    if (lsp) {
+      const model = this.editor?.getModel();
+      const wordInfo = model?.getWordAtPosition(position);
+      if (wordInfo) {
+        const expression = this.isMethodCallPosition(position)
+          ? this.getMethodCallExpression(position) || wordInfo.word
+          : wordInfo.word;
+        type = await lsp.probeReturnType(expression, position.lineNumber);
       }
     }
 

@@ -76,16 +76,17 @@ export class LSP {
     return this.resolver.probe(content, line, col, this.sync);
   }
 
-  // 式の戻り値型をプローブする Facade API
-  async probeReturnType(expression: string): Promise<string | null> {
+  // 式の戻り値型をプローブする Facade API (行を置換してスコープを維持)
+  async probeReturnType(expression: string, lineNumber: number): Promise<string | null> {
     if (!this.model) return null;
     this.flushDocumentSync();
 
     const content = this.model.getValue();
-    const probeLine = this.model.getLineCount() + 1;
-    const tempContent = content + `\n__rubpad_type_probe__ = ${expression}`;
+    const lines = content.split("\n");
+    lines[lineNumber - 1] = `__rubpad_type_probe__ = ${expression}`;
+    const tempContent = lines.join("\n");
 
-    return this.resolver.probeForType(tempContent, probeLine, 1, this.sync);
+    return this.resolver.probeForType(tempContent, lineNumber, 1, this.sync);
   }
 
   // 強制的にドキュメントを同期する

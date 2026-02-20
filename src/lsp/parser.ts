@@ -46,49 +46,44 @@ export class LSPResponseParser {
   }
 
   private static _doParse(content: string): string | null {
-    // 0. 戻り値型セクション（"-> Type"）を除去してレシーバ/パラメータの型のみを対象にする
-    // 例: "(String) -> Enumerator[String, String]" → "(String) "
-    const arrowIdx = content.lastIndexOf("->");
-    const target = arrowIdx > 0 ? content.substring(0, arrowIdx) : content;
-
     // 1. "Class#method" or "Class.method" 形式を文中から最優先で探す
     // `Prime.each` のようなケースに対応するため、[#.] の直前の識別子を柔軟に捕まえる
-    const sigMatch = target.match(/([A-Z][a-zA-Z0-9_:]*)(?:\[.*\])?[#.]/);
+    const sigMatch = content.match(/([A-Z][a-zA-Z0-9_:]*)(?:\[.*\])?[#.]/);
     if (sigMatch) {
       return this.normalizeTypeName(sigMatch[1]);
     }
 
     // 1b. "module Prime", "class Array" などの明示的な開始
-    const explicitMatch = target.match(/^(?:module|class)\s+([A-Z][a-zA-Z0-9_:]*)/);
+    const explicitMatch = content.match(/^(?:module|class)\s+([A-Z][a-zA-Z0-9_:]*)/);
     if (explicitMatch) {
       return this.normalizeTypeName(explicitMatch[1]);
     }
 
     // 2. 配列/タプル形式 [Integer, String] -> Array とみなす
     if (
-      target.startsWith("[") ||
-      target.includes(": [") ||
-      target.includes("-> [") ||
-      target.match(/^Array\[/)
+      content.startsWith("[") ||
+      content.includes(": [") ||
+      content.includes("-> [") ||
+      content.match(/^Array\[/)
     ) {
       return "Array";
     }
 
     // 3. コードブロック内の最初のクラス名
-    const codeBlockMatch = target.match(/```ruby\n(?:.*?\s)?([A-Z][a-zA-Z0-9_:]*)/);
+    const codeBlockMatch = content.match(/```ruby\n(?:.*?\s)?([A-Z][a-zA-Z0-9_:]*)/);
     if (codeBlockMatch) {
       return this.normalizeTypeName(codeBlockMatch[1]);
     }
 
     // 4. 単純な型名 (String, Array[Integer], etc.)
     // カッコ内の型（引数）を誤って拾わないように、スペース区切りや末尾を優先
-    const typeMatch = target.match(/(?:^|\s)([A-Z][a-zA-Z0-9_:]*(?:\[.*\])?)[?|]?(?:\s|$|:)/);
+    const typeMatch = content.match(/(?:^|\s)([A-Z][a-zA-Z0-9_:]*(?:\[.*\])?)[?|]?(?:\s|$|:)/);
     if (typeMatch) {
       return this.normalizeTypeName(typeMatch[1]);
     }
 
     // フォールバック: カッコ内も含めて最初に見つかったクラス名
-    const fallbackMatch = target.match(/([A-Z][a-zA-Z0-9_:]*(?:\[.*\])?)/);
+    const fallbackMatch = content.match(/([A-Z][a-zA-Z0-9_:]*(?:\[.*\])?)/);
     if (fallbackMatch) {
       return this.normalizeTypeName(fallbackMatch[1]);
     }
