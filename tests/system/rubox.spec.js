@@ -108,7 +108,7 @@ test.describe('Rubox System Integration Tests', () => {
             expect(result).toContain('"Ruby!!!"');
         });
 
-        await test.step('Ghost Text: デッドコード/未来の値チェック', async () => {
+        await test.step('Ghost Text: メソッド内の値キャプチャ', async () => {
             const code = [
                 'class DataProcessor',
                 '  def self.format(text)',
@@ -120,13 +120,13 @@ test.describe('Rubox System Integration Tests', () => {
             ].join('\n');
             await setCodeAndSync(page, code);
 
-            // メソッド定義行のパラメータ
+            // メソッド定義行のパラメータ (引数追跡が機能することを確認)
             const resultParams = await measureValue(page, 1, 18, 'text');
-            expect(resultParams).not.toContain('"ruby"');
+            expect(resultParams).toContain('"ruby"');
             
-            // メソッド内部の変数
+            // メソッド内部の変数 (スコープ分離が機能することを確認)
             const resultInner = await measureValuePromise(page, 2, 4, 'text');
-            expect(resultInner).not.toContain('"ruby"');
+            expect(resultInner).toContain('"ruby"');
         });
 
         await test.step('Ghost Text: 未来の値が表示されないこと', async () => {
