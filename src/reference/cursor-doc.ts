@@ -9,6 +9,8 @@ export class CursorDocComponent {
   private readonly CONTEXT_DEBOUNCE_MS = 300;
   private lastType: string | null = null;
   private lastProbeKey: string = "";
+  private lastPositionKey: string = "";
+  private isProbing: boolean = false;
 
   private boundHandleAnalysisFinished: () => void;
   private boundHandleLSPReady: () => void;
@@ -25,7 +27,11 @@ export class CursorDocComponent {
     this.cardTemplate = cardTemplate;
     this.linkTemplate = linkTemplate;
 
-    this.boundHandleAnalysisFinished = () => this.updateContextualList();
+    this.boundHandleAnalysisFinished = () => {
+      if (!this.isProbing) {
+        this.updateContextualList();
+      }
+    };
     this.boundHandleLSPReady = () => this.updateContextualList();
     this.boundHandleEditorInit = (e: any) => {
       this.editor = e.detail.editor;
@@ -107,14 +113,31 @@ export class CursorDocComponent {
         const probeKey = `${position.lineNumber}:${expression}`;
         if (probeKey === this.lastProbeKey) return;
         this.lastProbeKey = probeKey;
-        type = await lsp.probeReturnType(expression, position.lineNumber);
+        this.isProbing = true;
+        try {
+          type = await lsp.probeReturnType(expression, position.lineNumber);
+        } finally {
+          this.isProbing = false;
+        }
+      } else {
+        // wordInfoがない場合（"."直後など）でも行番号+カラムでキャッシュチェック
+        const posKey = `${position.lineNumber}:${position.column}`;
+        if (posKey === this.lastPositionKey) return;
+        this.lastPositionKey = posKey;
       }
     }
 
-    type ??= await analysis.resolver.resolution.resolveAtPosition(
-      position.lineNumber,
-      position.column
-    );
+    if (type === null) {
+      this.isProbing = true;
+      try {
+        type = await analysis.resolver.resolution.resolveAtPosition(
+          position.lineNumber,
+          position.column
+        );
+      } finally {
+        this.isProbing = false;
+      }
+    }
 
     const isInitializing = this.listElement.innerHTML.includes("loading-bar");
     if (type === this.lastType && !isInitializing) return;
