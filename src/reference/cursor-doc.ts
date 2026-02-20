@@ -94,9 +94,16 @@ export class CursorDocComponent {
     if (!position) return;
 
     const lsp = g.ruboxLSPManager;
-    const type = lsp
-      ? await lsp.getReturnTypeAtPosition(position.lineNumber, position.column)
-      : await analysis.resolver.resolution.resolveAtPosition(position.lineNumber, position.column);
+    let type: string | null = null;
+
+    if (lsp && this.isMethodCallPosition(position)) {
+      type = await lsp.getReturnTypeAtPosition(position.lineNumber, position.column);
+    }
+
+    type ??= await analysis.resolver.resolution.resolveAtPosition(
+      position.lineNumber,
+      position.column
+    );
 
     const isInitializing = this.listElement.innerHTML.includes("loading-bar");
     if (type === this.lastType && !isInitializing) return;
@@ -164,6 +171,21 @@ export class CursorDocComponent {
   private toggleContextLoader(show: boolean): void {
     if (!this.loaderElement) return;
     this.loaderElement.style.opacity = show ? "1" : "0";
+  }
+
+  // ヘルパー: カーソルが "." の直後（メソッド呼び出し位置）にあるか判定
+  private isMethodCallPosition(position: any): boolean {
+    const model = this.editor?.getModel();
+    if (!model) return false;
+    const wordInfo = model.getWordAtPosition(position);
+    if (!wordInfo || wordInfo.startColumn <= 1) return false;
+    const charBefore = model.getValueInRange({
+      startLineNumber: position.lineNumber,
+      startColumn: wordInfo.startColumn - 1,
+      endLineNumber: position.lineNumber,
+      endColumn: wordInfo.startColumn,
+    });
+    return charBefore === ".";
   }
 
   private createContextualMethodCard(item: any): HTMLElement {
