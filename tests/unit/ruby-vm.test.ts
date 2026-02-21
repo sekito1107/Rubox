@@ -28,9 +28,9 @@ describe('RubyVM', () => {
     vi.clearAllMocks();
     document.body.innerHTML = '';
     
-    // グローバル状態を明示的にリセット
-    Object.defineProperty(window, '__rubyVMInitializing', { value: false, writable: true, configurable: true });
-    Object.defineProperty(window, '__rubyVMReady', { value: false, writable: true, configurable: true });
+    // 内部状態をリセット
+    (RubyVM as any).isInitializing = false;
+    (RubyVM as any).isReady = false;
     Object.defineProperty(window, 'rubyLSP', { value: undefined, writable: true, configurable: true });
     Object.defineProperty(window, 'ruboxLSPManager', { value: undefined, writable: true, configurable: true });
 
@@ -81,8 +81,8 @@ describe('RubyVM', () => {
 
     await vm.readyPromise;
 
-    expect(window.__rubyVMReady).toBe(true);
-    expect(window.__rubyVMInitializing).toBeUndefined();
+    expect((RubyVM as any).isReady).toBe(true);
+    expect((RubyVM as any).isInitializing).toBe(false);
     expect(vm.rubyVersion).toBe('4.0.0');
     // イベントは発火されないはず
     expect(readyEventHandler).not.toHaveBeenCalled();
@@ -145,8 +145,8 @@ describe('RubyVM', () => {
     vi.stubGlobal('Worker', ErrorWorker);
     
     // 状態リセット
-    (window as any).__rubyVMInitializing = undefined;
-    (window as any).__rubyVMReady = undefined;
+    (RubyVM as any).isInitializing = false;
+    (RubyVM as any).isReady = false;
     
     const onOutput = vi.fn();
     vm = new RubyVM();

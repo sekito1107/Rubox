@@ -7,9 +7,11 @@ const RUBY_WASM_URL = "/ruby/rubox.wasm";
 
 // Ruby VM & 実行時マネージャ
 export class RubyVM {
+  private static isInitializing = false;
+  private static isReady = false;
+
   private worker: Worker | null = null;
   public lspClient: LSPClient | null = null;
-
   public rubyVersion: string = "";
 
   // 出力用イベントリスナー
@@ -22,8 +24,8 @@ export class RubyVM {
       this.resolveReady = resolve;
     });
 
-    if (!window.__rubyVMInitializing && !window.__rubyVMReady) {
-      window.__rubyVMInitializing = true;
+    if (!RubyVM.isInitializing && !RubyVM.isReady) {
+      RubyVM.isInitializing = true;
       this.initializeWorker();
     }
   }
@@ -64,8 +66,8 @@ export class RubyVM {
         );
         break;
       case "ready":
-        window.__rubyVMReady = true;
-        delete window.__rubyVMInitializing;
+        RubyVM.isReady = true;
+        RubyVM.isInitializing = false;
         // onReady はローディング統合のため版数を保存するのみ
         this.rubyVersion = payload.version;
 

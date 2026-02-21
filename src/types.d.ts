@@ -6,8 +6,6 @@ import * as monaco from "monaco-editor";
 declare global {
   interface Window {
     monacoEditor?: monaco.editor.IStandaloneCodeEditor | any; // 以前のコードとの互換性のために any を許可
-    __rubyVMInitializing?: boolean;
-    __rubyVMReady?: boolean;
     rubyLSP?: LSPClient;
     ruboxLSPManager?: LSP;
     ruboxLSPReady?: boolean;
