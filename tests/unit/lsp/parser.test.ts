@@ -23,6 +23,11 @@ describe('LSPResponseParser', () => {
       expect(LSPResponseParser.parseClassNameFromHover(content)).toBe('Hash');
     });
 
+    it('rubyコードブロックでの配列表記から Array を特定できること', () => {
+      const content = '```ruby\n[Integer]\n```';
+      expect(LSPResponseParser.parseClassNameFromHover(content)).toBe('Array');
+    });
+
     it('ジェネリクスを含む複雑な型名を処理できること', () => {
       expect(LSPResponseParser.parseClassNameFromHover('Enumerator[Integer]')).toBe('Enumerator');
     });

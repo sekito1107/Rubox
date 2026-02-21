@@ -64,6 +64,7 @@ export class LSPResponseParser {
       content.startsWith("[") ||
       content.includes(": [") ||
       content.includes("-> [") ||
+      content.includes("```ruby\n[") ||
       content.match(/^Array\[/)
     ) {
       return "Array";
