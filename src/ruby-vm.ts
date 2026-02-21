@@ -7,8 +7,8 @@ const RUBY_WASM_URL = "/ruby/rubox.wasm";
 
 // Ruby VM & 実行時マネージャ
 export class RubyVM {
-  private static isInitializing = false;
-  private static isReady = false;
+  private static isInitializing: boolean = false;
+  private static isReady: boolean = false;
 
   private worker: Worker | null = null;
   public lspClient: LSPClient | null = null;
