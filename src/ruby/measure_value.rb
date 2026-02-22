@@ -35,84 +35,77 @@ module MeasureValue
     expr
   end
 
-  def self.run(expression, target_line, user_binding, stdin_str = "")
+  def self.run(expression, target_line, user_binding, stdin_str = "", code_str = nil)
     expression = sanitize_expression(expression)
     CapturedValue.reset
     begin
       old_verbose, $VERBOSE = $VERBOSE, nil
       measure_binding = TOPLEVEL_BINDING.eval("binding")
-      code_str = File.read("/workspace/main.rb") rescue "nil"
+      code_str ||= File.read("/workspace/main.rb") rescue "nil"
       code_str += "\nnil"
 
       method_depth = 0
       last_lineno = 0
       pass_captured = false
+      target_line_depth = nil
+
+      # キャプチャ実行と状態更新の共通処理
+      capture_and_report = proc do |binding|
+        next if binding.nil?
+        begin
+          val = binding.eval(expression)
+          unless val.nil? && !CapturedValue.found?
+            CapturedValue.add(val.inspect)
+          end
+        rescue
+        ensure
+          CapturedValue.target_triggered = false
+          pass_captured = true
+        end
+      end
 
       tp = TracePoint.new(:line, :call, :return, :end, :b_call, :b_return, :c_call, :c_return) do |tp|
         next unless tp.path == "(eval)"
 
-        case tp.event
-        when :line, :call, :b_call, :c_call
-          # ターゲット行に戻った場合、またはそれより前に戻った場合にリセット
-          if tp.lineno <= target_line
+        # 実行行が戻った場合、またはターゲット行に到達した場合、新しい周回とみなしてリセット
+        if tp.event == :line || tp.event == :call || tp.event == :b_call
+          if tp.lineno < last_lineno || tp.lineno <= target_line
             pass_captured = false
+            target_line_depth = nil if tp.lineno <= target_line
           end
         end
 
         case tp.event
         when :call, :b_call, :c_call
           method_depth += 1
-          # ターゲット行に到達した場合 (def行やブロック開始行がターゲットの場合、即座にキャプチャを試みる)
-          if tp.lineno == target_line
-            begin
-              val = tp.binding.eval(expression)
-              CapturedValue.add(val.inspect) unless val.nil? && !CapturedValue.found?
-              pass_captured = true
-            rescue; end
+          # エントリポイント（def行やブロック開始行）がターゲットの場合
+          if tp.lineno == target_line && !pass_captured && tp.binding
+            capture_and_report.call(tp.binding)
           end
-        when :return, :c_return, :b_return, :end
-          # メソッド/ブロック終了時: ターゲット行と異なる行でのみキャプチャ
-          if CapturedValue.target_triggered && tp.lineno != target_line
-            begin
-              val = tp.binding.eval(expression)
-              CapturedValue.add(val.inspect)
-            rescue
-            ensure
-              CapturedValue.target_triggered = false
-              pass_captured = true
-            end
+        when :return, :b_return, :c_return, :end
+          # ターゲット行を抜けた後の事後キャプチャ（同じ深度に戻った時）
+          if CapturedValue.target_triggered && tp.lineno != target_line && (target_line_depth.nil? || method_depth == target_line_depth)
+            capture_and_report.call(tp.binding)
           end
           method_depth -= 1 if method_depth > 0
         when :line
-          # ターゲット行を抜けた直後 (代入完了後の値を取得)
-          if CapturedValue.target_triggered && tp.lineno != target_line
-            begin
-              val = tp.binding.eval(expression)
-              CapturedValue.add(val.inspect)
-            rescue
-            ensure
-              CapturedValue.target_triggered = false
-              pass_captured = true
-            end
+          # ターゲット行を抜けた直後の事後キャプチャ
+          if CapturedValue.target_triggered && tp.lineno != target_line && (target_line_depth.nil? || method_depth == target_line_depth)
+            capture_and_report.call(tp.binding)
           end
 
-          if !CapturedValue.target_triggered && !pass_captured
+          if !pass_captured
             if tp.lineno == target_line
               CapturedValue.target_triggered = true
-            elsif last_lineno < target_line && tp.lineno > target_line
-              # スキップされた場合は即座に現在の行でキャプチャを試みる
-              begin
-                val = tp.binding.eval(expression)
-                CapturedValue.add(val.inspect)
-              rescue
-              ensure
-                pass_captured = true
-              end
+              target_line_depth = method_depth
+            elsif last_lineno > 0 && last_lineno < target_line && tp.lineno > target_line
+              # スキップされた場合の境界越えキャプチャ
+              capture_and_report.call(tp.binding)
             end
           end
-          
-          last_lineno = tp.lineno
         end
+
+        last_lineno = tp.lineno
       end
 
       measure_binding.eval("require 'stringio'; $stdin = StringIO.new(#{stdin_str.inspect})") rescue nil
