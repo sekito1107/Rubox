@@ -44,6 +44,7 @@ module MeasureValue
       code_str = File.read("/workspace/main.rb") rescue "nil"
       code_str += "\nnil"
 
+      method_depth = 0
       last_lineno = 0
       pass_captured = false
 
