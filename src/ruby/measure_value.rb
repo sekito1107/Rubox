@@ -47,17 +47,15 @@ module MeasureValue
       method_depth = 0
       tp = TracePoint.new(:line, :call, :return, :end, :b_call, :b_return, :c_call, :c_return) do |tp|
         case tp.event
-        when :call
+        when :call, :b_call, :c_call
           method_depth += 1 if tp.path == "(eval)"
-          # メソッド引数のキャプチャ (def行がターゲットの場合)
+          # ターゲット行に到達した場合 (def行やブロック開始行がターゲットの場合、即座にキャプチャを試みる)
           if tp.lineno == target_line && tp.path == "(eval)"
             begin
               val = tp.binding.eval(expression)
               CapturedValue.add(val.inspect) unless val.nil? && !CapturedValue.found?
             rescue; end
           end
-        when :c_call, :b_call
-          method_depth += 1 if tp.path == "(eval)"
         when :return, :c_return, :b_return, :end
           # メソッド/ブロック終了時: ターゲット行と異なる行でのみキャプチャ
           if CapturedValue.target_triggered && tp.path == "(eval)" && tp.lineno != target_line
@@ -84,9 +82,20 @@ module MeasureValue
             end
           end
 
-          # ターゲット行に到達 (即時評価はせず、次行/return で値を取得する)
-          if tp.lineno == target_line
+          # ターゲット行に到達、またはスキップされた可能性がある場合（ターゲット行を超えた最初の行）
+          if !CapturedValue.target_triggered && tp.lineno >= target_line
             CapturedValue.target_triggered = true
+            
+            # スキップされた場合は即座に現在の行でキャプチャを試みる
+            if tp.lineno > target_line
+              begin
+                val = tp.binding.eval(expression)
+                CapturedValue.add(val.inspect)
+              rescue
+              ensure
+                CapturedValue.target_triggered = false
+              end
+            end
           end
         end
       end
