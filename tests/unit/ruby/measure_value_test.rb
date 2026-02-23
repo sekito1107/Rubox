@@ -215,4 +215,15 @@ class TestMeasureValue < Minitest::Test
     result = MeasureValue.run("x", 3, binding, "", code)
     assert_equal '10', result, "メソッド内のローカル変数は取得できるべきです"
   end
+
+  def test_ループ内のブロック呼び出しを伴う行で最終的な値が取得できること
+    code = <<~RUBY
+      lines = []
+      3.times do |i|
+        lines << [1, 1, 1].map { |n| n.to_i }
+      end
+    RUBY
+    result = MeasureValue.run("lines", 3, binding, "", code)
+    assert_match /\[\[1, 1, 1\], \[1, 1, 1\], \[1, 1, 1\]\]/, result, "ループの各周回で、ブロック実行後の最終的な配列の状態がキャプチャされるべきです"
+  end
 end

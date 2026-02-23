@@ -59,7 +59,6 @@ module MeasureValue
           end
         rescue
         ensure
-          CapturedValue.target_triggered = false
           pass_captured = true
         end
       end
@@ -89,12 +88,14 @@ module MeasureValue
           # ターゲット行を抜けた後の事後キャプチャ（同じ深度に戻った時）
           if CapturedValue.target_triggered && tp.lineno != target_line && (target_line_depth.nil? || method_depth == target_line_depth)
             capture_and_report.call(tp.binding)
+            CapturedValue.target_triggered = false
           end
           method_depth -= 1 if method_depth > 0
         when :line
           # ターゲット行を抜けた直後の事後キャプチャ
           if CapturedValue.target_triggered && tp.lineno != target_line && (target_line_depth.nil? || method_depth == target_line_depth)
             capture_and_report.call(tp.binding)
+            CapturedValue.target_triggered = false
           end
 
           if !pass_captured
@@ -104,6 +105,7 @@ module MeasureValue
             elsif last_lineno > 0 && last_lineno < target_line && tp.lineno > target_line
               # スキップされた場合の境界越えキャプチャ（ターゲット行を飛び越えた時）
               capture_and_report.call(tp.binding)
+              CapturedValue.target_triggered = false
             end
           end
         end
