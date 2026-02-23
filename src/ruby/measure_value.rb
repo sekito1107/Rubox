@@ -67,11 +67,14 @@ module MeasureValue
       tp = TracePoint.new(:line, :call, :return, :end, :b_call, :b_return, :c_call, :c_return) do |tp|
         next unless tp.path == "(eval)"
 
-        # 実行行が戻った場合、またはターゲット行に到達した場合、新しい周回とみなしてリセット
+        # 実行行が戻った場合（ループの先頭に戻った等）、新しい周回とみなしてキャプチャを再度有効にする
         if tp.event == :line || tp.event == :call || tp.event == :b_call
-          if tp.lineno < last_lineno || tp.lineno <= target_line
+          if tp.lineno < last_lineno
             pass_captured = false
-            target_line_depth = nil if tp.lineno <= target_line
+          end
+          # ターゲット行かそれより前に戻った場合もリセット（ただし1周に1回のみ）
+          if tp.lineno <= target_line && tp.lineno < last_lineno
+            target_line_depth = nil
           end
         end
 
@@ -99,7 +102,7 @@ module MeasureValue
               CapturedValue.target_triggered = true
               target_line_depth = method_depth
             elsif last_lineno > 0 && last_lineno < target_line && tp.lineno > target_line
-              # スキップされた場合の境界越えキャプチャ
+              # スキップされた場合の境界越えキャプチャ（ターゲット行を飛び越えた時）
               capture_and_report.call(tp.binding)
             end
           end

@@ -69,6 +69,60 @@ begin
     end
   end
 
+  # 多重代入の型推論バグの修正 (TypeProf 0.31.x 向け)
+  # 右辺が Type::Array (Tuple) ではなく、Type::Instance の Array (動的配列) である場合に
+  # 要素の型を正しく変数へ分配するようにする
+  module TypeProf::Core
+    class MAsgnBox
+      def run0(genv, changes)
+        edges = []
+        @value.each_type do |ty|
+          case ty
+          when Type::Array
+            edges.concat(ty.splat_assign(genv, @lefts, @rest_elem, @rights))
+          when Type::Instance
+            # 動的な Array 型の場合、その全要素型を各左辺変数へ分配する
+            if ty.mod == genv.mod_ary
+              elem_vtx = ty.args[0]
+              if elem_vtx
+                @lefts.each {|lhs| edges << [elem_vtx, lhs] }
+                edges << [Source.new(genv.gen_ary_type(elem_vtx)), @rest_elem] if @rest_elem
+                @rights&.each {|rhs| edges << [elem_vtx, rhs] }
+              end
+            else
+              # Array 以外の場合のフォールバック
+              if @lefts.size >= 1
+                edges << [Source.new(ty), @lefts[0]]
+              elsif @rights && @rights.size >= 1
+                edges << [Source.new(ty), @rights[0]]
+              else
+                edges << [Source.new(ty), @rest_elem]
+              end
+            end
+          else
+            if @lefts.size >= 1
+              edges << [Source.new(ty), @lefts[0]]
+            elsif @rights && @rights.size >= 1
+              edges << [Source.new(ty), @rights[0]]
+            else
+              edges << [Source.new(ty), @rest_elem]
+            end
+          end
+        end
+        edges.each {|src, dst| changes.add_edge(genv, src, dst) }
+      end
+    end
+  end
+
+  # gets が nil を返す可能性があることによる警告を抑制するための RBS 注入
+  # (競プロ等のユースケースでは入力があることが前提のため、String を返すものとして扱う)
+  $raw_rbs_env << TypeProf::Core::AST.parse_rbs("rubox-shim.rbs", <<~RBS).first
+    class Object
+      def gets: (?String | Integer sep, ?Integer limit) -> String
+             | (Integer limit) -> String
+    end
+  RBS
+
   # TypeProf Service の初期化（同期モード）
   JS.global.call(:updateProgress, 90, "LSP サーバーを起動中...")
   $server = Server.new(core)

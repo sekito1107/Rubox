@@ -108,6 +108,21 @@ test.describe('Rubox System Integration Tests', () => {
             expect(result).toContain('"Ruby!!!"');
         });
 
+        await test.step('Ghost Text: 動的配列の多重代入における型推論', async () => {
+            const code = [
+                'x, y = gets.split.map(&:to_i)',
+                'x.times do |i|',
+                'end'
+            ].join('\n');
+            await setCodeAndSync(page, code);
+
+            // 1. 診断（赤線）が出ていないことを確認
+            const diagnostics = await page.evaluate(() => {
+                return monaco.editor.getModelMarkers({ owner: "ruby" });
+            });
+            expect(diagnostics.length).toBe(0);
+        });
+
         await test.step('Ghost Text: メソッド内の値キャプチャ', async () => {
             const code = [
                 'class DataProcessor',
