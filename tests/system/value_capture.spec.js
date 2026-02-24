@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Value Capture Integration Tests (Batch)', () => {
+test.describe('値キャプチャ統合テスト (一括検証)', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/');
         await expect(page.locator('#terminal-output')).toContainText('Ruby WASM ready!', { timeout: 90000 });
@@ -16,94 +16,94 @@ test.describe('Value Capture Integration Tests (Batch)', () => {
     const executionCases = [
         // --- 1. Scoping (U8, U9, U10, S9) ---
         {
-            name: 'Scope: Top-level vs Method (U8)',
+            name: 'スコープ: トップレベル vs メソッド',
             code: 'target = "banana"\ndef my_count\n  target = "apple"\n  target\nend\nmy_count',
             line: 3, expr: 'target', expected: '"apple"'
         },
         {
-            name: 'Scope: Method param isolation (U9)',
+            name: 'スコープ: メソッド引数の独立性',
             code: 'target = "banana"\ndef my_count(target)\n  target\nend\nmy_count("apple")',
             line: 0, expr: 'target', expected: '"banana"'
         },
         {
-            name: 'Scope: Local var in method (U10)',
+            name: 'スコープ: メソッド内のローカル変数',
             code: 'def my_method\n  x = 10\n  x\nend\nmy_method',
             line: 2, expr: 'x', expected: '10'
         },
         {
-            name: 'Scope: Class method capture (S9)',
+            name: 'スコープ: クラスメソッドのキャプチャ',
             code: 'class P; def self.f(t); t.strip; end; end; P.f(" ruby ")',
             line: 0, col: 18, expr: 't', expected: '" ruby "'
         },
 
         // --- 2. Loops and Transformation (U3, U11, U12, S6, S7, R1, R2) ---
         {
-            name: 'Loop: Simple increment (U3)',
+            name: 'ループ: 単純なインクリメント',
             code: 'a = 0\n3.times do |i|\n  a += 1\nend',
             line: 2, expr: 'a', expected: '1, 2, 3'
         },
         {
-            name: 'Loop: Block mutation (U11)',
+            name: 'ループ: ブロック内での破壊的変更',
             code: 'a = []\n3.times do |i|\n  a << [1].map { |n| n }\nend',
             line: 2, expr: 'a', expected: '[[1]], [[1], [1]], [[1], [1], [1]]'
         },
         {
-            name: 'Loop: Single line (U12/R1)',
+            name: 'ループ: 1行ループ',
             code: 'a = []; 3.times { a << [1] }',
             line: 0, expr: 'a << [1]', expected: '[[1]], [[1], [1]], [[1], [1], [1]]'
         },
         {
-            name: 'Loop: Collection each (S6)',
+            name: 'ループ: コレクションの各要素',
             code: 'items = ["a", "b"]\nitems.each do |item|\n  item\nend',
             line: 2, expr: 'item', expected: '"a", "b"'
         },
         {
-            name: 'Loop: Mutable trace (S7)',
+            name: 'ループ: 破壊的変更の追跡',
             code: 'a = "R"\n3.times do\n  a << "!"\nend',
             line: 2, expr: 'a', expected: '"R!", "R!!", "R!!!"'
         },
         {
-            name: 'Regression: Multi-line nested (R2)',
+            name: 'リグレッション: 複数行のネスト',
             code: 'a = []\n3.times do |i|\n  a << [i]\nend',
             line: 2, expr: 'a << [i]', expected: '[[0]], [[0], [1]], [[0], [1], [2]]'
         },
 
         // --- 3. Timing and Filtering (U1, U4, U5, U6, S10) ---
         {
-            name: 'Timing: Prevent future capture (U1/S10)',
+            name: 'タイミング: 未来の値のキャプチャ防止',
             code: 's = "R"\n5.times { s << "!" }\ns = "reset"',
             line: 0, expr: 's', expected: '"R"'
         },
         {
-            name: 'Timing: Re-assignment shows new only (U4)',
+            name: 'タイミング: 再代入時は新しい値のみ表示',
             code: 's = "R"\n5.times { s << "!" }\nputs s\ns = "nil"\nputs s',
             line: 4, expr: 's', expected: '"nil"'
         },
         {
-            name: 'Timing: Current value at puts (U5)',
+            name: 'タイミング: puts呼び出し時の現在値',
             code: 's = "R"\n3.times { s << "!" }\nputs s\ns = "reset"',
             line: 2, expr: 's', expected: '"R!!!"'
         },
         {
-            name: 'Filtering: No intermediate nil (U6)',
+            name: 'フィルタリング: 中間的なnilを除外',
             code: 'targets = ["a", "bb"]\nmax = targets.max_by{|t| t.size}.size',
             line: 1, expr: 'max', expected: '2'
         },
 
         // --- 4. Misc (U7, S5) ---
         {
-            name: 'Misc: Method chain (U7)',
+            name: 'その他: メソッドチェーン',
             code: 't = "abc"\nt.each_char',
             line: 1, expr: 't.each_char', expected: '/#<Enumerator: "abc":each_char>/'
         },
         {
-            name: 'Misc: Long array no ellipsis (S5)',
+            name: 'その他: 長い配列（省略なし）',
             code: 'x = (1..20).to_a',
             line: 0, expr: 'x', expected: '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]'
         }
     ];
 
-    test('Core Execution Logic: Batch Validation', async ({ page }) => {
+    test('コア実行ロジック: 一括検証', async ({ page }) => {
         for (const c of executionCases) {
             await test.step(`Case: ${c.name}`, async () => {
                 await setCodeAndSync(page, c.code);
@@ -119,7 +119,7 @@ test.describe('Value Capture Integration Tests (Batch)', () => {
         }
     });
 
-    test('IO Logic: gets and split (U2, R3)', async ({ page }) => {
+    test('IOロジック: gets と split', async ({ page }) => {
         // U2: gets
         await setCodeAndSync(page, 'x = gets');
         const res1 = await measureValue(page, 0, 0, 'x', 'hello\n');

@@ -14,25 +14,25 @@ test.describe('Smoke Tests', () => {
     });
 
     test('基本機能: コード実行と出力クリア', async ({ page }) => {
-        // S2: コード実行
+        // コード実行
         await page.evaluate(() => window.monacoEditor.setValue('puts "Smoke Test"'));
         await page.getByRole('button', { name: 'Run' }).click();
         await expect(page.locator('#terminal-output')).toContainText('Smoke Test');
 
-        // S4: クリア
+        // クリア
         await page.getByRole('button', { name: 'Clear' }).click();
         await expect(page.locator('#terminal-output')).not.toContainText('Smoke Test');
     });
 
     test('基本機能: エラーハンドリング', async ({ page }) => {
-        // S3: エラー
+        // エラー
         await page.evaluate(() => window.monacoEditor.setValue('undefined_var'));
         await page.getByRole('button', { name: 'Run' }).click();
         await expect(page.locator('#terminal-output')).toContainText('Error:');
     });
 
     test('UI: メソッドリスト解決', async ({ page }) => {
-        // S12: メソッドリスト
+        // メソッドリスト
         await page.evaluate(() => {
             window.monacoEditor.setValue('puts "test"');
             window.ruboxLSPManager.flushDocumentSync();
@@ -43,7 +43,7 @@ test.describe('Smoke Tests', () => {
     });
 
     test('Ghost Text: 多重代入における診断エラーなしの確認', async ({ page }) => {
-        // S8: 多重代入
+        // 多重代入
         const code = 'x, y = [1, 2]';
         await page.evaluate((c) => {
             window.monacoEditor.setValue(c);

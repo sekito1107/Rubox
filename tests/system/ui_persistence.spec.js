@@ -9,7 +9,7 @@ test.describe('UI and Persistence Tests', () => {
     });
 
     test('UI: サンプルコードロード', async ({ page }) => {
-        // S11: Examples
+        // Examples
         await page.locator('#examples-button').click();
         await page.locator('#examples-menu button[data-key="fizzbuzz"]').click();
         
@@ -19,7 +19,7 @@ test.describe('UI and Persistence Tests', () => {
     });
 
     test('機能: ファイルダウンロード', async ({ page }) => {
-        // S13: Download
+        // Download
         await page.evaluate(() => {
             // @ts-ignore
             window.showSaveFilePicker = undefined;
@@ -31,7 +31,7 @@ test.describe('UI and Persistence Tests', () => {
     });
 
     test('機能: Shareと復元', async ({ page, context }) => {
-        // S14: Share
+        // Share
         const targetCode = 'puts "Share Persistence Test"';
         await page.evaluate((c) => window.monacoEditor.setValue(c), targetCode);
 
@@ -51,7 +51,7 @@ test.describe('UI and Persistence Tests', () => {
     });
 
     test('永続化: エディタ設定・テーマ・コード', async ({ page }) => {
-        // S15, S16, S17 まとめて検証（効率化のため）
+        // エディタ設定・テーマ・コードの永続化検証（効率化のため）
         
         // 1. 設定変更
         await page.getByTitle('Editor Settings').click();
