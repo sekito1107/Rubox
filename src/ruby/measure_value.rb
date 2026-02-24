@@ -57,7 +57,16 @@ module MeasureValue
       # lines.push(...), lines.concat(...)
       # レシーバ部分を特定
       call_node = (body[0] == :method_add_arg) ? body[1] : body
-      return extract_node_name(call_node[1]) if call_node[0] == :call || call_node[0] == :method_add_arg
+      if call_node[0] == :call || call_node[0] == :method_add_arg
+        method_name_node = call_node[3] || (call_node[0] == :method_add_arg ? call_node[1][3] : nil)
+        method_name = method_name_node ? method_name_node[1] : nil
+        
+        # 破壊的メソッドのホワイトリスト（または ! 付き）
+        destructive = ["push", "concat", "insert", "delete", "update", "replace", "clear", "shift", "unshift"]
+        if method_name && (method_name.end_with?("!") || destructive.include?(method_name))
+          return extract_node_name(call_node[1])
+        end
+      end
     end
     nil
   end
