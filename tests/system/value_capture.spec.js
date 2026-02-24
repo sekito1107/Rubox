@@ -15,7 +15,7 @@ test.describe('値キャプチャ統合テスト (一括検証)', () => {
     });
 
     const executionCases = [
-        // --- 1. Scoping (U8, U9, U10, S9) ---
+        // --- スコープ ---
         {
             name: 'スコープ: トップレベル vs メソッド',
             code: 'target = "banana"\ndef my_count\n  target = "apple"\n  target\nend\nmy_count',
@@ -37,7 +37,7 @@ test.describe('値キャプチャ統合テスト (一括検証)', () => {
             line: 3, expr: 'v', expected: '" ruby "'
         },
 
-        // --- 2. Loops and Transformation (U3, U11, U12, S6, S7, R1, R2) ---
+        // --- ループと破壊的変更 ---
         {
             name: 'ループ: 単純なインクリメント',
             code: 'a = 0\n3.times do |i|\n  a += 1\nend',
@@ -69,7 +69,7 @@ test.describe('値キャプチャ統合テスト (一括検証)', () => {
             line: 2, expr: 'a << [i]', expected: '[[0]], [[0], [1]], [[0], [1], [2]]'
         },
 
-        // --- 3. Timing and Filtering (U1, U4, U5, U6, S10) ---
+        // --- タイミングとフィルタリング ---
         {
             name: 'タイミング: 未来の値のキャプチャ防止',
             code: 's = "R"\n5.times { s << "!" }\ns = "reset"',
@@ -91,7 +91,7 @@ test.describe('値キャプチャ統合テスト (一括検証)', () => {
             line: 1, expr: 'max', expected: '2'
         },
 
-        // --- 4. Misc (U7, S5) ---
+        // --- その他 ---
         {
             name: 'その他: メソッドチェーン',
             code: 't = "abc"\nt.each_char',
@@ -106,7 +106,6 @@ test.describe('値キャプチャ統合テスト (一括検証)', () => {
 
     test('コア実行ロジック: 一括検証', async ({ page }) => {
         for (const c of executionCases) {
-            if (c.name !== 'ループ: ブロック内での破壊的変更') continue;
             await test.step(`Case: ${c.name}`, async () => {
                 await setCodeAndSync(page, c.code);
                 const result = await measureValue(page, c.line, c.col || 0, c.expr);
@@ -122,12 +121,12 @@ test.describe('値キャプチャ統合テスト (一括検証)', () => {
     });
 
     test('IOロジック: gets と split', async ({ page }) => {
-        // U2: gets
+        // gets
         await setCodeAndSync(page, 'x = gets');
         const res1 = await measureValue(page, 0, 0, 'x', 'hello\n');
         expect(res1).toBe('"hello\\n"');
 
-        // R3: gets split multi-assign
+        // gets split multi-assign
         await setCodeAndSync(page, 'x, y = gets.split.map(&:to_i)');
         const res2 = await measureValue(page, 0, 0, 'x, y = gets.split.map(&:to_i)', '10 20\n');
         // sanitize により [x, y] が評価される
