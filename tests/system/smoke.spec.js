@@ -56,4 +56,32 @@ test.describe('Smoke Tests', () => {
         });
         expect(diagnostics.length).toBe(0);
     });
+
+    test('Ghost Text: Array(range) で型エラーなしの確認', async ({ page }) => {
+        const code = [
+            'n, k = gets.split.map(&:to_i)',
+            'a = Array(1..n)',
+            'result = 0',
+            'a.each do |i|',
+            '  count = 0',
+            '  i.times do |j|',
+            '    j = j + 1',
+            '    break if i + 1 < k',
+            '    count += 1 if i % j == 0',
+            '  end',
+            '  result += 1 if count == k',
+            'end',
+            'puts result',
+        ].join('\n');
+        await page.evaluate((c) => {
+            window.monacoEditor.setValue(c);
+            window.ruboxLSPManager.flushDocumentSync();
+        }, code);
+        await page.waitForTimeout(2000);
+
+        const diagnostics = await page.evaluate(() =>
+            monaco.editor.getModelMarkers({ owner: 'ruby' })
+        );
+        expect(diagnostics.length).toBe(0);
+    });
 });

@@ -5,6 +5,7 @@ import workspaceCode from "./ruby/workspace.rb?raw";
 import measureValueCode from "./ruby/measure_value.rb?raw";
 import methodFilterCode from "./ruby/method_filter.rb?raw";
 import serverCode from "./ruby/server.rb?raw";
+import typeprofPatchesCode from "./ruby/typeprof_patches.rb?raw";
 
 
 let vm: any = null;
@@ -124,6 +125,7 @@ async function initializeVM(wasmUrl: string) {
     writeRubyFile("/src/measure_value.rb", measureValueCode);
     writeRubyFile("/src/method_filter.rb", methodFilterCode);
     writeRubyFile("/src/server.rb", serverCode);
+    writeRubyFile("/src/typeprof_patches.rb", typeprofPatchesCode);
 
 
     // 4. ブートストラップスクリプトを評価する
