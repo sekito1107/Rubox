@@ -15,107 +15,10 @@ require "typeprof/lsp"
 require_relative "workspace"
 require_relative "measure_value"
 require_relative "server"
+require_relative "typeprof_patches"
 
 # --- Monkey-patches ---
-
-# 1. 組み込みメソッドの挙動を直接書き換える (RBSより強力)
-module TypeProf::Core
-  class Builtin
-    alias_method :orig_deploy, :deploy
-    def deploy
-      orig_deploy
-      [[:Object], [:Kernel]].each do |cpath|
-        begin
-          # gets が常に String を返すように強制
-          me = @genv.resolve_method(cpath, false, :gets)
-          me.builtin = method(:kernel_gets) if me
-        rescue
-        end
-        begin
-          # Kernel#Array: Range[Elem] → Array[Elem] の正しい型変換を登録
-          me = @genv.resolve_method(cpath, false, :Array)
-          me.builtin = method(:kernel_array_conv) if me
-        rescue
-        end
-      end
-    end
-
-    def kernel_gets(changes, node, ty, a_args, ret)
-      vtx = Source.new(@genv.str_type)
-      changes.add_edge(@genv, vtx, ret)
-      true
-    end
-
-    # Kernel#Array の型推論バグ修正:
-    # TypeProf は Range[Elem] を Array[Range[Elem]] と誤推論するため、
-    # Range[Elem] の型パラメータを取り出して Array[Elem] を返す。
-    def kernel_array_conv(changes, node, ty, a_args, ret)
-      return false unless a_args.positionals.size == 1
-
-      arg_vtx = a_args.positionals[0]
-      elem_vtx = Vertex.new(node)
-      handled = false
-
-      arg_vtx.each_type do |arg_ty|
-        handled = true
-        case arg_ty
-        when Type::Instance
-          if arg_ty.mod == @genv.mod_range && arg_ty.args && !arg_ty.args.empty?
-            # Range[Elem] → elem の Vertex を elem_vtx に繋ぐ
-            changes.add_edge(@genv, arg_ty.args[0], elem_vtx)
-          elsif arg_ty.mod == @genv.mod_ary
-            # Array[Elem] → そのまま返す
-            changes.add_edge(@genv, Source.new(arg_ty), ret)
-            next
-          else
-            # その他のオブジェクト → [obj] 相当
-            changes.add_edge(@genv, Source.new(arg_ty), elem_vtx)
-          end
-        when Type::Array
-          # リテラル配列 → そのまま返す
-          changes.add_edge(@genv, Source.new(arg_ty), ret)
-          next
-        else
-          changes.add_edge(@genv, Source.new(arg_ty), elem_vtx)
-        end
-      end
-
-      return false unless handled
-
-      ary_ty = @genv.gen_ary_type(elem_vtx)
-      changes.add_edge(@genv, Source.new(ary_ty), ret)
-      true
-    end
-  end
-
-  # 2. 多重代入の型推論バグの修正
-  class MAsgnBox
-    def run0(genv, changes)
-      @value.each_type do |ty|
-        case ty
-        when Type::Array
-          ty.splat_assign(genv, @lefts, @rest_elem, @rights).each do |src, dst|
-            changes.add_edge(genv, src, dst)
-          end
-        when Type::Instance
-          if ty.mod == genv.mod_ary && (elem_vtx = ty.args[0])
-            @lefts.each {|lhs| changes.add_edge(genv, elem_vtx, lhs) }
-            changes.add_edge(genv, Source.new(genv.gen_ary_type(elem_vtx)), @rest_elem) if @rest_elem
-            @rights&.each {|rhs| changes.add_edge(genv, elem_vtx, rhs) }
-          else
-            lhs = @lefts[0] || (@rights && @rights[0]) || @rest_elem
-            changes.add_edge(genv, Source.new(ty), lhs) if lhs
-          end
-        else
-          lhs = @lefts[0] || (@rights && @rights[0]) || @rest_elem
-          changes.add_edge(genv, Source.new(ty), lhs) if lhs
-          # 余る変数には nil を代入 (本来のRuby動作に近づける)
-          (@lefts[1..] || []).each {|dst| changes.add_edge(genv, Source.new(Type.nil), dst) } if @lefts[0]
-        end
-      end
-    end
-  end
-end
+TypeProfPatches.apply!
 
 # RBSとTypeProfコアの初期化
 begin
@@ -135,26 +38,8 @@ begin
   JS.global.call(:updateProgress, 87, "TypeProf サービスを初期化中...")
   core = TypeProf::Core::Service.new(rbs_env: $raw_rbs_env, rbs_collection: nil)
 
-  # 3. update_rbs_file の安全性向上 (後から適用)
-  class << core
-    def update_rbs_file(path, code)
-      prev_decls = @rbs_text_nodes[path]
-      begin
-        decls = TypeProf::Core::AST.parse_rbs(path, code || File.read(path))
-      rescue
-        return false
-      end
-      decls = decls.compact
-      @rbs_text_nodes[path] = decls
-      decls.each {|decl| decl.define(@genv) }
-      prev_decls.each {|decl| decl.undefine(@genv) } if prev_decls
-      @genv.define_all
-      decls.each {|decl| decl.install(@genv) }
-      prev_decls.each {|decl| decl.uninstall(@genv) } if prev_decls
-      @genv.run_all
-      true
-    end
-  end
+  # update_rbs_file の安全性を向上
+  TypeProfPatches.patch_service(core)
 
   # インデックス構築
   core.update_file("/workspace/main.rb", "")
