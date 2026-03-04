@@ -4,8 +4,6 @@ module MeasureValue
   class CapturedValue
     def self.inspect_and_add(vals, v)
       inspected = v.inspect rescue "???"
-      # 重複排除
-      return if !vals.empty? && vals.last[1] == inspected
       val_to_save = (v.is_a?(Numeric) || v.is_a?(Symbol) || v.nil? || v.is_a?(TrueClass) || v.is_a?(FalseClass)) ? v : (v.dup rescue v)
       vals << [val_to_save, inspected]
     end
@@ -17,7 +15,7 @@ module MeasureValue
       if results.size > 1 && results.first.strip =~ /\A(nil|\[\s*\])\z/
         results.shift
       end
-      results.uniq.join(", ")
+      results.join(", ")
     end
   end
 
@@ -68,63 +66,103 @@ module MeasureValue
     nil
   end
 
+  # 対象行コードのASTを解析し、「内側のブロック（スキップすべきb_call/b_return）の数」を返す
+  # ルート（トップレベル）の method_add_block はカウントしない（これがループ本体）
+  # 内部にネストした method_add_block はカウントする（式の一部として評価されるブロック）
+  def self.count_inner_blocks(code_line)
+    require 'ripper'
+    sexp = Ripper.sexp(code_line.to_s)
+    return 0 unless sexp && sexp[1]
+    walk_for_inner_blocks(sexp[1], true)
+  rescue
+    0
+  end
+
+  def self.walk_for_inner_blocks(nodes, is_root = false)
+    return 0 unless nodes.is_a?(Array)
+    nodes.sum do |node|
+      next 0 unless node.is_a?(Array)
+      if node[0] == :method_add_block
+        if is_root
+          # ルートのブロック自体はカウントしない、その中の内部ブロックだけ探す
+          walk_for_inner_blocks(node[1..])
+        else
+          # 内部ブロック = スキップ対象
+          1 + walk_for_inner_blocks(node[1..])
+        end
+      elsif node[0].is_a?(Symbol)
+        walk_for_inner_blocks(node[1..], false)
+      else
+        0
+      end
+    end
+  end
+
   def self.run(expression, target_line, user_binding, stdin_str = "", code_str = nil)
     final_result = ""
     begin
       expression = sanitize_expression(expression)
       old_verbose, $VERBOSE = $VERBOSE, nil
-      
+
       vals = []
-      target_triggered = false
-      target_line_depth = 0
-      last_line_binding = nil
+      pending_origin_depth = nil
+      last_binding = nil
       method_depth = 0
+
+      # 対象行コードの1行目を取得してAST解析
+      target_line_code = (code_str || "").lines[target_line - 1]&.strip || ""
+      # その行に含まれる「内側ブロック」の数 = スキップすべき b_return の数
+      skip_b_returns = count_inner_blocks(target_line_code)
+      # 現在のイテレーション内でスキップ済みの b_return 数
+      b_return_count_in_iter = 0
 
       capture_and_report = proc do |binding|
         next if binding.nil?
         begin
           val = binding.eval(expression)
           CapturedValue.inspect_and_add(vals, val)
-        rescue
-          # キャプチャ失敗は無視
+        rescue => e
+          $stderr.puts "[EVAL ERROR] #{e.message}"
         end
       end
 
       tp = TracePoint.new(:line, :call, :return, :b_call, :b_return, :end) do |tp|
         next if tp.path == "/src/measure_value.rb"
-        
+
         case tp.event
         when :call, :b_call; method_depth += 1
         when :return, :b_return, :end; method_depth -= 1 if method_depth > 0
         end
 
         if tp.event == :line && tp.lineno == target_line
-          # 再入時に前回分を確定 (同じか浅い深度の場合)
-          if target_triggered && method_depth <= target_line_depth
-            capture_and_report.call(last_line_binding)
-            target_triggered = false
+          if pending_origin_depth.nil?
+            pending_origin_depth = method_depth
+            b_return_count_in_iter = 0
           end
-          
-          # ターゲット捕捉（新規、または1行内でのより深い呼び出しを優先）
-          if !target_triggered || method_depth >= target_line_depth
-            target_triggered = true
-            target_line_depth = method_depth
-            last_line_binding = tp.binding
-          end
-        elsif target_triggered
-          # 離脱の検知
-          is_inter_line_departure = (tp.event == :line && tp.lineno != target_line && method_depth <= target_line_depth)
-          is_scope_departure = (method_depth < target_line_depth)
-          
-          if is_inter_line_departure
-            capture_and_report.call(last_line_binding)
-            target_triggered = false # 完全に別の行へ移った
-          elsif is_scope_departure
-            # 内部スコープから戻った（例: 1行内ブロックの終了）
-            # ここまでの結果を記録しつつ、ターゲット行自体の続きに備えて triggered は維持し、深度を下げる
-            capture_and_report.call(last_line_binding)
-            target_line_depth = method_depth
-            last_line_binding = tp.binding
+          last_binding = tp.binding if method_depth <= pending_origin_depth
+        end
+
+        if pending_origin_depth
+          if tp.event == :line && tp.lineno != target_line && method_depth <= pending_origin_depth
+            capture_and_report.call(last_binding)
+            pending_origin_depth = nil
+            b_return_count_in_iter = 0
+          elsif tp.event == :b_call && tp.lineno == target_line && skip_b_returns == 0
+            pending_origin_depth = method_depth if method_depth > pending_origin_depth
+          elsif tp.event == :b_return && tp.path == "(eval)"
+            if skip_b_returns == 0
+              if method_depth <= pending_origin_depth
+                capture_and_report.call(last_binding)
+                pending_origin_depth = nil
+                b_return_count_in_iter = 0
+              end
+            elsif b_return_count_in_iter < skip_b_returns
+              b_return_count_in_iter += 1
+            elsif method_depth < pending_origin_depth
+              capture_and_report.call(last_binding)
+              pending_origin_depth = nil
+              b_return_count_in_iter = 0
+            end
           end
         end
       end
@@ -133,7 +171,7 @@ module MeasureValue
       old_stdin, old_stdout = $stdin, $stdout
       $stdin = StringIO.new(stdin_str.to_s)
       $stdout = StringIO.new
-      
+
       measure_binding = TOPLEVEL_BINDING.eval("binding")
       actual_code = (code_str || "nil") + "\n# end"
 
@@ -142,11 +180,12 @@ module MeasureValue
           measure_binding.eval(actual_code, "(eval)")
         end
       rescue RuboxStopExecution
-      rescue
+      rescue => e
         # 実行時エラーもキャプチャ結果の一部として許容
+        $stderr.puts "[MEASURE ERROR] #{e.message}"
       ensure
         tp.disable if tp
-        capture_and_report.call(last_line_binding) if target_triggered
+        capture_and_report.call(last_binding) if pending_origin_depth
         $stdin, $stdout = old_stdin, old_stdout
       end
 

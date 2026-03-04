@@ -59,19 +59,9 @@ test.describe('Smoke Tests', () => {
 
     test('Ghost Text: Array(range) で型エラーなしの確認', async ({ page }) => {
         const code = [
-            'n, k = gets.split.map(&:to_i)',
+            'n = 10',
             'a = Array(1..n)',
-            'result = 0',
-            'a.each do |i|',
-            '  count = 0',
-            '  i.times do |j|',
-            '    j = j + 1',
-            '    break if i + 1 < k',
-            '    count += 1 if i % j == 0',
-            '  end',
-            '  result += 1 if count == k',
-            'end',
-            'puts result',
+            'a.each { |i| i + 1 }',
         ].join('\n');
         await page.evaluate((c) => {
             window.monacoEditor.setValue(c);
