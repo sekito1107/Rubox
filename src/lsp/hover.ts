@@ -40,7 +40,9 @@ export class ProvideHover {
           const withoutComment = lineContent.replace(/#(?!\{).*$/g, "").trim();
           
           // 代入演算子などの記号付近でない限り、単語を優先する
-          const expression = (wordInfo ? wordInfo.word : "") || withoutComment;
+          const expression = wordInfo
+            ? this.extractSubscriptExpression(lineContent, wordInfo)
+            : withoutComment;
 
           const additionalContents: { value: string; isTrusted: boolean }[] = [];
 
@@ -84,6 +86,32 @@ export class ProvideHover {
         }
       },
     });
+  }
+
+  // 単語の末尾位置(0-indexed)から[...]を追跡してサブスクリプト式全体を構築する
+  private extractSubscriptExpression(
+    lineContent: string,
+    wordInfo: monaco.editor.IWordAtPosition
+  ): string {
+    const base = wordInfo.word;
+    let pos = wordInfo.endColumn - 1; // 1-indexed to 0-indexed
+    let expr = base;
+
+    // ネストした [] を全て取り込む
+    while (pos < lineContent.length && lineContent[pos] === "[") {
+      let depth = 1;
+      let i = pos + 1;
+      while (i < lineContent.length && depth > 0) {
+        if (lineContent[i] === "[") depth++;
+        else if (lineContent[i] === "]") depth--;
+        i++;
+      }
+      if (depth !== 0) break; // 閉じていない場合は中断
+      expr += lineContent.slice(pos, i);
+      pos = i;
+    }
+
+    return expr;
   }
 
   private shouldShowEvaluateLink(

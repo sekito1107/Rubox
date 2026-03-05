@@ -59,6 +59,11 @@ test.describe('値キャプチャ統合テスト (一括検証)', () => {
             line: 2, expr: 'item', expected: '"a", "b"'
         },
         {
+            name: 'ループ: 配列アクセス式（strings[j]）',
+            code: 'n = 4\nstrings = "baab".chars\ncount = 0\n(0...n).each do |i|\n  ((i + 1)...n).each do |j|\n    count += 1 if strings[i] == strings[j]\n  end\nend',
+            line: 5, expr: 'strings[j]', expected: '"a", "a", "b", "a", "b", "b"'
+        },
+        {
             name: 'ループ: 破壊的変更の追跡',
             code: 'a = "R"\n3.times do\n  a << "!"\nend',
             line: 2, expr: 'a', expected: '"R!", "R!!", "R!!!"'
