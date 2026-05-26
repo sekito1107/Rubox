@@ -237,7 +237,8 @@ module Analyzer
         service = TypeProfEngine.service
 
         result = Prism.parse(code)
-        return { methods: [], variables: [], literals: [] }.to_json unless result.success?
+        # エラーがあっても、resultには解析出来た部分の情報が格納されているので、それを返す
+        return { methods: [], variables: [], literals: [] }.to_json unless result.value
 
         visitor = Visitor.new(service)
         result.value.accept(visitor)
